@@ -856,7 +856,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 
     <!-- Módulo 4: Reparo -->
     <div class="hub-hex-wrap" onclick="enterReparo()" title="Reparo">
-      <div class="hub-hex" style="background:linear-gradient(135deg,#1e3a5f,#2563a8)">
+      <div class="hub-hex">
         <div class="hub-hex-inner">
           <div class="hub-hex-icon">🔧</div>
           <div class="hub-hex-name">Reparo</div>
@@ -5804,8 +5804,15 @@ function repToggleAutorizado(){
   }
 }
 function enterReparo(){
+  // Hide all screens
   var hs = document.getElementById('hubScreen');
   if(hs) hs.style.cssText = 'display:none!important';
+  var as = document.getElementById('appScreen');
+  if(as) as.style.cssText = 'display:none!important';
+  var sc = document.getElementById('screenReconhece');
+  if(sc) sc.style.display = 'none';
+  var sp = document.getElementById('screenPlano');
+  if(sp) sp.style.display = 'none';
   var rs = document.getElementById('screenReparo');
   if(rs) rs.style.display = '';
   repLoadData();
@@ -5817,7 +5824,10 @@ function enterReparo(){
 }
 
 function backFromReparo(){
-  document.getElementById('screenReparo').style.display = 'none';
+  var rs = document.getElementById('screenReparo');
+  if(rs) rs.style.display = 'none';
+  var as = document.getElementById('appScreen');
+  if(as) as.style.cssText = 'display:none!important';
   var hs = document.getElementById('hubScreen');
   if(hs) hs.style.cssText = 'display:flex!important';
 }
