@@ -359,7 +359,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 .pa-fade-in{animation:fadeIn .3s ease}
 
 body{font-family:'DM Sans',sans-serif;background:var(--dark);color:var(--white);min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.15}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1;opacity:.15}
 
 /* ── HEADER ── */
 header{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 2rem;border-bottom:1px solid var(--border);background:linear-gradient(135deg,#321d65 0%,#5B21B6 40%,#c44a00 75%,#FF6200 100%);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100}
@@ -659,7 +659,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 /* ══════════════════════════════════════
    RECONHECE+ MODULE
 ══════════════════════════════════════ */
-#screenReconhece{display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto}
+#screenReconhece{display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto;isolation:isolate}
 .rec-header{background:linear-gradient(135deg,#321d65 0%,#5B21B6 40%,#c44a00 75%,#FF6200 100%);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,98,0,.2)}
 .rec-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;letter-spacing:-.01em}
 .rec-title span{color:#FF6200}
@@ -708,7 +708,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 /* ══════════════════════════════════════
    REPARO MODULE
 ══════════════════════════════════════ */
-#screenReparo{display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto}
+#screenReparo{display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto;isolation:isolate}
 .rep-header{background:linear-gradient(135deg,#1e3a5f 0%,#2563a8 60%,#1e40af 100%);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(37,99,168,.4)}
 .rep-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem}
 .rep-title span{color:#60a5fa}
@@ -5626,7 +5626,7 @@ function enterReconhece(){
   var hs = document.getElementById('hubScreen');
   if(hs) hs.style.cssText = 'display:none!important';
   var rs = document.getElementById('screenReconhece');
-  if(rs) rs.style.display = '';
+  if(rs) rs.style.display = 'block';
   var ui = document.getElementById('recUserInfo');
   if(ui && window._currentUser) ui.textContent = window._currentUser.name || window._currentUser.email || '';
   // Month selector
@@ -5816,7 +5816,7 @@ function enterReparo(){
   var sp = document.getElementById('screenPlano');
   if(sp) sp.style.display = 'none';
   var rs = document.getElementById('screenReparo');
-  if(rs) rs.style.display = '';
+  if(rs) rs.style.display = 'block';
   repLoadData();
   _repCurrentWeekStart = repGetWeekStart(new Date());
   repRenderCal();
@@ -6471,7 +6471,7 @@ function applyRecImport(){
 <input type="file" id="importFileInput" accept=".xlsx,.xls,.csv" style="position:fixed;top:-999px;left:-999px;opacity:0;width:1px;height:1px" onchange="importExcel(event)"/>
 
 <!-- ══ PLANO DE AÇÃO ══ -->
-<div id="screenPlano" style="display:none;position:fixed;inset:0;background:var(--dark);z-index:9996;overflow-y:auto;">
+<div id="screenPlano" style="display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto;isolation:isolate">
 <!-- HEADER STICKY DO MÓDULO PLANO -->
 <div style="background:linear-gradient(135deg,#321d65 0%,#5B21B6 40%,#c44a00 75%,#FF6200 100%);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,98,0,.2)">
   <div style="display:flex;align-items:center;gap:1rem">
