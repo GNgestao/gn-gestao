@@ -659,7 +659,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 /* ══════════════════════════════════════
    RECONHECE+ MODULE
 ══════════════════════════════════════ */
-#screenReconhece{display:none;position:fixed;inset:0;background:var(--dark);z-index:9998;overflow-y:auto}
+#screenReconhece{display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto}
 .rec-header{background:linear-gradient(135deg,#321d65 0%,#5B21B6 40%,#c44a00 75%,#FF6200 100%);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,98,0,.2)}
 .rec-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;letter-spacing:-.01em}
 .rec-title span{color:#FF6200}
@@ -708,7 +708,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 /* ══════════════════════════════════════
    REPARO MODULE
 ══════════════════════════════════════ */
-#screenReparo{display:none;position:fixed;inset:0;background:var(--dark);z-index:9998;overflow-y:auto}
+#screenReparo{display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto}
 .rep-header{background:linear-gradient(135deg,#1e3a5f 0%,#2563a8 60%,#1e40af 100%);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(37,99,168,.4)}
 .rep-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem}
 .rep-title span{color:#60a5fa}
@@ -2585,8 +2585,8 @@ function exportPDF(){
     +'<title>'+client.name+' — Equipamentos</title>'
     +'<style>'
     +'*{box-sizing:border-box;margin:0;padding:0}'
-    +'body{font-family:Arial,sans-serif;padding:2rem;color:#111;font-size:12px}'
-    +'h1{font-size:1.3rem;margin-bottom:.3rem;color:#3B0764}'
+    +'body{font-family:Arial,sans-serif;padding:1rem;color:#111;font-size:12px;background:#f5f3ff}'
+    +'h1{font-size:1.3rem;margin-bottom:.3rem;color:#321d65}'
     +'.meta{font-size:.82rem;color:#666;margin-bottom:1.5rem;padding-bottom:.75rem;border-bottom:2px solid #5B21B6}'
     +'.summary-row{display:flex;align-items:flex-start;gap:2rem;margin-bottom:1.75rem}'
     +'.summary-stats{display:flex;flex-direction:column;gap:.6rem;flex:1}'
@@ -2598,8 +2598,10 @@ function exportPDF(){
     +'.footer{margin-top:1.5rem;font-size:.72rem;color:#999;text-align:right;border-top:1px solid #e5e7eb;padding-top:.75rem}'
     +'@media print{body{padding:1rem}}'
     +'</style></head><body>'
-    +'<h1>GN Gestão Zona Vip — '+client.name+(equipFilter?' · Equip. '+equipFilter:'')+'</h1>'
-    +'<div class="meta">'+meta+'</div>'
+    +'<div style="background:linear-gradient(135deg,#321d65 0%,#5B21B6 50%,#FF6200 100%);padding:.75rem 1.25rem;border-radius:8px;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center">'
+    +'<div><h1 style="color:#fff;font-size:1.2rem;font-weight:900;margin:0;font-family:Arial,sans-serif">GN Gestão <span style="color:#FF6200">Zona Vip</span></h1>'
+    +'<div style="color:rgba(255,255,255,.8);font-size:.78rem;margin-top:.2rem">'+client.name+(equipFilter?' · Equip. '+equipFilter:'')+'</div></div>'
+    +'<div style="font-size:.75rem;color:rgba(255,255,255,.7)">'+meta+'</div></div>'
     +'<div class="summary-row">'
     +'<div>'+pieChart+'</div>'
     +'<div class="summary-stats">'
@@ -5565,9 +5567,9 @@ function exportPlanoPDF(){
   var pendentes = items.length - done;
 
   // Progress bar percentage for sidebar
-  var progressColor = pct===100?'#70AD47':'#5B9BD5';
+  var progressColor = pct===100?'#22C55E':'#7C3AED';
 
-  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'    +'<title>Plano de Ação TKE — '+p.client+'</title>'    +'<style>'    +'*{box-sizing:border-box;margin:0;padding:0}'    +'body{font-family:Calibri,Arial,sans-serif;padding:1cm;color:#111;font-size:10pt;background:#fff}'    +'/* Title row */'    +'.tke-title{background:#44546A;color:#fff;font-size:14pt;font-weight:700;padding:8px 12px;letter-spacing:.01em;display:flex;justify-content:space-between;align-items:center}'    +'.tke-logo{font-size:18pt;font-weight:900;color:#fff;letter-spacing:.05em;font-family:Arial Black,Arial,sans-serif}'    +'/* Info block below title */'    +'.tke-info{background:#8EA3B5;color:#fff;padding:6px 12px;font-size:9pt;display:flex;gap:24px;flex-wrap:wrap;margin-bottom:0}'    +'.tke-info span{white-space:nowrap}'    +'.tke-info strong{color:#fff}'    +'/* Main layout: table + sidebar */'    +'.tke-layout{display:flex;gap:12px;margin-top:10px;align-items:flex-start}'    +'.tke-table-wrap{flex:1;min-width:0}'    +'.tke-sidebar{width:130px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px}'    +'/* Sidebar progress */'    +'.tke-progress-title{font-size:8pt;font-weight:700;color:#44546A;text-align:center;text-transform:uppercase;letter-spacing:.05em}'    +'.tke-donut-wrap{position:relative;width:100px;height:100px}'    +'.tke-donut-wrap svg{width:100px;height:100px}'    +'.tke-donut-pct{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14pt;font-weight:900;color:#44546A;text-align:center;line-height:1}'    +'.tke-donut-label{font-size:7pt;color:#888;text-align:center;margin-top:-4px}'    +'.tke-stat{background:#EBF3FB;border:1px solid #9DC3E6;border-radius:4px;padding:4px 8px;text-align:center;width:100%}'    +'.tke-stat .sv{font-size:14pt;font-weight:900;color:#44546A;display:block}'    +'.tke-stat .sl{font-size:7pt;color:#666;text-transform:uppercase;letter-spacing:.04em}'    +'.tke-stat.green .sv{color:#70AD47}'    +'.tke-stat.orange .sv{color:#ED7D31}'    +'/* Table */'    +'table{width:100%;border-collapse:collapse}'    +'.th-blue{background:#44546A;color:#fff;padding:5px 6px;text-align:center;font-size:9pt;font-weight:700;border:1px solid #2E3E4E;word-wrap:break-word}'    +'.th-blue-light{background:#8EA3B5;color:#fff;padding:5px 6px;text-align:center;font-size:8pt;font-weight:700;border:1px solid #2E3E4E}'    +'td{vertical-align:middle}'    +'/* Why col merged label */'    +'.why-cell{background:#D9E2EC;border:1px solid #9DC3E6;padding:4px 6px;font-size:8pt;color:#2E3E4E;vertical-align:top;word-wrap:break-word}'    +'/* Footer */'    +'.tke-footer{display:flex;justify-content:space-between;margin-top:8px;padding-top:6px;border-top:2px solid #44546A;font-size:8pt;color:#666}'    +'@page{size:A4 landscape;margin:1cm}'    +'@media print{body{padding:0;margin:0}.tke-layout{margin-top:8px}}'    +'</style></head><body>'    +'<div class="tke-title">'    +'<span>Plano de Ação TKE — '+p.client+'</span>'    +'<span class="tke-logo">TKE</span>'    +'</div>'    +'<div class="tke-info">'    +'<span>Plano: <strong>'+p.name+'</strong></span>'    +(p.addr?'<span>Endereço: <strong>'+p.addr+'</strong></span>':'')    +'<span>Responsável: <strong>'+p.resp+'</strong></span>'    +'<span>Início: <strong>'+fmtDate(p.start)+'</strong></span>'    +'<span>Término: <strong>'+fmtDate(p.end)+'</strong></span>'    +'<span>Status: <strong>'+p.status+'</strong></span>'    +'</div>'    +(whyGlobal?'<div style="background:#EBF3FB;border:1px solid #9DC3E6;padding:5px 12px;font-size:9pt;margin-top:6px"><strong style="color:#44546A">Por quê:</strong> '+whyGlobal+'</div>':'')    +'<div class="tke-layout">'    +'<div class="tke-table-wrap">'    +'<table>'    +'<thead>'    +'<tr>'    +'<th class="th-blue" style="width:16%">Why?<br><span style="font-size:8pt;font-weight:400">(Por que?)</span></th>'    +'<th class="th-blue" style="width:18%">What?<br><span style="font-size:8pt;font-weight:400">( o que?)</span></th>'    +'<th class="th-blue" style="width:22%">How?<br><span style="font-size:8pt;font-weight:400">(Como?)</span></th>'    +'<th class="th-blue" style="width:8%">Who?<br><span style="font-size:8pt;font-weight:400">(Quem?)</span></th>'    +'<th class="th-blue" style="width:13%">Where?<br><span style="font-size:8pt;font-weight:400">(Onde?)</span></th>'    +'<th class="th-blue-light" style="width:8%" colspan="2">When? (Quando?)</th>'    +'<th class="th-blue" style="width:6%">Check</th>'    +'</tr>'    +'<tr>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light">Início</th>'    +'<th class="th-blue-light">Fim</th>'    +'<th class="th-blue-light"></th>'    +'</tr>'    +'</thead>'    +'<tbody>'+rows+'</tbody>'    +'</table>'    +'</div>'    +'<div class="tke-sidebar">'    +'<div class="tke-progress-title">Progresso Geral</div>'    +'<div class="tke-donut-wrap">'    +'<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'    +'<circle cx="50" cy="50" r="40" fill="none" stroke="#E7E6E6" stroke-width="14"/>'    +'<circle cx="50" cy="50" r="40" fill="none" stroke="'+progressColor+'" stroke-width="14" stroke-dasharray="'+(2*Math.PI*40)+'" stroke-dashoffset="'+(2*Math.PI*40*(1-pct/100))+'" stroke-linecap="butt" transform="rotate(-90 50 50)"/>'    +'</svg>'    +'<div class="tke-donut-pct">'+pct+'%</div>'    +'</div>'    +'<div class="tke-donut-label">Concluído</div>'    +'<div class="tke-stat"><span class="sv">'+items.length+'</span><span class="sl">Total</span></div>'    +'<div class="tke-stat green"><span class="sv">'+done+'</span><span class="sl">Completo</span></div>'    +'<div class="tke-stat orange"><span class="sv">'+pendentes+'</span><span class="sl">Pendente</span></div>'    +'</div>'    +'</div>'    +'<div class="tke-footer">'    +'<span>'+p.client+' &nbsp;|&nbsp; '+p.name+'</span>'    +'<span>TK Elevadores &nbsp;|&nbsp; GN Gestão</span>'    +'<span>Gerado em: '+now+'</span>'    +'</div>'    +'</body></html>';
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'    +'<title>Plano de Ação TKE — '+p.client+'</title>'    +'<style>'    +'*{box-sizing:border-box;margin:0;padding:0}'    +'body{font-family:Calibri,Arial,sans-serif;padding:1cm;color:#111;font-size:10pt;background:#f5f3ff}'    +'/* Title row */'    +'.tke-title{background:linear-gradient(135deg,#321d65 0%,#5B21B6 50%,#FF6200 100%);color:#fff;font-size:14pt;font-weight:700;padding:8px 12px;letter-spacing:.01em;display:flex;justify-content:space-between;align-items:center}'    +'.tke-logo{font-size:18pt;font-weight:900;color:#fff;letter-spacing:.05em;font-family:Arial Black,Arial,sans-serif}'    +'/* Info block below title */'    +'.tke-info{background:#1a1040;color:#fff;padding:6px 12px;font-size:9pt;display:flex;gap:24px;flex-wrap:wrap;margin-bottom:0}'    +'.tke-info span{white-space:nowrap}'    +'.tke-info strong{color:#fff}'    +'/* Main layout: table + sidebar */'    +'.tke-layout{display:flex;gap:12px;margin-top:10px;align-items:flex-start}'    +'.tke-table-wrap{flex:1;min-width:0}'    +'.tke-sidebar{width:130px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px}'    +'/* Sidebar progress */'    +'.tke-progress-title{font-size:8pt;font-weight:700;color:#44546A;text-align:center;text-transform:uppercase;letter-spacing:.05em}'    +'.tke-donut-wrap{position:relative;width:100px;height:100px}'    +'.tke-donut-wrap svg{width:100px;height:100px}'    +'.tke-donut-pct{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14pt;font-weight:900;color:#44546A;text-align:center;line-height:1}'    +'.tke-donut-label{font-size:7pt;color:#888;text-align:center;margin-top:-4px}'    +'.tke-stat{background:#EBF3FB;border:1px solid #9DC3E6;border-radius:4px;padding:4px 8px;text-align:center;width:100%}'    +'.tke-stat .sv{font-size:14pt;font-weight:900;color:#44546A;display:block}'    +'.tke-stat .sl{font-size:7pt;color:#666;text-transform:uppercase;letter-spacing:.04em}'    +'.tke-stat.green .sv{color:#70AD47}'    +'.tke-stat.orange .sv{color:#ED7D31}'    +'/* Table */'    +'table{width:100%;border-collapse:collapse}'    +'.th-blue{background:#1a1040;color:#fff;padding:5px 6px;text-align:center;font-size:9pt;font-weight:700;border:1px solid #2E3E4E;word-wrap:break-word}'    +'.th-blue-light{background:#2a1860;color:#fff;padding:5px 6px;text-align:center;font-size:8pt;font-weight:700;border:1px solid #2E3E4E}'    +'td{vertical-align:middle}'    +'/* Why col merged label */'    +'.why-cell{background:#D9E2EC;border:1px solid #9DC3E6;padding:4px 6px;font-size:8pt;color:#2E3E4E;vertical-align:top;word-wrap:break-word}'    +'/* Footer */'    +'.tke-footer{display:flex;justify-content:space-between;margin-top:8px;padding-top:6px;border-top:2px solid #5B21B6;font-size:8pt;color:#666}'    +'@page{size:A4 landscape;margin:1cm}'    +'@media print{body{padding:0;margin:0}.tke-layout{margin-top:8px}}'    +'</style></head><body>'    +'<div class="tke-title">'    +'<span>Plano de Ação TKE — '+p.client+'</span>'    +'<span class="tke-logo">TKE</span>'    +'</div>'    +'<div class="tke-info">'    +'<span>Plano: <strong>'+p.name+'</strong></span>'    +(p.addr?'<span>Endereço: <strong>'+p.addr+'</strong></span>':'')    +'<span>Responsável: <strong>'+p.resp+'</strong></span>'    +'<span>Início: <strong>'+fmtDate(p.start)+'</strong></span>'    +'<span>Término: <strong>'+fmtDate(p.end)+'</strong></span>'    +'<span>Status: <strong>'+p.status+'</strong></span>'    +'</div>'    +(whyGlobal?'<div style="background:#EBF3FB;border:1px solid #9DC3E6;padding:5px 12px;font-size:9pt;margin-top:6px"><strong style="color:#44546A">Por quê:</strong> '+whyGlobal+'</div>':'')    +'<div class="tke-layout">'    +'<div class="tke-table-wrap">'    +'<table>'    +'<thead>'    +'<tr>'    +'<th class="th-blue" style="width:16%">Why?<br><span style="font-size:8pt;font-weight:400">(Por que?)</span></th>'    +'<th class="th-blue" style="width:18%">What?<br><span style="font-size:8pt;font-weight:400">( o que?)</span></th>'    +'<th class="th-blue" style="width:22%">How?<br><span style="font-size:8pt;font-weight:400">(Como?)</span></th>'    +'<th class="th-blue" style="width:8%">Who?<br><span style="font-size:8pt;font-weight:400">(Quem?)</span></th>'    +'<th class="th-blue" style="width:13%">Where?<br><span style="font-size:8pt;font-weight:400">(Onde?)</span></th>'    +'<th class="th-blue-light" style="width:8%" colspan="2">When? (Quando?)</th>'    +'<th class="th-blue" style="width:6%">Check</th>'    +'</tr>'    +'<tr>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light">Início</th>'    +'<th class="th-blue-light">Fim</th>'    +'<th class="th-blue-light"></th>'    +'</tr>'    +'</thead>'    +'<tbody>'+rows+'</tbody>'    +'</table>'    +'</div>'    +'<div class="tke-sidebar">'    +'<div class="tke-progress-title">Progresso Geral</div>'    +'<div class="tke-donut-wrap">'    +'<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'    +'<circle cx="50" cy="50" r="40" fill="none" stroke="#E7E6E6" stroke-width="14"/>'    +'<circle cx="50" cy="50" r="40" fill="none" stroke="'+progressColor+'" stroke-width="14" stroke-dasharray="'+(2*Math.PI*40)+'" stroke-dashoffset="'+(2*Math.PI*40*(1-pct/100))+'" stroke-linecap="butt" transform="rotate(-90 50 50)"/>'    +'</svg>'    +'<div class="tke-donut-pct">'+pct+'%</div>'    +'</div>'    +'<div class="tke-donut-label">Concluído</div>'    +'<div class="tke-stat"><span class="sv">'+items.length+'</span><span class="sl">Total</span></div>'    +'<div class="tke-stat green"><span class="sv">'+done+'</span><span class="sl">Completo</span></div>'    +'<div class="tke-stat orange"><span class="sv">'+pendentes+'</span><span class="sl">Pendente</span></div>'    +'</div>'    +'</div>'    +'<div class="tke-footer">'    +'<span>'+p.client+' &nbsp;|&nbsp; '+p.name+'</span>'    +'<span>TK Elevadores &nbsp;|&nbsp; GN Gestão</span>'    +'<span>Gerado em: '+now+'</span>'    +'</div>'    +'</body></html>';
 
   var win = window.open('','_blank');
   if(!win){ alert('⚠️ Permita pop-ups no navegador para gerar o PDF.'); return; }
@@ -6237,6 +6239,80 @@ function saveRecData(){
   alert('Dados salvos para '+recGetMesLabel(_recCurrentMes));
 }
 
+function exportRecPDF(){
+  var data = window._recData;
+  if(!data || !data.length){ alert('Nenhum dado para exportar.'); return; }
+  var mesLabel = recGetMesLabel(_recCurrentMes);
+  var rows = '';
+  var zonaGroups = {};
+  data.forEach(function(r){
+    if(!zonaGroups[r.zona]) zonaGroups[r.zona] = {};
+    if(!zonaGroups[r.zona][r.setor]) zonaGroups[r.zona][r.setor] = [];
+    zonaGroups[r.zona][r.setor].push(r);
+  });
+  Object.keys(zonaGroups).forEach(function(zona){
+    var setores = zonaGroups[zona];
+    var zonaCount = data.filter(function(r){ return r.zona===zona; }).length;
+    var zonaFirst = true;
+    Object.keys(setores).forEach(function(setor){
+      var items = setores[setor];
+      var setorFirst = true;
+      items.forEach(function(r){
+        var total = recCalcTotal(r);
+        var totalColor = total >= 100 ? '#22C55E' : total >= 50 ? '#F59E0B' : '#EF4444';
+        var prodStr = (r.produtividade !== null && r.produtividade !== undefined) ? r.produtividade.toFixed(1)+'%' : '-';
+        var prodColor = (r.produtividade !== null && r.produtividade < 50) ? '#EF4444' : '#fff';
+        var hzColor = (r.quaseAcidentes||0) < 5 ? '#EF4444' : '#22C55E';
+        rows += '<tr>';
+        if(zonaFirst){ rows += '<td rowspan="'+zonaCount+'" class="td-zona">'+zona+'</td>'; zonaFirst=false; }
+        if(setorFirst){ rows += '<td rowspan="'+items.length+'" class="td-setor">'+setor+'</td>'; setorFirst=false; }
+        rows += '<td>'+r.nome+'</td>';
+        rows += '<td>'+(r.ptsIniciais||100)+'</td>';
+        rows += '<td style="color:'+prodColor+'">'+prodStr+'</td>';
+        rows += '<td style="color:#22C55E">'+(r.assiduidade||0)+'</td>';
+        rows += '<td style="color:'+((r.marcacaoPonto||0)>=3?'#EF4444':'#fff')+'">'+(r.marcacaoPonto||0)+'</td>';
+        rows += '<td style="color:'+hzColor+'">'+(r.quaseAcidentes||0)+'</td>';
+        rows += '<td style="color:'+((r.treinamento||0)===1?'#EF4444':'#22C55E')+'">'+(r.treinamento===1?'Vencido':'OK')+'</td>';
+        rows += '<td style="color:'+((r.manutencaoPrev||0)>=2?'#EF4444':'#fff')+'">'+(r.manutencaoPrev||0)+'d</td>';
+        rows += '<td style="font-weight:900;color:'+totalColor+'">'+total+'</td>';
+        rows += '</tr>';
+      });
+    });
+  });
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'
+    +'<title>Reconhece+ '+mesLabel+'<\/title>'
+    +'<style>'
+    +'*{box-sizing:border-box;margin:0;padding:0}'
+    +'body{font-family:Arial,sans-serif;background:#1e1040;color:#fff;padding:.5rem}'
+    +'.header{background:linear-gradient(135deg,#321d65 0%,#5B21B6 50%,#FF6200 100%);padding:.5rem 1rem;border-radius:6px;display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}'
+    +'.header h1{font-size:12pt;font-weight:900;color:#fff}'
+    +'.header h1 span{color:#FF6200}'
+    +'table{width:100%;border-collapse:collapse;background:#150d30}'
+    +'thead th{background:#1a1040;color:#fff;padding:4px 5px;font-size:7pt;text-transform:uppercase;letter-spacing:.04em;border:1px solid #2a1860;text-align:center;white-space:nowrap}'
+    +'tbody td{padding:3px 5px;border:1px solid #2a1860;font-size:8pt;text-align:center;vertical-align:middle}'
+    +'tbody tr:nth-child(even){background:#1a1240}'
+    +'.td-zona{background:#0f0830!important;color:#FF6200;font-weight:700;writing-mode:vertical-rl;text-orientation:mixed}'
+    +'.td-setor{background:#1a1040!important;color:#c4b5fd;font-weight:600;font-size:7.5pt;text-align:left!important;white-space:nowrap}'
+    +'tbody td:nth-child(3){text-align:left}'
+    +'@page{size:A4 landscape;margin:.8cm}'
+    +'<\/style><\/head><body>'
+    +'<div class="header"><div><h1>🏆 Reconhece<span>+<\/span><\/h1>'
+    +'<div style="font-size:8pt;color:rgba(255,255,255,.8)">'+mesLabel+' — Zona VIP<\/div><\/div>'
+    +'<div style="font-size:8pt;color:rgba(255,255,255,.6)">'+new Date().toLocaleDateString('pt-BR')+'<\/div><\/div>'
+    +'<table><thead><tr>'
+    +'<th>Zona<\/th><th style="text-align:left">Setor<\/th><th style="text-align:left">Colaborador<\/th>'
+    +'<th>Pts<\/th><th>Produtividade<\/th><th>Assiduidade<\/th>'
+    +'<th>Marc.Ponto<\/th><th>Quase Acid.<\/th><th>Treinamento<\/th><th>Man.Prev.<\/th>'
+    +'<th style="background:#FF6200">TOTAL<\/th>'
+    +'<\/tr><\/thead><tbody>'+rows+'<\/tbody><\/table>'
+    +'<\/body><\/html>';
+  var win = window.open('','_blank');
+  if(!win){ alert('Permita pop-ups para exportar.'); return; }
+  win.document.write(html);
+  win.document.close();
+  setTimeout(function(){ win.print(); }, 700);
+}
+
 function openRecImport(type){
   _recImportType = type;
   document.getElementById('recImportTitle').textContent = type==='prod'?'Importar Produtividade':'Importar Quase Acidentes';
@@ -6740,6 +6816,7 @@ function applyRecImport(){
       </div>
       <div style="display:flex;gap:.5rem;align-items:center">
         <button class="rec-save-btn" onclick="saveRecData()" id="recBtnSave">💾 Salvar</button>
+        <button class="rec-save-btn" onclick="exportRecPDF()" style="background:#dc2626" id="recBtnExport">📄 Exportar PDF</button>
         <select id="recMesSelect" onchange="loadRecMes()" style="background:rgba(50,29,101,.6);border:1px solid var(--border);color:var(--white);border-radius:8px;padding:.4rem .75rem;font-size:.78rem;font-family:'DM Sans',sans-serif;outline:none"></select>
       </div>
     </div>
