@@ -709,30 +709,30 @@ tr:hover td{background:rgba(91,33,182,.05)}
    REPARO MODULE
 ══════════════════════════════════════ */
 #screenReparo{display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto;isolation:isolate}
-.rep-header{background:linear-gradient(135deg,#1e3a5f 0%,#2563a8 60%,#1e40af 100%);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(37,99,168,.4)}
+.rep-header{background:linear-gradient(135deg,#321d65 0%,#5B21B6 40%,#c44a00 75%,#FF6200 100%);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(37,99,168,.4)}
 .rep-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem}
-.rep-title span{color:#60a5fa}
+.rep-title span{color:#FF6200}
 .rep-body{max-width:1400px;margin:0 auto;padding:1.5rem 2rem}
 
 /* Tabs */
 .rep-tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:.5rem}
 .rep-tab{background:transparent;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;padding:.5rem 1.25rem;cursor:pointer;border-radius:8px 8px 0 0;transition:all .2s;border-bottom:2px solid transparent}
-.rep-tab.active{color:#60a5fa;border-bottom:2px solid #60a5fa;background:rgba(37,99,168,.1)}
+.rep-tab.active{color:#FF6200;border-bottom:2px solid #FF6200;background:rgba(255,98,0,.08)}
 .rep-tab-content{display:none}
 .rep-tab-content.active{display:block}
 
 /* Calendar */
 .rep-cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
 .rep-cal-nav{display:flex;align-items:center;gap:1rem}
-.rep-cal-nav button{background:rgba(37,99,168,.2);border:1px solid rgba(37,99,168,.3);color:#60a5fa;border-radius:8px;padding:.35rem .75rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem}
+.rep-cal-nav button{background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem}
 .rep-cal-title{font-size:1rem;font-weight:700;color:var(--white)}
 .rep-week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.5rem}
 .rep-day-col{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
-.rep-day-head{background:rgba(37,99,168,.2);padding:.6rem .75rem;font-size:.78rem;font-weight:700;color:#60a5fa;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.rep-day-head.today{background:rgba(37,99,168,.4);color:#93c5fd}
+.rep-day-head{background:rgba(255,98,0,.08);padding:.6rem .75rem;font-size:.78rem;font-weight:700;color:#FF6200;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.rep-day-head.today{background:rgba(255,98,0,.2);color:#FF6200}
 .rep-day-head.holiday{background:rgba(239,68,68,.15);color:#fca5a5}
 .rep-day-head.weekend{background:rgba(168,85,247,.12);color:#c4b5fd}
-.rep-day-head.weekend.plantao{background:rgba(37,99,168,.2);color:#93c5fd}
+.rep-day-head.weekend.plantao{background:rgba(124,58,237,.2);color:#c4b5fd}
 .rep-day-hours{font-size:.68rem;color:var(--muted);font-weight:400}
 .rep-day-body{padding:.5rem;min-height:120px;display:flex;flex-direction:column;gap:.4rem}
 .rep-service-card{border-radius:7px;padding:.5rem .65rem;font-size:.75rem;cursor:pointer;transition:opacity .2s;border-left:3px solid transparent}
@@ -744,8 +744,8 @@ tr:hover td{background:rgba(91,33,182,.05)}
 .rep-sc-name{font-weight:700;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rep-sc-equipe{font-size:.68rem;color:var(--muted);margin-top:.1rem}
 .rep-sc-hours{font-size:.68rem;color:#60a5fa;margin-top:.1rem}
-.rep-add-btn{background:rgba(37,99,168,.1);border:1px dashed rgba(37,99,168,.3);color:var(--muted);border-radius:6px;padding:.4rem;font-size:.75rem;cursor:pointer;text-align:center;width:100%;transition:background .2s}
-.rep-add-btn:hover{background:rgba(37,99,168,.2);color:#60a5fa}
+.rep-add-btn{background:rgba(255,98,0,.05);border:1px dashed rgba(255,98,0,.25);color:var(--muted);border-radius:6px;padding:.4rem;font-size:.75rem;cursor:pointer;text-align:center;width:100%;transition:background .2s}
+.rep-add-btn:hover{background:rgba(255,98,0,.12);color:#FF6200}
 
 /* Status badges */
 .rep-badge{border-radius:99px;padding:2px 8px;font-size:.7rem;font-weight:700;white-space:nowrap}
@@ -757,7 +757,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 
 /* Service list */
 .rep-service-row{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.85rem 1.25rem;display:flex;align-items:center;gap:1rem;cursor:pointer;transition:border-color .2s}
-.rep-service-row:hover{border-color:rgba(37,99,168,.4)}
+.rep-service-row:hover{border-color:rgba(255,98,0,.3)}
 .rep-service-info{flex:1;min-width:0}
 .rep-service-title{font-weight:700;font-size:.88rem;color:var(--white)}
 .rep-service-meta{font-size:.75rem;color:var(--muted);margin-top:.2rem}
@@ -3136,6 +3136,13 @@ function enterModule(mod){
   var as=document.getElementById('appScreen');
   var hs=document.getElementById('hubScreen');
   if(hs) hs.style.cssText='display:none!important';
+  // Hide all other screens
+  var sc = document.getElementById('screenReconhece');
+  if(sc) sc.style.display = 'none';
+  var sp = document.getElementById('screenPlano');
+  if(sp) sp.style.display = 'none';
+  var sr = document.getElementById('screenReparo');
+  if(sr) sr.style.display = 'none';
   if(as) as.style.cssText='display:block!important';
   updateUserHeader();
   applyAdminSections();
@@ -5699,6 +5706,12 @@ function recGetMesLabel(key){
 function enterReconhece(){
   var hs = document.getElementById('hubScreen');
   if(hs) hs.style.cssText = 'display:none!important';
+  var as = document.getElementById('appScreen');
+  if(as) as.style.cssText = 'display:none!important';
+  var sp = document.getElementById('screenPlano');
+  if(sp) sp.style.display = 'none';
+  var sr = document.getElementById('screenReparo');
+  if(sr) sr.style.display = 'none';
   var rs = document.getElementById('screenReconhece');
   if(rs) rs.style.display = 'block';
   var ui = document.getElementById('recUserInfo');
@@ -5723,6 +5736,8 @@ function enterReconhece(){
 function backFromReconhece(){
   var rs = document.getElementById('screenReconhece');
   if(rs) rs.style.display = 'none';
+  var as = document.getElementById('appScreen');
+  if(as) as.style.cssText = 'display:none!important';
   var hs = document.getElementById('hubScreen');
   if(hs) hs.style.cssText = 'display:flex!important';
 }
@@ -6961,7 +6976,7 @@ function applyRecImport(){
 <div id="screenReparo">
   <div class="rep-header">
     <div style="display:flex;align-items:center;gap:1rem">
-      <button onclick="backFromReparo()" style="background:rgba(37,99,168,.15);border:1px solid rgba(37,99,168,.3);color:#60a5fa;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer">⬅ Zona Vip</button>
+      <button onclick="backFromReparo()" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer">⬅ Zona Vip</button>
       <div class="rep-title">🔧 Reparo <span>Subcontratado</span></div>
     </div>
     <div style="display:flex;gap:.5rem">
