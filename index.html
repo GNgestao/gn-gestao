@@ -816,7 +816,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
   <div class="hub-header">
     <div class="hub-logo">GN <span>Gestão</span></div>
     <div class="hub-subtitle">✦ Zona Vip ✦</div>
-    <div class="hub-user" id="hubUserName"></div>
+    <div class="hub-user" id="hubUserName" style="display:flex;align-items:center;gap:.6rem"><span id="hubRoleBadge" style="font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:99px;background:rgba(196,181,253,.1);color:#c4b5fd"></span></div>
   </div>
 
   <div class="hub-grid">
@@ -1483,6 +1483,66 @@ function isAdmin(){
 }
 function isSuperAdmin(){
   return window._currentUser && window._currentUser.role === 'superadmin';
+}
+
+
+// ── ROLE-BASED UI ──
+function applyRoleUI(){
+  var admin = isAdmin();
+  var superadmin = isSuperAdmin();
+
+  // Elements that only admins can see
+  var adminOnlyIds = [
+    // Manutenção Preditiva
+    'btnAddClient','btnAddItem','btnImportExcel','btnExportBackup',
+    // Plano de Ação  
+    'btnNewPlan','btnDeletePlan',
+    // Reconhece+
+    'recBtnImportProd','recBtnImportHz','recBtnAddTec','recBtnSave',
+    // Reparo
+    'repBtnNewService',
+  ];
+  adminOnlyIds.forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.style.display = admin ? '' : 'none';
+  });
+
+  // CSS classes that only admins can use
+  // Add data-admin-only attribute support
+  document.querySelectorAll('[data-admin-only]').forEach(function(el){
+    el.style.display = admin ? '' : 'none';
+  });
+
+  // Role badge on hub
+  var badge = document.getElementById('hubRoleBadge');
+  if(badge){
+    badge.textContent = superadmin ? '👑 SuperAdmin' : admin ? '🔧 Admin' : '👁 Viewer';
+    badge.style.background = superadmin ? 'rgba(255,98,0,.2)' : admin ? 'rgba(34,197,94,.15)' : 'rgba(196,181,253,.1)';
+    badge.style.color = superadmin ? '#FF6200' : admin ? '#22C55E' : '#c4b5fd';
+  }
+}
+
+// Call applyRoleUI whenever entering a module
+function applyRoleModule(){
+  var admin = isAdmin();
+  document.querySelectorAll('[data-admin-only]').forEach(function(el){
+    el.style.display = admin ? '' : 'none';
+  });
+  document.querySelectorAll('[data-viewer-hide]').forEach(function(el){
+    el.style.display = admin ? '' : 'none';
+  });
+  // Disable editable inputs for viewers
+  document.querySelectorAll('[data-admin-edit]').forEach(function(el){
+    if(admin){
+      el.removeAttribute('disabled');
+      el.style.pointerEvents = '';
+      el.style.opacity = '';
+    } else {
+      el.setAttribute('disabled','disabled');
+      el.style.pointerEvents = 'none';
+      el.style.opacity = '0.6';
+    }
+  });
 }
 
 function requireAdmin(fn){
@@ -2166,8 +2226,8 @@ function renderTable(){
       if(s !== 'ok'){
         actionBtns += '<button class="btn-email" onclick="openEmailModal('+realIdx+')" title="Enviar e-mail de autorização" style="margin-right:.2rem">✉️</button>';
       }
-      actionBtns += '<button class="btn-edit" onclick="editItem('+realIdx+')" style="margin-right:.2rem">✏️</button>';
-      actionBtns += '<button class="btn-del" onclick="deleteItem('+realIdx+')">🗑</button>';
+      actionBtns += '<button class="btn-edit" data-admin-only onclick="editItem('+realIdx+')" style="margin-right:.2rem">✏️</button>';
+      actionBtns += '<button class="btn-del" data-admin-only onclick="deleteItem('+realIdx+')">🗑</button>';
     }
 
     rows += '<tr>'
@@ -3049,7 +3109,21 @@ function showApp(){
   if(hs){ hs.style.cssText='display:flex!important'; }
   // Update hub user name
   var hubUser = document.getElementById('hubUserName');
-  if(hubUser && window._currentUser) hubUser.textContent = 'Olá, ' + (window._currentUser.name || window._currentUser.email);
+  if(hubUser && window._currentUser){
+    var displayName = 'Olá, ' + (window._currentUser.name || window._currentUser.email);
+    var badge = document.getElementById('hubRoleBadge');
+    if(badge){
+      var role = window._currentUser.role || 'viewer';
+      badge.textContent = role==='superadmin'?'👑 SuperAdmin':role==='admin'?'🔧 Admin':'👁 Viewer';
+      badge.style.background = role==='superadmin'?'rgba(255,98,0,.2)':role==='admin'?'rgba(34,197,94,.15)':'rgba(196,181,253,.1)';
+      badge.style.color = role==='superadmin'?'#FF6200':role==='admin'?'#22C55E':'#c4b5fd';
+      hubUser.innerHTML = badge.outerHTML + ' ' + displayName;
+    } else {
+      hubUser.textContent = displayName;
+    }
+  }
+  // Apply role-based UI
+  setTimeout(applyRoleUI, 100);
   // Clear any old localStorage data to avoid mixing with Firebase data
   localStorage.removeItem('elevatech_items_v2');
   localStorage.removeItem('gnpred_items_v3');
@@ -5643,6 +5717,7 @@ function enterReconhece(){
     }
   }
   loadRecMes();
+  setTimeout(applyRoleModule, 100);
 }
 
 function backFromReconhece(){
@@ -5823,6 +5898,7 @@ function enterReparo(){
   repRenderList();
   repCheckAlerts();
   repPopulateCartaSelect();
+  setTimeout(applyRoleModule, 100);
 }
 
 function backFromReparo(){
@@ -6495,7 +6571,7 @@ function applyRecImport(){
       <div style="display:flex;gap:.75rem;flex-wrap:wrap">
         <button class="btn-secondary" onclick="openImportExcelModal()" style="display:flex!important">📊 Importar Excel</button>
         <button class="btn-secondary" onclick="openAiModal()" style="display:flex!important">🤖 Analisar Laudo com IA</button>
-        <button class="btn-primary" onclick="openNewPlanModal()" style="display:flex!important">＋ Novo Plano</button>
+        <button class="btn-primary" onclick="openNewPlanModal()" data-admin-only style="display:flex!important">＋ Novo Plano</button>
       </div>
     </div>
     <!-- FILTROS AVANÇADOS -->
@@ -6811,11 +6887,11 @@ function applyRecImport(){
     <div class="rec-toolbar">
       <div class="rec-toolbar-left">
         <div class="rec-mes-badge" id="recMesBadge">📅 ...</div>
-        <button class="rec-import-btn" onclick="openRecImport('prod')" id="recBtnImportProd">📊 Importar Produtividade</button>
-        <button class="rec-import-btn" onclick="openRecImport('hz')" id="recBtnImportHz">🦺 Importar Quase Acidentes</button>
+        <button class="rec-import-btn" onclick="openRecImport('prod')" id="recBtnImportProd" data-admin-only>📊 Importar Produtividade</button>
+        <button class="rec-import-btn" onclick="openRecImport('hz')" id="recBtnImportHz" data-admin-only>🦺 Importar Quase Acidentes</button>
       </div>
       <div style="display:flex;gap:.5rem;align-items:center">
-        <button class="rec-save-btn" onclick="saveRecData()" id="recBtnSave">💾 Salvar</button>
+        <button class="rec-save-btn" onclick="saveRecData()" id="recBtnSave" data-admin-only>💾 Salvar</button>
         <button class="rec-save-btn" onclick="exportRecPDF()" style="background:#dc2626" id="recBtnExport">📄 Exportar PDF</button>
         <select id="recMesSelect" onchange="loadRecMes()" style="background:rgba(50,29,101,.6);border:1px solid var(--border);color:var(--white);border-radius:8px;padding:.4rem .75rem;font-size:.78rem;font-family:'DM Sans',sans-serif;outline:none"></select>
       </div>
@@ -6889,7 +6965,7 @@ function applyRecImport(){
       <div class="rep-title">🔧 Reparo <span>Subcontratado</span></div>
     </div>
     <div style="display:flex;gap:.5rem">
-      <button onclick="openRepServiceModal(null)" class="btn-primary" style="font-size:.78rem;padding:.4rem .9rem">＋ Novo Serviço</button>
+      <button onclick="openRepServiceModal(null)" class="btn-primary" data-admin-only style="font-size:.78rem;padding:.4rem .9rem">＋ Novo Serviço</button>
     </div>
   </div>
 
