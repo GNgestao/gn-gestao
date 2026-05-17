@@ -7136,7 +7136,6 @@ function gnListen(){
   gnRecognition.onend = function(){
     console.log('Reconhecimento encerrou');
     gnListening = false;
-    gnReiniciar();
   };
 
   try{
@@ -7151,7 +7150,7 @@ function gnListen(){
 }
 
 function gnReiniciar(){
-  if(!gnContinuousMode) return;
+  if(!gnContinuousMode || gnListening) return;
   setTimeout(()=>{
     if(gnContinuousMode && !gnListening) gnListen();
   }, 300);
