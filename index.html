@@ -7011,6 +7011,7 @@ let gnConversationMode = false;
 let gnConversationTimer = null;
 let gnListening = false;
 let gnRecognition = null;
+let gnProcessing = false;
 (function gnInitCanvas(){
   const canvas=document.getElementById('gnCanvas');
   if(!canvas)return;
@@ -7158,6 +7159,8 @@ function gnReiniciar(){
 }
 
 async function gnExecutar(comando){
+  if(gnProcessing) return;
+  gnProcessing = true;
   gnListening = false;
   if(gnRecognition){ try{ gnRecognition.abort(); }catch(e){} gnRecognition=null; }
   document.getElementById('gnCore').classList.add('listening');
@@ -7236,6 +7239,7 @@ async function gnSpeak(texto){
       gnConversationMode = false;
       gnSetStatus("Diga 'Jarvis' para ativar",'');
     }, 60000);
+    gnProcessing = false;
     gnListening = false;
     gnSetBars('');
     setTimeout(()=>{
