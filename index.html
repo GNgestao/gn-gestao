@@ -7239,7 +7239,7 @@ async function gnSpeak(texto){
     gnSetBars('');
     setTimeout(()=>{
       console.log('Reiniciando loop - modo conversa:', gnConversationMode);
-      if(gnContinuousMode) gnListenLoop();
+      if(gnContinuousMode) gnListen();
     }, 1500);
   }
 }
