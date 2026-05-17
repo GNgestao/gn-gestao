@@ -7115,6 +7115,7 @@ function gnListen(){
         gnExecutar(comando);
       } else {
         gnSetStatus('Pode falar seu comando...','listening');
+        gnConversationMode = true;
         document.getElementById('gnCore').classList.add('listening');
         gnReiniciar();
       }
