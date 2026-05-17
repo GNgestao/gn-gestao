@@ -182,12 +182,9 @@ body.light-mode .elevator-bg{opacity:.08}
 
 /* ── HUB ZONA VIP ── */
 #hubScreen{
-  position:fixed;inset:0;background:#321d65;z-index:9997;
+  position:fixed;inset:0;background:transparent;z-index:9997;
   display:none;align-items:center;justify-content:center;
-  flex-direction:column;padding:3.5rem 2rem 2rem;overflow-y:auto;
-  background-image:
-    radial-gradient(ellipse at 20% 50%, rgba(255,98,0,.08) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 20%, rgba(124,58,237,.12) 0%, transparent 50%);
+  flex-direction:column;padding:0;overflow:hidden;
 }
 .hub-header{text-align:center;margin-bottom:2rem;position:relative;z-index:2}
 .hub-logo{font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;letter-spacing:-.03em;margin-bottom:.4rem}
@@ -565,7 +562,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 
 /* ── LOGIN SCREEN ── */
 #loginScreen{position:fixed;inset:0;background:var(--dark);z-index:9998;display:flex;align-items:center;justify-content:center;padding:1.5rem;overflow:hidden}
-#appScreen{display:none}
+#appScreen{display:none;position:relative;z-index:1}
 .login-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:400px;text-align:center}
 .login-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;margin-bottom:.25rem}
 .login-logo span{color:var(--orange)}
@@ -600,27 +597,6 @@ tr:hover td{background:rgba(91,33,182,.05)}
 .user-row-name{font-size:.75rem;color:var(--muted)}
 .user-row-actions{display:flex;gap:.4rem;align-items:center;flex-shrink:0}
 
-/* ── ELEVATOR ANIMATION ── */
-.elevator-bg{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden;opacity:.18}
-.elev-shaft{position:absolute;bottom:0;width:36px;display:flex;flex-direction:column;align-items:center}
-.elev-rail{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,98,0,.7);left:50%;transform:translateX(-50%)}
-.elev-cab{position:absolute;width:34px;border-radius:4px;background:rgba(255,98,0,.75);border:2px solid rgba(255,150,50,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
-.elev-door-l,.elev-door-r{position:absolute;top:2px;bottom:2px;width:48%;background:rgba(200,60,0,.9);border-radius:2px;transition:width .6s ease}
-.elev-door-l{left:2px;transform-origin:left}
-.elev-door-r{right:2px;transform-origin:right}
-.elev-cab.open .elev-door-l,.elev-cab.open .elev-door-r{width:4px}
-.elev-floor{font-size:7px;color:rgba(255,255,255,.9);font-family:'Syne',sans-serif;font-weight:700;z-index:1}
-.elev-arrow{font-size:8px;color:#fff;z-index:1;font-weight:700}
-.elev-indicator{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:#FF6200;font-family:'Syne',sans-serif;font-weight:700;white-space:nowrap;text-shadow:0 0 8px rgba(255,98,0,.6)}
-
-@keyframes elev-move-up{
-  0%{bottom:5%}
-  100%{bottom:85%}
-}
-@keyframes elev-move-down{
-  0%{bottom:85%}
-  100%{bottom:5%}
-}
 
 /* ── GLOBAL SEARCH ── */
 .search-modal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:2000;display:none;align-items:flex-start;justify-content:center;padding-top:80px;backdrop-filter:blur(6px)}
@@ -828,7 +804,6 @@ tr:hover td{background:rgba(91,33,182,.05)}
 
 <!-- LOGIN SCREEN -->
 <div id="loginScreen">
-  <div class="elevator-bg" id="elevatorBgLogin"></div>
   <div class="login-box">
     <div class="login-logo">GN <span>Gestão</span></div>
     <div class="login-sub" style="color:#FF6200;letter-spacing:.12em">✦ Zona Vip ✦</div>
@@ -853,83 +828,13 @@ tr:hover td{background:rgba(91,33,182,.05)}
 
 <!-- HUB ZONA VIP -->
 <div id="hubScreen">
-  <div class="elevator-bg" id="elevatorBgHub"></div>
-  <div class="hub-header">
-    <div class="hub-logo">GN <span>Gestão</span></div>
-    <div class="hub-subtitle">✦ Zona Vip ✦</div>
-    <div class="hub-user" id="hubUserName" style="display:flex;align-items:center;gap:.6rem"><span id="hubRoleBadge" style="font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:99px;background:rgba(196,181,253,.1);color:#c4b5fd"></span></div>
+  <canvas id="hubCanvas" style="position:absolute;inset:0;width:100%;height:100%;z-index:1"></canvas>
+  <div id="hubOverlay" style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh">
+    <div style="font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.25em;color:rgba(196,181,253,.35);text-transform:uppercase;margin-bottom:2rem">GN Gestão — Zona Vip</div>
+    <div id="hubUserDisplay" style="font-family:'DM Sans',sans-serif;font-size:.78rem;color:rgba(196,181,253,.5);margin-bottom:3rem;display:flex;align-items:center;gap:.5rem"><span id="hubRoleBadge2"></span><span id="hubUserName2"></span></div>
+    <div style="font-family:'DM Sans',sans-serif;font-size:.7rem;color:rgba(196,181,253,.25);margin-top:3rem;letter-spacing:.08em">Clique em qualquer módulo para acessar</div>
+    <div style="position:absolute;bottom:2rem;font-family:'DM Sans',sans-serif;font-size:.72rem;color:rgba(196,181,253,.3);cursor:pointer;letter-spacing:.08em;text-transform:uppercase" onclick="hubLogout()">⬅ Sair</div>
   </div>
-
-  <div class="hub-grid">
-    <!-- Módulo 1: Manutenção Preditiva -->
-    <div class="hub-hex-wrap" onclick="enterModule('preditiva')" title="Manutenção Preditiva">
-      <div class="hub-hex">
-        <div class="hub-hex-inner">
-          <div class="hub-hex-icon">🛗</div>
-          <div class="hub-hex-name">Manutenção Preditiva</div>
-        </div>
-      </div>
-      <div class="hub-hex-label">Gestão de elevadores e vencimentos</div>
-    </div>
-
-    <!-- Módulo 2: Reconhece+ -->
-    <div class="hub-hex-wrap" onclick="enterReconhece()" title="Reconhece+">
-      <div class="hub-hex" style="background:linear-gradient(135deg,#7C3AED,#FF6200)">
-        <div class="hub-hex-inner">
-          <div class="hub-hex-icon">🏆</div>
-          <div class="hub-hex-name">Reconhece+</div>
-        </div>
-      </div>
-      <div class="hub-hex-label">Desempenho da equipe</div>
-    </div>
-
-    <!-- Módulo 3: GN Assistente Inteligente -->
-    <div class="hub-hex-wrap" onclick="enterGN()" title="GN — Assistente Inteligente">
-      <div class="hub-hex" style="background:linear-gradient(145deg,#FF6200,#321d65)">
-        <div class="hub-hex-inner" style="background:radial-gradient(circle at 40% 35%,#1a0a2e,#321d65)">
-          <div class="hub-hex-icon">🧠</div>
-          <div class="hub-hex-name">GN</div>
-        </div>
-      </div>
-      <div class="hub-hex-label">Assistente Inteligente</div>
-    </div>
-
-    <!-- Módulo 4: Reparo -->
-    <div class="hub-hex-wrap" onclick="enterReparo()" title="Reparo">
-      <div class="hub-hex">
-        <div class="hub-hex-inner">
-          <div class="hub-hex-icon">🔧</div>
-          <div class="hub-hex-name">Reparo</div>
-        </div>
-      </div>
-      <div class="hub-hex-label">Serviços subcontratados</div>
-    </div>
-
-    <!-- Módulo 5: Plano de Ação -->
-    <div class="hub-hex-wrap" onclick="enterPlano()" title="Plano de Ação">
-      <div class="hub-hex">
-        <div class="hub-hex-inner">
-          <div class="hub-hex-icon">📋</div>
-          <div class="hub-hex-name">Plano de Ação</div>
-        </div>
-      </div>
-      <div class="hub-hex-label">Laudos e acompanhamento</div>
-    </div>
-
-    <!-- Módulo 6: Documentação -->
-    <div class="hub-hex-wrap disabled" title="Em breve">
-      <div class="hub-hex locked">
-        <div class="hub-hex-inner">
-          <div class="hub-hex-icon">📁</div>
-          <div class="hub-hex-name">Documentação</div>
-        </div>
-      </div>
-      <div class="hub-hex-label">Em desenvolvimento</div>
-      <div class="hub-badge-soon">EM BREVE</div>
-    </div>
-  </div>
-
-  <div class="hub-logout" onclick="hubLogout()">⬅ Sair</div>
 </div>
 
 <div id="appScreen">
@@ -4501,138 +4406,6 @@ function loadTheme(){
 }
 
 
-// ── ELEVATOR ANIMATION ──
-(function(){
-  // Animate all elevator backgrounds (main, login, hub)
-  var bgIds = ['elevatorBgLogin', 'elevatorBgHub'];
-  bgIds.forEach(function(bgId){
-    var bg = document.getElementById(bgId);
-    if(!bg) return;
-    initElevatorBg(bg);
-  });
-
-  function initElevatorBg(bg){
-
-  var FLOORS = 12;
-  var shaftCount = 8;
-  var shafts = [];
-
-  // Spread evenly across full width 4%→96%
-  var positions = [4,16,28,40,52,64,76,88];
-  for(var s=0; s<shaftCount; s++){
-    var shaft = document.createElement('div');
-    shaft.className = 'elev-shaft';
-    shaft.style.left = positions[s] + '%';
-    shaft.style.height = '100%';
-
-    // Rail
-    var rail = document.createElement('div');
-    rail.className = 'elev-rail';
-    shaft.appendChild(rail);
-
-    // Cabin
-    var cab = document.createElement('div');
-    cab.className = 'elev-cab';
-    var cabHeight = 28 + Math.random()*10;
-    cab.style.height = cabHeight + 'px';
-    cab.style.bottom = (Math.random()*70+5) + '%';
-
-    // Floor indicator
-    var indicator = document.createElement('div');
-    indicator.className = 'elev-indicator';
-    var floorNum = Math.floor(Math.random()*FLOORS)+1;
-    indicator.textContent = floorNum + 'º';
-    cab.appendChild(indicator);
-
-    // Door left
-    var dl = document.createElement('div');
-    dl.className = 'elev-door-l';
-    cab.appendChild(dl);
-    // Door right
-    var dr = document.createElement('div');
-    dr.className = 'elev-door-r';
-    cab.appendChild(dr);
-
-    // Arrow indicator
-    var arrow = document.createElement('div');
-    arrow.className = 'elev-arrow';
-    arrow.textContent = '▲';
-    cab.appendChild(arrow);
-
-    shaft.appendChild(cab);
-    bg.appendChild(shaft);
-
-    shafts.push({
-      shaft: shaft,
-      cab: cab,
-      indicator: indicator,
-      arrow: arrow,
-      floor: floorNum,
-      targetFloor: Math.floor(Math.random()*FLOORS)+1,
-      moving: false,
-      doorsOpen: false,
-      waitTimer: null,
-      speed: 0.015 + Math.random()*0.02,
-      currentPct: Math.random()*70+5
-    });
-  }
-
-  function pctToFloor(pct){ return Math.max(1, Math.min(FLOORS, Math.round(pct/100*FLOORS))); }
-  function floorToPct(floor){ return (floor/FLOORS)*85+5; }
-
-  function animateShaft(s){
-    var st = shafts[s];
-    if(st.moving) return;
-
-    // Pick random target floor different from current
-    var newTarget;
-    do { newTarget = Math.floor(Math.random()*FLOORS)+1; } while(newTarget === st.floor);
-    st.targetFloor = newTarget;
-    st.arrow.textContent = newTarget > st.floor ? '▲' : '▼';
-    st.moving = true;
-
-    var startPct = st.currentPct;
-    var endPct = floorToPct(st.targetFloor);
-    var duration = Math.abs(endPct - startPct) / st.speed * 16;
-    var startTime = null;
-
-    function step(ts){
-      if(!startTime) startTime = ts;
-      var progress = Math.min((ts - startTime) / duration, 1);
-      // ease in-out
-      var ease = progress < 0.5 ? 2*progress*progress : -1+(4-2*progress)*progress;
-      st.currentPct = startPct + (endPct - startPct) * ease;
-      st.cab.style.bottom = st.currentPct + '%';
-      st.floor = pctToFloor(st.currentPct);
-      st.indicator.textContent = st.floor + 'º';
-
-      if(progress < 1){
-        requestAnimationFrame(step);
-      } else {
-        st.currentPct = endPct;
-        st.floor = st.targetFloor;
-        st.indicator.textContent = st.floor + 'º';
-        st.moving = false;
-        // Open doors
-        st.cab.classList.add('open');
-        st.arrow.textContent = '—';
-        // Wait then close and move again
-        setTimeout(function(){
-          st.cab.classList.remove('open');
-          st.arrow.textContent = '▲';
-          setTimeout(function(){ animateShaft(s); }, 800 + Math.random()*1200);
-        }, 1200 + Math.random()*1500);
-      }
-    }
-    requestAnimationFrame(step);
-  }
-
-  // Start each shaft with a random delay
-  shafts.forEach(function(st, i){
-    setTimeout(function(){ animateShaft(i); }, i * 800 + Math.random()*2000);
-  });
-  } // end initElevatorBg
-})();
 
 document.addEventListener('DOMContentLoaded', function(){
   // Modal click-outside listeners that depend on DOM being ready
@@ -7323,6 +7096,246 @@ async function gnSpeak(texto){
     window.speechSynthesis.speak(msg);
   }
 }
+</script>
+
+<script>
+(function starField(){
+  const canvas = document.createElement('canvas');
+  canvas.id = 'starCanvas';
+  canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:0;background:#080415;pointer-events:none';
+  document.body.prepend(canvas);
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+  function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  for(let i=0;i<200;i++) stars.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,r:Math.random()*1.5+.2,alpha:Math.random(),speed:Math.random()*.003+.001,vx:(Math.random()-.5)*.08,vy:(Math.random()-.5)*.08});
+  function draw(){
+    canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+    ctx.fillStyle='#080415'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    stars.forEach(s=>{
+      s.alpha+=s.speed; if(s.alpha>1||s.alpha<0) s.speed*=-1;
+      s.x+=s.vx; s.y+=s.vy;
+      if(s.x<0)s.x=canvas.width; if(s.x>canvas.width)s.x=0;
+      if(s.y<0)s.y=canvas.height; if(s.y>canvas.height)s.y=0;
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,255,255,${s.alpha})`; ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+(function hubNeural(){
+  function initHub(){
+    const canvas = document.getElementById('hubCanvas');
+    if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W, H, animFrame;
+
+    const modules = [
+      {id:'preditiva', label:'Manutenção\nPreditiva', icon:'🛗', angle:270, action:()=>enterModule('preditiva'), roles:['superadmin','admin','viewer']},
+      {id:'reconhece', label:'Reconhece+', icon:'🏆', angle:330, action:()=>enterReconhece(), roles:['superadmin','admin','viewer']},
+      {id:'reparo', label:'Reparo', icon:'🔧', angle:30, action:()=>enterReparo(), roles:['superadmin','admin','viewer']},
+      {id:'plano', label:'Plano de\nAção', icon:'📋', angle:90, action:()=>enterPlano(), roles:['superadmin','admin','viewer']},
+      {id:'documentacao', label:'Documentação', icon:'📁', angle:150, action:null, roles:['superadmin','admin']},
+      {id:'gn', label:'GN', icon:'🧠', angle:210, action:()=>enterGN(), roles:['superadmin']},
+    ];
+
+    let nodes = [];
+    let centerNode = null;
+    let particles = [];
+    let hoveredNode = null;
+
+    function buildNodes(){
+      W = canvas.width = canvas.offsetWidth;
+      H = canvas.height = canvas.offsetHeight;
+      const cx = W/2, cy = H/2;
+      const radius = Math.min(W,H) * 0.32;
+
+      centerNode = {x:cx, y:cy, r:52, label:'GN\nGestão', isCenter:true, pulse:0, pulseDir:1};
+
+      nodes = modules.map(m=>{
+        const rad = (m.angle-90)*Math.PI/180;
+        return {
+          ...m,
+          x: cx + Math.cos(rad)*radius + (Math.random()-.5)*8,
+          y: cy + Math.sin(rad)*radius + (Math.random()-.5)*8,
+          ox: cx + Math.cos(rad)*radius,
+          oy: cy + Math.sin(rad)*radius,
+          r: 38,
+          t: Math.random()*Math.PI*2,
+          speed: .004 + Math.random()*.003,
+          floatAmp: 6+Math.random()*6,
+          pulse:0, pulseDir:1,
+          hovered:false
+        };
+      });
+
+      for(let i=0;i<30;i++) particles.push({
+        x:Math.random()*W, y:Math.random()*H,
+        vx:(Math.random()-.5)*.4, vy:(Math.random()-.5)*.4,
+        r:Math.random()*1.5+.3, alpha:Math.random()*.3+.1
+      });
+    }
+
+    function draw(){
+      W = canvas.width = canvas.offsetWidth;
+      H = canvas.height = canvas.offsetHeight;
+      ctx.clearRect(0,0,W,H);
+
+      const role = window._currentUser?.role || 'viewer';
+      const cx=W/2, cy=H/2;
+
+      // Particles
+      particles.forEach(p=>{
+        p.x+=p.vx; p.y+=p.vy;
+        if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+        if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle=`rgba(124,58,237,${p.alpha})`; ctx.fill();
+      });
+
+      // Float nodes
+      nodes.forEach(n=>{
+        n.t += n.speed;
+        n.x = n.ox + Math.sin(n.t)*n.floatAmp;
+        n.y = n.oy + Math.cos(n.t*1.3)*n.floatAmp*.6;
+        n.pulse += .04*n.pulseDir;
+        if(n.pulse>1||n.pulse<0) n.pulseDir*=-1;
+      });
+
+      // Center pulse
+      centerNode.pulse += .03*centerNode.pulseDir;
+      if(centerNode.pulse>1||centerNode.pulse<0) centerNode.pulseDir*=-1;
+
+      // Lines from center to nodes
+      nodes.forEach(n=>{
+        const accessible = n.roles.includes(role);
+        const alpha = accessible ? .35+n.pulse*.15 : .1;
+        const grad = ctx.createLinearGradient(cx,cy,n.x,n.y);
+        grad.addColorStop(0,'rgba(255,98,0,'+alpha+')');
+        grad.addColorStop(1,'rgba(124,58,237,'+(alpha*.6)+')');
+        ctx.beginPath();
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = accessible ? 1.5 : .5;
+        ctx.setLineDash(accessible?[]:[4,6]);
+        ctx.moveTo(cx,cy); ctx.lineTo(n.x,n.y); ctx.stroke();
+        ctx.setLineDash([]);
+      });
+
+      // Center node
+      const cglow = .3+centerNode.pulse*.3;
+      ctx.save();
+      ctx.shadowBlur=40+centerNode.pulse*20; ctx.shadowColor='rgba(255,98,0,'+cglow+')';
+      ctx.beginPath(); ctx.arc(cx,cy,centerNode.r,0,Math.PI*2);
+      const cg=ctx.createRadialGradient(cx-10,cy-10,5,cx,cy,centerNode.r);
+      cg.addColorStop(0,'#4c1d95'); cg.addColorStop(1,'#1a0535');
+      ctx.fillStyle=cg; ctx.fill();
+      ctx.strokeStyle='rgba(255,98,0,'+(0.7+centerNode.pulse*.3)+')';
+      ctx.lineWidth=2; ctx.stroke();
+      ctx.restore();
+      ctx.fillStyle='#fff'; ctx.font='700 15px Syne,sans-serif'; ctx.textAlign='center';
+      ctx.fillText('GN',cx,cy-4);
+      ctx.fillStyle='rgba(196,181,253,.6)'; ctx.font='500 8px DM Sans,sans-serif';
+      ctx.fillText('Gestão',cx,cy+10);
+
+      // Module nodes
+      nodes.forEach(n=>{
+        const accessible = n.roles.includes(role);
+        const glow = accessible ? (.2+n.pulse*.25) : .05;
+        ctx.save();
+        if(accessible){ ctx.shadowBlur=n.hovered?40:20; ctx.shadowColor=n.id==='gn'?`rgba(255,98,0,${glow})`:`rgba(124,58,237,${glow})`; }
+        ctx.beginPath(); ctx.arc(n.x,n.y,n.hovered&&accessible?n.r+4:n.r,0,Math.PI*2);
+        const ng=ctx.createRadialGradient(n.x-8,n.y-8,3,n.x,n.y,n.r);
+        if(n.id==='gn'){
+          ng.addColorStop(0,accessible?'#7C3AED':'#1a0535');
+          ng.addColorStop(1,accessible?'#321d65':'#0d0620');
+        } else {
+          ng.addColorStop(0,accessible?'#2d1b69':'#111');
+          ng.addColorStop(1,accessible?'#1a0535':'#0d0620');
+        }
+        ctx.fillStyle=ng; ctx.fill();
+        const borderColor = !accessible?'rgba(255,255,255,.08)':n.id==='gn'?`rgba(255,98,0,${.5+n.pulse*.3})`:`rgba(124,58,237,${.4+n.pulse*.2})`;
+        ctx.strokeStyle=borderColor; ctx.lineWidth=n.hovered&&accessible?2:1.5; ctx.stroke();
+        ctx.restore();
+
+        ctx.fillStyle=accessible?'rgba(255,255,255,.9)':'rgba(255,255,255,.2)';
+        ctx.font=`500 ${n.id==='gn'?18:16}px DM Sans,sans-serif`; ctx.textAlign='center';
+        ctx.fillText(n.icon,n.x,n.y+5);
+
+        const lines=n.label.split('\n');
+        ctx.font='500 9px DM Sans,sans-serif';
+        ctx.fillStyle=accessible?(n.id==='gn'?'rgba(255,98,0,.9)':'rgba(196,181,253,.8)'):'rgba(255,255,255,.15)';
+        lines.forEach((l,i)=>ctx.fillText(l,n.x,n.y+n.r+14+(i*12)));
+
+        if(!accessible||(!n.action&&n.id!=='gn')){
+          ctx.fillStyle='rgba(255,255,255,.12)'; ctx.font='10px sans-serif'; ctx.textAlign='center';
+          ctx.fillText('🔒',n.x,n.y-n.r-6);
+        }
+      });
+
+      animFrame = requestAnimationFrame(draw);
+    }
+
+    function getHitNode(mx,my){
+      const role = window._currentUser?.role||'viewer';
+      for(let n of nodes){
+        const dx=mx-n.x,dy=my-n.y;
+        if(Math.sqrt(dx*dx+dy*dy)<n.r+8 && n.roles.includes(role)) return n;
+      }
+      return null;
+    }
+
+    canvas.addEventListener('mousemove',function(e){
+      const r=canvas.getBoundingClientRect();
+      const mx=e.clientX-r.left,my=e.clientY-r.top;
+      const hit=getHitNode(mx,my);
+      nodes.forEach(n=>n.hovered=false);
+      if(hit){ hit.hovered=true; canvas.style.cursor='pointer'; }
+      else canvas.style.cursor='default';
+      hoveredNode=hit;
+    });
+
+    canvas.addEventListener('click',function(e){
+      const r=canvas.getBoundingClientRect();
+      const mx=e.clientX-r.left,my=e.clientY-r.top;
+      const hit=getHitNode(mx,my);
+      if(hit && hit.action) hit.action();
+    });
+
+    canvas.addEventListener('touchend',function(e){
+      e.preventDefault();
+      const r=canvas.getBoundingClientRect();
+      const t=e.changedTouches[0];
+      const mx=t.clientX-r.left,my=t.clientY-r.top;
+      const hit=getHitNode(mx,my);
+      if(hit && hit.action) hit.action();
+    });
+
+    buildNodes();
+    draw();
+
+    // Update user display
+    if(window._currentUser){
+      const u=window._currentUser;
+      const n2=document.getElementById('hubUserName2');
+      const b2=document.getElementById('hubRoleBadge2');
+      if(n2) n2.textContent='Olá, '+(u.name||u.email);
+      if(b2){
+        const role=u.role||'viewer';
+        b2.textContent=role==='superadmin'?'👑 SuperAdmin':role==='admin'?'🔧 Admin':'👁 Viewer';
+        b2.style.cssText=`font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:99px;background:${role==='superadmin'?'rgba(255,98,0,.2)':'rgba(196,181,253,.1)'};color:${role==='superadmin'?'#FF6200':'#c4b5fd'}`;
+      }
+    }
+  }
+
+  // Wrap showApp to trigger hub init
+  const orig = window.showApp;
+  window.showApp = function(){
+    if(orig) orig();
+    setTimeout(initHub, 200);
+  };
+})();
 </script>
 </body>
 </html>
