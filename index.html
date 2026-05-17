@@ -7034,6 +7034,9 @@ let gnListening=false,gnRecognition=null,gnContinuousMode=false,gnWakeRecognitio
   draw();
 })();
 function enterGN(){
+  if(!window._gnAudioCtx){
+    window._gnAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
   document.querySelectorAll('#appScreen,#hubScreen,#screenReconhece,#screenPlano,#screenReparo').forEach(s=>{if(s)s.style.cssText='display:none!important';});
   const sc=document.getElementById('screenGN');if(sc)sc.style.display='block';
   setTimeout(() => { gnStartContinuous(); }, 800);
@@ -7066,27 +7069,37 @@ function gnStopContinuous(){
 }
 function gnListenLoop(){
   if(!gnContinuousMode)return;
-  gnListenOnce(function(text){
-    if(!gnContinuousMode)return;
-    const t=(text||'').toLowerCase().trim();
-    if(t.startsWith('jarvis')||t.includes('jarvis')){
-      document.getElementById('gnCore').classList.add('listening');
-      gnSetStatus('Ouvindo... fale seu comando','listening');
-      gnSetBars('active');
-      document.getElementById('gnResponse').style.display='none';
-      gnListenOnce(function(cmd){
-        document.getElementById('gnCore').classList.remove('listening');
-        gnSetBars('');
-        if(cmd&&cmd.trim())gnProcessCommand(cmd.trim());
-        else{
-          gnSetStatus('Diga "Jarvis" para ativar','');
-          setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},300);
-        }
-      });
-    } else {
-      setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},100);
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  gnRecognition=new SR();gnRecognition.lang='pt-BR';gnRecognition.continuous=false;gnRecognition.interimResults=false;
+  gnRecognition.onresult = function(e){
+    let texto = '';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      texto += e.results[i][0].transcript;
     }
-  });
+    texto = texto.trim().toLowerCase();
+    console.log('Ouvido:', texto);
+    const temWakeWord = texto.includes('jarvis');
+    if(temWakeWord){
+      const comando = texto.replace(/.*jarvis[,\s]*/i,'').trim();
+      console.log('Comando:', comando);
+      if(comando.length > 2){
+        document.getElementById('gnCore').classList.add('listening');
+        gnSetStatus('Comando recebido...','listening');
+        gnSetBars('active');
+        gnProcessCommand(comando);
+      } else {
+        gnSetStatus('Pode falar seu comando...','listening');
+        document.getElementById('gnCore').classList.add('listening');
+        gnSetBars('active');
+        gnListenOnce();
+      }
+    } else {
+      setTimeout(()=>{ if(gnContinuousMode) gnListenLoop(); }, 200);
+    }
+  };
+  gnRecognition.onerror=function(){gnRecognition=null;setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},1000);};
+  gnRecognition.onend=function(){if(gnRecognition)gnRecognition=null;};
+  try{gnRecognition.start();}catch(e){setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},500);}
 }
 function gnListenOnce(callback){
   if(!gnContinuousMode)return;
@@ -7095,7 +7108,7 @@ function gnListenOnce(callback){
   gnWakeRecognition.lang='pt-BR';gnWakeRecognition.continuous=false;gnWakeRecognition.interimResults=false;
   let heard='';
   gnWakeRecognition.onresult=function(e){for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)heard+=e.results[i][0].transcript;}};
-  gnWakeRecognition.onend=function(){gnWakeRecognition=null;callback(heard);};
+  gnWakeRecognition.onend=function(){gnWakeRecognition=null;if(callback)callback(heard);else if(heard.trim())gnProcessCommand(heard.trim());else setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},300);};
   gnWakeRecognition.onerror=function(){gnWakeRecognition=null;setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},1000);};
   try{gnWakeRecognition.start();}catch(e){setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},500);}
 }
@@ -7151,7 +7164,8 @@ async function gnSpeak(texto){
     const contentType = res.headers.get('content-type') || '';
     console.log('TTS content-type:', contentType);
     const arrayBuffer = await res.arrayBuffer();
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const audioContext = window._gnAudioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if(audioContext.state === 'suspended') await audioContext.resume();
     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
     const source = audioContext.createBufferSource();
     source.buffer = audioBuffer;
