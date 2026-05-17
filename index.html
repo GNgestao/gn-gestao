@@ -561,7 +561,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 .client-actions{display:flex;gap:.4rem}
 
 /* ── LOGIN SCREEN ── */
-#loginScreen{position:fixed;inset:0;background:var(--dark);z-index:9998;display:flex;align-items:center;justify-content:center;padding:1.5rem;overflow:hidden}
+#loginScreen{position:fixed;inset:0;background:transparent;z-index:1;display:flex;align-items:center;justify-content:center;padding:1.5rem;overflow:hidden}
 #appScreen{display:none;position:relative;z-index:1}
 .login-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:400px;text-align:center}
 .login-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;margin-bottom:.25rem}
@@ -6987,7 +6987,7 @@ function applyRecImport(){
       <div class="gn-bar"></div>
     </div>
     <div id="gnStatus">Clique em GN ou no microfone para ativar</div>
-    <div id="gnTranscript"></div>
+    <div id="gnTranscript" style="display:none"></div>
     <div id="gnResponse"></div>
     <button id="gnMicBtn" onclick="gnToggleListen()">🎙️</button>
     <div id="gnNodes">
@@ -7006,7 +7006,7 @@ function applyRecImport(){
 const GN_WEBHOOK='https://n8n.srv1610251.hstgr.cloud/webhook/gn-assistente';
 const GN_ELEVEN_KEY='sk_1f1a4e934da9f834cd787c333d65795e2679ad779654af5d';
 const GN_VOICE_ID='ZYCQDYoXnl78dNdU6JeG';
-let gnListening=false,gnRecognition=null;
+let gnListening=false,gnRecognition=null,gnContinuousMode=false,gnWakeRecognition=null;
 (function gnInitCanvas(){
   const canvas=document.getElementById('gnCanvas');
   if(!canvas)return;
@@ -7036,10 +7036,10 @@ let gnListening=false,gnRecognition=null;
 function enterGN(){
   document.querySelectorAll('#appScreen,#hubScreen,#screenReconhece,#screenPlano,#screenReparo').forEach(s=>{if(s)s.style.cssText='display:none!important';});
   const sc=document.getElementById('screenGN');if(sc)sc.style.display='block';
-  gnSetStatus('Clique em GN ou no microfone para ativar','');
+  setTimeout(gnStartContinuous,400);
 }
 function backFromGN(){
-  gnStopListen();
+  gnStopContinuous();gnStopListen();
   const sc=document.getElementById('screenGN');if(sc)sc.style.display='none';
   const hs=document.getElementById('hubScreen');if(hs)hs.style.cssText='display:flex!important';
 }
@@ -7047,13 +7047,64 @@ function gnSetStatus(msg,mode){const el=document.getElementById('gnStatus');if(!
 function gnSetBars(mode){document.querySelectorAll('.gn-bar').forEach(b=>{b.classList.remove('active','speaking');if(mode)b.classList.add(mode);});}
 function gnActivateNode(node){document.querySelectorAll('.gn-node-pill').forEach(p=>p.classList.remove('active'));const el=document.getElementById('gnP-'+node);if(el)el.classList.add('active');}
 function gnDeactivateNodes(){document.querySelectorAll('.gn-node-pill').forEach(p=>p.classList.remove('active'));}
-function gnToggleListen(){if(gnListening){gnStopListen();return;}gnStartListen();}
+function gnToggleListen(){
+  if(gnContinuousMode){gnStopContinuous();return;}
+  if(gnListening){gnStopListen();return;}
+  gnStartListen();
+}
+function gnStartContinuous(){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){gnSetStatus('Navegador não suporta voz','');return;}
+  gnContinuousMode=true;
+  gnSetStatus('Diga "GN" para ativar','');
+  gnSetBars('');
+  gnListenLoop();
+}
+function gnStopContinuous(){
+  gnContinuousMode=false;
+  if(gnWakeRecognition){try{gnWakeRecognition.stop();}catch(e){}gnWakeRecognition=null;}
+  gnSetStatus('Clique em GN ou no microfone para ativar','');
+}
+function gnListenLoop(){
+  if(!gnContinuousMode)return;
+  gnListenOnce(function(text){
+    if(!gnContinuousMode)return;
+    const t=(text||'').toLowerCase().trim();
+    if(t.includes('gn')||t.includes('ei gn')||t.includes('hey gn')){
+      document.getElementById('gnCore').classList.add('listening');
+      gnSetStatus('Ouvindo... fale seu comando','listening');
+      gnSetBars('active');
+      document.getElementById('gnResponse').style.display='none';
+      gnListenOnce(function(cmd){
+        document.getElementById('gnCore').classList.remove('listening');
+        gnSetBars('');
+        if(cmd&&cmd.trim())gnProcessCommand(cmd.trim());
+        else{
+          gnSetStatus('Diga "GN" para ativar','');
+          setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},300);
+        }
+      });
+    } else {
+      setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},100);
+    }
+  });
+}
+function gnListenOnce(callback){
+  if(!gnContinuousMode)return;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  gnWakeRecognition=new SR();
+  gnWakeRecognition.lang='pt-BR';gnWakeRecognition.continuous=false;gnWakeRecognition.interimResults=false;
+  let heard='';
+  gnWakeRecognition.onresult=function(e){for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)heard+=e.results[i][0].transcript;}};
+  gnWakeRecognition.onend=function(){gnWakeRecognition=null;callback(heard);};
+  gnWakeRecognition.onerror=function(){gnWakeRecognition=null;setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},1000);};
+  try{gnWakeRecognition.start();}catch(e){setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},500);}
+}
 function gnStartListen(){
   if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){gnSetStatus('Navegador não suporta voz','');return;}
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   gnRecognition=new SR();gnRecognition.lang='pt-BR';gnRecognition.continuous=false;gnRecognition.interimResults=true;
-  gnRecognition.onstart=function(){gnListening=true;document.getElementById('gnCore').classList.add('listening');document.getElementById('gnMicBtn').classList.add('listening');document.getElementById('gnMicBtn').textContent='🔴';gnSetStatus('Ouvindo... fale seu comando','listening');gnSetBars('active');document.getElementById('gnTranscript').textContent='';document.getElementById('gnResponse').style.display='none';};
-  gnRecognition.onresult=function(e){let interim='',final='';for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)final+=e.results[i][0].transcript;else interim+=e.results[i][0].transcript;}document.getElementById('gnTranscript').textContent='"'+(final||interim)+'"';if(final)gnProcessCommand(final.trim());};
+  gnRecognition.onstart=function(){gnListening=true;document.getElementById('gnCore').classList.add('listening');document.getElementById('gnMicBtn').classList.add('listening');document.getElementById('gnMicBtn').textContent='🔴';gnSetStatus('Ouvindo... fale seu comando','listening');gnSetBars('active');document.getElementById('gnResponse').style.display='none';};
+  gnRecognition.onresult=function(e){let interim='',final='';for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)final+=e.results[i][0].transcript;else interim+=e.results[i][0].transcript;}if(final)gnProcessCommand(final.trim());};
   gnRecognition.onerror=function(e){gnSetStatus('Erro no microfone: '+e.error,'');gnStopListen();};
   gnRecognition.onend=function(){if(gnListening)gnStopListen();};
   gnRecognition.start();
@@ -7061,7 +7112,10 @@ function gnStartListen(){
 function gnStopListen(){
   gnListening=false;if(gnRecognition){try{gnRecognition.stop();}catch(e){}gnRecognition=null;}
   document.getElementById('gnCore').classList.remove('listening');document.getElementById('gnMicBtn').classList.remove('listening');document.getElementById('gnMicBtn').textContent='🎙️';gnSetBars('');
-  if(!document.getElementById('gnCore').classList.contains('speaking'))gnSetStatus('Clique em GN ou no microfone para ativar','');
+  if(!document.getElementById('gnCore').classList.contains('speaking')){
+    if(gnContinuousMode){gnSetStatus('Diga "GN" para ativar','');setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},300);}
+    else gnSetStatus('Clique em GN ou no microfone para ativar','');
+  }
 }
 async function gnProcessCommand(comando){
   gnStopListen();gnSetStatus('Processando...','');gnDeactivateNodes();
@@ -7078,21 +7132,32 @@ async function gnProcessCommand(comando){
     const resposta=data.resposta||data.response||'Não consegui processar o comando.';
     const respEl=document.getElementById('gnResponse');respEl.textContent=resposta;respEl.style.display='block';
     await gnSpeak(resposta);
-  }catch(err){gnSetStatus('Erro ao conectar com o servidor','');console.error('GN erro:',err);gnDeactivateNodes();}
+  }catch(err){
+    gnSetStatus('Erro ao conectar com o servidor','');console.error('GN erro:',err);gnDeactivateNodes();
+    if(gnContinuousMode){gnSetStatus('Diga "GN" para ativar','');setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},1000);}
+  }
 }
 async function gnSpeak(texto){
   document.getElementById('gnCore').classList.add('speaking');gnSetStatus('GN respondendo...','speaking');gnSetBars('speaking');
   try{
-    const res=await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${GN_VOICE_ID}`,{method:'POST',headers:{'xi-api-key':GN_ELEVEN_KEY,'Content-Type':'application/json'},body:JSON.stringify({text:texto,model_id:'eleven_multilingual_v2',voice_settings:{stability:0.6,similarity_boost:0.85,style:0.2,use_speaker_boost:true}})});
+    const res=await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({texto:texto})});
     if(!res.ok)throw new Error('ElevenLabs erro:'+res.status);
     const blob=await res.blob();const url=URL.createObjectURL(blob);
     const audio=new Audio(url);
-    audio.onended=function(){document.getElementById('gnCore').classList.remove('speaking');gnSetStatus('Clique em GN ou no microfone para ativar','');gnSetBars('');gnDeactivateNodes();URL.revokeObjectURL(url);};
+    audio.onended=function(){
+      document.getElementById('gnCore').classList.remove('speaking');gnSetBars('');gnDeactivateNodes();URL.revokeObjectURL(url);
+      if(gnContinuousMode){gnSetStatus('Diga "GN" para ativar','');setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},500);}
+      else gnSetStatus('Clique em GN ou no microfone para ativar','');
+    };
     audio.play();
   }catch(err){
     console.error('ElevenLabs erro:',err);
     const msg=new SpeechSynthesisUtterance(texto);msg.lang='pt-BR';msg.rate=0.88;msg.pitch=0.7;
-    msg.onend=function(){document.getElementById('gnCore').classList.remove('speaking');gnSetStatus('Clique em GN ou no microfone para ativar','');gnSetBars('');gnDeactivateNodes();};
+    msg.onend=function(){
+      document.getElementById('gnCore').classList.remove('speaking');gnSetBars('');gnDeactivateNodes();
+      if(gnContinuousMode){gnSetStatus('Diga "GN" para ativar','');setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},500);}
+      else gnSetStatus('Clique em GN ou no microfone para ativar','');
+    };
     window.speechSynthesis.speak(msg);
   }
 }
