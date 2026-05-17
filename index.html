@@ -7179,55 +7179,53 @@ async function gnSpeak(texto){
   gnSetStatus('Jarvis respondendo...','speaking');
   gnSetBars('speaking');
   try{
-    const res = await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts', {
+    const res = await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({texto: texto})
+      body:JSON.stringify({texto:texto})
     });
     if(!res.ok) throw new Error('TTS erro: '+res.status);
-    const contentType = res.headers.get('content-type') || '';
+    const contentType = res.headers.get('content-type')||'';
     console.log('TTS content-type:', contentType);
-    const arrayBuffer = await res.arrayBuffer();
-    const audioContext = window._gnAudioCtx || new (window.AudioContext || window.webkitAudioContext)();
-    if(audioContext.state === 'suspended') await audioContext.resume();
-    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-    const source = audioContext.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(audioContext.destination);
-    source.onended = function(){
-      document.getElementById('gnCore').classList.remove('speaking');
-      gnSetBars('');
-      gnDeactivateNodes();
-      gnConversationMode = true;
-      gnSetStatus('Pode continuar falando...','listening');
-      if(gnConversationTimer) clearTimeout(gnConversationTimer);
-      gnConversationTimer = setTimeout(()=>{
-        gnConversationMode = false;
-        gnSetStatus("Diga 'Jarvis' para ativar",'');
-      }, 60000);
-      gnListening = false;
-      setTimeout(()=>{ if(gnContinuousMode) gnListenLoop(); }, 500);
-    };
-    source.start(0);
+    const blob = await res.blob();
+    console.log('TTS blob size:', blob.size);
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.type = 'audio/mpeg';
+    await new Promise((resolve, reject)=>{
+      audio.onended = function(){
+        console.log('Audio terminou');
+        resolve();
+      };
+      audio.onerror = function(e){
+        console.error('Audio erro:', e);
+        reject(e);
+      };
+      audio.play().then(()=>{
+        console.log('Audio tocando...');
+      }).catch(reject);
+    });
+    URL.revokeObjectURL(url);
   }catch(err){
     console.error('gnSpeak erro:', err);
-    const msg = new SpeechSynthesisUtterance(texto);
-    msg.lang='pt-BR'; msg.rate=0.88; msg.pitch=0.7;
-    msg.onend = function(){
-      document.getElementById('gnCore').classList.remove('speaking');
-      gnSetBars('');
-      gnDeactivateNodes();
-      gnConversationMode = true;
-      gnSetStatus('Pode continuar falando...','listening');
-      if(gnConversationTimer) clearTimeout(gnConversationTimer);
-      gnConversationTimer = setTimeout(()=>{
-        gnConversationMode = false;
-        gnSetStatus("Diga 'Jarvis' para ativar",'');
-      }, 60000);
-      gnListening = false;
-      setTimeout(()=>{ if(gnContinuousMode) gnListenLoop(); }, 500);
-    };
-    window.speechSynthesis.speak(msg);
+    await new Promise((resolve)=>{
+      const msg = new SpeechSynthesisUtterance(texto);
+      msg.lang='pt-BR'; msg.rate=0.88; msg.pitch=0.7;
+      msg.onend = resolve;
+      window.speechSynthesis.speak(msg);
+    });
+  }finally{
+    document.getElementById('gnCore').classList.remove('speaking');
+    gnConversationMode = true;
+    gnSetStatus('Pode continuar falando...','listening');
+    if(gnConversationTimer) clearTimeout(gnConversationTimer);
+    gnConversationTimer = setTimeout(()=>{
+      gnConversationMode = false;
+      gnSetStatus("Diga 'Jarvis' para ativar",'');
+    }, 60000);
+    gnListening = false;
+    gnSetBars('');
+    setTimeout(()=>{ if(gnContinuousMode) gnListenLoop(); }, 500);
   }
 }
 </script>
