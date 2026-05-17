@@ -6973,7 +6973,7 @@ function applyRecImport(){
       <div class="gn-orbit"></div>
       <div class="gn-orbit"></div>
       <div id="gnCore">
-        <div id="gnLabel">G<span>N</span></div>
+        <div id="gnLabel">Jarvis</div>
         <div id="gnSublabel">Online</div>
       </div>
     </div>
@@ -6986,7 +6986,7 @@ function applyRecImport(){
       <div class="gn-bar"></div>
       <div class="gn-bar"></div>
     </div>
-    <div id="gnStatus">Clique em GN ou no microfone para ativar</div>
+    <div id="gnStatus">Clique em Jarvis ou no microfone para ativar</div>
     <div id="gnTranscript" style="display:none"></div>
     <div id="gnResponse"></div>
     <button id="gnMicBtn" onclick="gnToggleListen()">🎙️</button>
@@ -6998,7 +6998,7 @@ function applyRecImport(){
       <div class="gn-node-pill" id="gnP-reparo">🔧 Reparo</div>
       <div class="gn-node-pill" id="gnP-plano">📋 Plano de Ação</div>
     </div>
-    <div id="gnHint">Fale naturalmente — GN entende você</div>
+    <div id="gnHint">Fale naturalmente — Jarvis entende você</div>
   </div>
 </div>
 
@@ -7062,7 +7062,7 @@ function gnStartContinuous(){
 function gnStopContinuous(){
   gnContinuousMode=false;
   if(gnWakeRecognition){try{gnWakeRecognition.stop();}catch(e){}gnWakeRecognition=null;}
-  gnSetStatus('Clique em GN ou no microfone para ativar','');
+  gnSetStatus('Clique em Jarvis ou no microfone para ativar','');
 }
 function gnListenLoop(){
   if(!gnContinuousMode)return;
@@ -7114,7 +7114,7 @@ function gnStopListen(){
   document.getElementById('gnCore').classList.remove('listening');document.getElementById('gnMicBtn').classList.remove('listening');document.getElementById('gnMicBtn').textContent='🎙️';gnSetBars('');
   if(!document.getElementById('gnCore').classList.contains('speaking')){
     if(gnContinuousMode){gnSetStatus('Diga "Jarvis" para ativar','');setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},300);}
-    else gnSetStatus('Clique em GN ou no microfone para ativar','');
+    else gnSetStatus('Clique em Jarvis ou no microfone para ativar','');
   }
 }
 async function gnProcessCommand(comando){
@@ -7147,7 +7147,7 @@ async function gnSpeak(texto){
     audio.onended=function(){
       document.getElementById('gnCore').classList.remove('speaking');gnSetBars('');gnDeactivateNodes();URL.revokeObjectURL(url);
       if(gnContinuousMode){gnSetStatus('Diga "Jarvis" para ativar','');setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},500);}
-      else gnSetStatus('Clique em GN ou no microfone para ativar','');
+      else gnSetStatus('Clique em Jarvis ou no microfone para ativar','');
     };
     audio.play();
   }catch(err){
@@ -7156,7 +7156,7 @@ async function gnSpeak(texto){
     msg.onend=function(){
       document.getElementById('gnCore').classList.remove('speaking');gnSetBars('');gnDeactivateNodes();
       if(gnContinuousMode){gnSetStatus('Diga "Jarvis" para ativar','');setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},500);}
-      else gnSetStatus('Clique em GN ou no microfone para ativar','');
+      else gnSetStatus('Clique em Jarvis ou no microfone para ativar','');
     };
     window.speechSynthesis.speak(msg);
   }
