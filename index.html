@@ -7007,6 +7007,8 @@ const GN_WEBHOOK='https://n8n.srv1610251.hstgr.cloud/webhook/gn-assistente';
 const GN_ELEVEN_KEY='sk_1f1a4e934da9f834cd787c333d65795e2679ad779654af5d';
 const GN_VOICE_ID='ZYCQDYoXnl78dNdU6JeG';
 let gnListening=false,gnRecognition=null,gnContinuousMode=false,gnWakeRecognition=null;
+let gnConversationMode = false;
+let gnConversationTimer = null;
 (function gnInitCanvas(){
   const canvas=document.getElementById('gnCanvas');
   if(!canvas)return;
@@ -7068,9 +7070,13 @@ function gnStopContinuous(){
   gnSetStatus('Clique em Jarvis ou no microfone para ativar','');
 }
 function gnListenLoop(){
-  if(!gnContinuousMode)return;
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  gnRecognition=new SR();gnRecognition.lang='pt-BR';gnRecognition.continuous=false;gnRecognition.interimResults=false;
+  if(!gnContinuousMode) return;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  gnRecognition = new SR();
+  gnRecognition.lang = 'pt-BR';
+  gnRecognition.continuous = false;
+  gnRecognition.interimResults = false;
+
   gnRecognition.onresult = function(e){
     let texto = '';
     for(let i=e.resultIndex;i<e.results.length;i++){
@@ -7078,28 +7084,46 @@ function gnListenLoop(){
     }
     texto = texto.trim().toLowerCase();
     console.log('Ouvido:', texto);
+
     const temWakeWord = texto.includes('jarvis');
-    if(temWakeWord){
-      const comando = texto.replace(/.*jarvis[,\s]*/i,'').trim();
+
+    if(gnConversationMode || temWakeWord){
+      const comando = temWakeWord
+        ? texto.replace(/.*jarvis[,\s]*/i,'').trim()
+        : texto;
       console.log('Comando:', comando);
       if(comando.length > 2){
         document.getElementById('gnCore').classList.add('listening');
         gnSetStatus('Comando recebido...','listening');
         gnSetBars('active');
         gnProcessCommand(comando);
-      } else {
+      } else if(temWakeWord){
         gnSetStatus('Pode falar seu comando...','listening');
         document.getElementById('gnCore').classList.add('listening');
         gnSetBars('active');
         gnListenOnce();
+      } else {
+        setTimeout(()=>{ if(gnContinuousMode) gnListenLoop(); }, 200);
       }
     } else {
       setTimeout(()=>{ if(gnContinuousMode) gnListenLoop(); }, 200);
     }
   };
-  gnRecognition.onerror=function(){gnRecognition=null;setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},1000);};
-  gnRecognition.onend=function(){if(gnRecognition)gnRecognition=null;};
-  try{gnRecognition.start();}catch(e){setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},500);}
+
+  gnRecognition.onerror = function(e){
+    if(e.error==='no-speech'||e.error==='aborted'){
+      setTimeout(()=>{ if(gnContinuousMode) gnListenLoop(); }, 500);
+    } else {
+      gnSetStatus('Erro no microfone: '+e.error,'');
+      gnStopContinuous();
+    }
+  };
+
+  gnRecognition.onend = function(){
+    setTimeout(()=>{ if(gnContinuousMode&&!gnListening) gnListenLoop(); }, 300);
+  };
+
+  gnRecognition.start();
 }
 function gnListenOnce(callback){
   if(!gnContinuousMode)return;
@@ -7172,9 +7196,15 @@ async function gnSpeak(texto){
     source.connect(audioContext.destination);
     source.onended = function(){
       document.getElementById('gnCore').classList.remove('speaking');
-      gnSetStatus("Diga 'Jarvis' para ativar",'');
       gnSetBars('');
       gnDeactivateNodes();
+      gnConversationMode = true;
+      gnSetStatus('Pode continuar falando...','listening');
+      if(gnConversationTimer) clearTimeout(gnConversationTimer);
+      gnConversationTimer = setTimeout(()=>{
+        gnConversationMode = false;
+        gnSetStatus("Diga 'Jarvis' para ativar",'');
+      }, 60000);
       gnListening = false;
       setTimeout(()=>{ if(gnContinuousMode) gnListenLoop(); }, 500);
     };
@@ -7185,9 +7215,15 @@ async function gnSpeak(texto){
     msg.lang='pt-BR'; msg.rate=0.88; msg.pitch=0.7;
     msg.onend = function(){
       document.getElementById('gnCore').classList.remove('speaking');
-      gnSetStatus("Diga 'Jarvis' para ativar",'');
       gnSetBars('');
       gnDeactivateNodes();
+      gnConversationMode = true;
+      gnSetStatus('Pode continuar falando...','listening');
+      if(gnConversationTimer) clearTimeout(gnConversationTimer);
+      gnConversationTimer = setTimeout(()=>{
+        gnConversationMode = false;
+        gnSetStatus("Diga 'Jarvis' para ativar",'');
+      }, 60000);
       gnListening = false;
       setTimeout(()=>{ if(gnContinuousMode) gnListenLoop(); }, 500);
     };
