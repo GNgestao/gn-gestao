@@ -7138,25 +7138,48 @@ async function gnProcessCommand(comando){
   }
 }
 async function gnSpeak(texto){
-  document.getElementById('gnCore').classList.add('speaking');gnSetStatus('GN respondendo...','speaking');gnSetBars('speaking');
+  document.getElementById('gnCore').classList.add('speaking');
+  gnSetStatus('Jarvis respondendo...','speaking');
+  gnSetBars('speaking');
   try{
-    const res=await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({texto:texto,language_code:"pt-BR"})});
-    if(!res.ok)throw new Error('ElevenLabs erro:'+res.status);
-    const blob=await res.blob();const url=URL.createObjectURL(blob);
-    const audio=new Audio(url);
-    audio.onended=function(){
-      document.getElementById('gnCore').classList.remove('speaking');gnSetBars('');gnDeactivateNodes();URL.revokeObjectURL(url);
-      if(gnContinuousMode){gnSetStatus('Diga "Jarvis" para ativar','');setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},500);}
-      else gnSetStatus('Clique em Jarvis ou no microfone para ativar','');
+    const res = await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({texto: texto})
+    });
+    if(!res.ok) throw new Error('TTS erro: '+res.status);
+    const contentType = res.headers.get('content-type') || '';
+    console.log('TTS content-type:', contentType);
+    const blob = await res.blob();
+    console.log('TTS blob size:', blob.size, 'type:', blob.type);
+    const blobComTipo = new Blob([blob], {type:'audio/mpeg'});
+    const url = URL.createObjectURL(blobComTipo);
+    const audio = new Audio(url);
+    audio.oncanplaythrough = function(){ audio.play(); };
+    audio.onended = function(){
+      document.getElementById('gnCore').classList.remove('speaking');
+      gnSetStatus("Diga 'Jarvis' para ativar",'');
+      gnSetBars('');
+      gnDeactivateNodes();
+      gnListening = false;
+      URL.revokeObjectURL(url);
+      setTimeout(()=>{ if(gnContinuousMode) gnListenLoop(); }, 500);
     };
-    audio.play();
+    audio.onerror = function(e){
+      console.error('Audio erro:', e);
+      throw new Error('Audio play falhou');
+    };
   }catch(err){
-    console.error('ElevenLabs erro:',err);
-    const msg=new SpeechSynthesisUtterance(texto);msg.lang='pt-BR';msg.rate=0.88;msg.pitch=0.7;
-    msg.onend=function(){
-      document.getElementById('gnCore').classList.remove('speaking');gnSetBars('');gnDeactivateNodes();
-      if(gnContinuousMode){gnSetStatus('Diga "Jarvis" para ativar','');setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},500);}
-      else gnSetStatus('Clique em Jarvis ou no microfone para ativar','');
+    console.error('gnSpeak erro:', err);
+    const msg = new SpeechSynthesisUtterance(texto);
+    msg.lang='pt-BR'; msg.rate=0.88; msg.pitch=0.7;
+    msg.onend = function(){
+      document.getElementById('gnCore').classList.remove('speaking');
+      gnSetStatus("Diga 'Jarvis' para ativar",'');
+      gnSetBars('');
+      gnDeactivateNodes();
+      gnListening = false;
+      setTimeout(()=>{ if(gnContinuousMode) gnListenLoop(); }, 500);
     };
     window.speechSynthesis.speak(msg);
   }
