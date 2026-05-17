@@ -7150,25 +7150,21 @@ async function gnSpeak(texto){
     if(!res.ok) throw new Error('TTS erro: '+res.status);
     const contentType = res.headers.get('content-type') || '';
     console.log('TTS content-type:', contentType);
-    const blob = await res.blob();
-    console.log('TTS blob size:', blob.size, 'type:', blob.type);
-    const blobComTipo = new Blob([blob], {type:'audio/mpeg'});
-    const url = URL.createObjectURL(blobComTipo);
-    const audio = new Audio(url);
-    audio.oncanplaythrough = function(){ audio.play(); };
-    audio.onended = function(){
+    const arrayBuffer = await res.arrayBuffer();
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    const source = audioContext.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(audioContext.destination);
+    source.onended = function(){
       document.getElementById('gnCore').classList.remove('speaking');
       gnSetStatus("Diga 'Jarvis' para ativar",'');
       gnSetBars('');
       gnDeactivateNodes();
       gnListening = false;
-      URL.revokeObjectURL(url);
       setTimeout(()=>{ if(gnContinuousMode) gnListenLoop(); }, 500);
     };
-    audio.onerror = function(e){
-      console.error('Audio erro:', e);
-      throw new Error('Audio play falhou');
-    };
+    source.start(0);
   }catch(err){
     console.error('gnSpeak erro:', err);
     const msg = new SpeechSynthesisUtterance(texto);
