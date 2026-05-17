@@ -7123,7 +7123,12 @@ function gnListenLoop(){
     setTimeout(()=>{ if(gnContinuousMode&&!gnListening) gnListenLoop(); }, 300);
   };
 
+  gnRecognition.onstart = function(){
+    console.log('Microfone ativo - pode falar');
+  };
+
   gnRecognition.start();
+  console.log('Loop iniciado - aguardando voz...');
 }
 function gnListenOnce(callback){
   if(!gnContinuousMode)return;
