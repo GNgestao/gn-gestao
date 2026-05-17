@@ -7006,9 +7006,11 @@ function applyRecImport(){
 const GN_WEBHOOK='https://n8n.srv1610251.hstgr.cloud/webhook/gn-assistente';
 const GN_ELEVEN_KEY='sk_1f1a4e934da9f834cd787c333d65795e2679ad779654af5d';
 const GN_VOICE_ID='ZYCQDYoXnl78dNdU6JeG';
-let gnListening=false,gnRecognition=null,gnContinuousMode=false,gnWakeRecognition=null;
+let gnContinuousMode = false;
 let gnConversationMode = false;
 let gnConversationTimer = null;
+let gnListening = false;
+let gnRecognition = null;
 (function gnInitCanvas(){
   const canvas=document.getElementById('gnCanvas');
   if(!canvas)return;
@@ -7044,7 +7046,7 @@ function enterGN(){
   setTimeout(() => { gnStartContinuous(); }, 800);
 }
 function backFromGN(){
-  gnStopContinuous();gnStopListen();
+  gnStopContinuous();
   const sc=document.getElementById('screenGN');if(sc)sc.style.display='none';
   const hs=document.getElementById('hubScreen');if(hs)hs.style.cssText='display:flex!important';
 }
@@ -7053,130 +7055,135 @@ function gnSetBars(mode){document.querySelectorAll('.gn-bar').forEach(b=>{b.clas
 function gnActivateNode(node){document.querySelectorAll('.gn-node-pill').forEach(p=>p.classList.remove('active'));const el=document.getElementById('gnP-'+node);if(el)el.classList.add('active');}
 function gnDeactivateNodes(){document.querySelectorAll('.gn-node-pill').forEach(p=>p.classList.remove('active'));}
 function gnToggleListen(){
-  if(gnContinuousMode){gnStopContinuous();return;}
-  if(gnListening){gnStopListen();return;}
-  gnStartListen();
+  if(gnContinuousMode){ gnStopContinuous(); return; }
+  gnStartContinuous();
 }
+
 function gnStartContinuous(){
-  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){gnSetStatus('Navegador não suporta voz','');return;}
-  gnContinuousMode=true;
-  gnSetStatus('Diga "Jarvis" para ativar','');
-  gnSetBars('');
-  gnListenLoop();
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){
+    gnSetStatus('Navegador não suporta voz',''); return;
+  }
+  gnContinuousMode = true;
+  document.getElementById('gnMicBtn').classList.add('listening');
+  document.getElementById('gnMicBtn').textContent = '🔴';
+  gnSetStatus("Diga 'Jarvis' para ativar",'');
+  gnListen();
 }
+
 function gnStopContinuous(){
-  gnContinuousMode=false;
-  if(gnWakeRecognition){try{gnWakeRecognition.stop();}catch(e){}gnWakeRecognition=null;}
-  gnSetStatus('Clique em Jarvis ou no microfone para ativar','');
+  gnContinuousMode = false;
+  gnListening = false;
+  gnConversationMode = false;
+  if(gnConversationTimer) clearTimeout(gnConversationTimer);
+  if(gnRecognition){ try{ gnRecognition.abort(); }catch(e){} gnRecognition=null; }
+  document.getElementById('gnCore').classList.remove('listening','speaking');
+  document.getElementById('gnMicBtn').classList.remove('listening');
+  document.getElementById('gnMicBtn').textContent = '🎙️';
+  gnSetBars('');
+  gnSetStatus('Clique em GN ou no microfone para ativar','');
+  gnDeactivateNodes();
 }
-function gnListenLoop(){
-  if(!gnContinuousMode) return;
+
+function gnListen(){
+  if(!gnContinuousMode || gnListening) return;
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   gnRecognition = new SR();
   gnRecognition.lang = 'pt-BR';
   gnRecognition.continuous = false;
   gnRecognition.interimResults = false;
 
+  gnRecognition.onstart = function(){
+    console.log('Microfone ativo - pode falar');
+  };
+
   gnRecognition.onresult = function(e){
-    let texto = '';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      texto += e.results[i][0].transcript;
-    }
-    texto = texto.trim().toLowerCase();
+    const texto = e.results[0][0].transcript.trim().toLowerCase();
     console.log('Ouvido:', texto);
-
-    const temWakeWord = texto.includes('jarvis');
-
-    if(gnConversationMode || temWakeWord){
-      const comando = temWakeWord
-        ? texto.replace(/.*jarvis[,\s]*/i,'').trim()
-        : texto;
-      console.log('Comando:', comando);
-      if(comando.length > 2){
-        document.getElementById('gnCore').classList.add('listening');
-        gnSetStatus('Comando recebido...','listening');
-        gnSetBars('active');
-        gnProcessCommand(comando);
-      } else if(temWakeWord){
+    const temWake = texto.includes('jarvis');
+    if(gnConversationMode){
+      const comando = temWake ? texto.replace(/.*jarvis[,\s]*/i,'').trim() : texto;
+      if(comando.length > 1){
+        console.log('Comando (conversa):', comando);
+        gnExecutar(comando);
+      } else {
+        gnReiniciar();
+      }
+    } else if(temWake){
+      const comando = texto.replace(/.*jarvis[,\s]*/i,'').trim();
+      console.log('Comando (wake):', comando);
+      if(comando.length > 1){
+        gnExecutar(comando);
+      } else {
         gnSetStatus('Pode falar seu comando...','listening');
         document.getElementById('gnCore').classList.add('listening');
-        gnSetBars('active');
-        gnListenOnce();
-      } else {
-        setTimeout(()=>{ if(gnContinuousMode) gnListenLoop(); }, 200);
+        gnReiniciar();
       }
     } else {
-      setTimeout(()=>{ if(gnContinuousMode) gnListenLoop(); }, 200);
+      gnReiniciar();
     }
   };
 
   gnRecognition.onerror = function(e){
-    if(e.error==='no-speech'||e.error==='aborted'){
-      setTimeout(()=>{ if(gnContinuousMode) gnListenLoop(); }, 500);
+    console.log('Erro reconhecimento:', e.error);
+    if(e.error==='no-speech'||e.error==='aborted'||e.error==='network'){
+      gnReiniciar();
     } else {
-      gnSetStatus('Erro no microfone: '+e.error,'');
       gnStopContinuous();
     }
   };
 
   gnRecognition.onend = function(){
-    setTimeout(()=>{ if(gnContinuousMode&&!gnListening) gnListenLoop(); }, 300);
+    console.log('Reconhecimento encerrou');
+    gnListening = false;
+    gnReiniciar();
   };
 
-  gnRecognition.onstart = function(){
-    console.log('Microfone ativo - pode falar');
-  };
-
-  gnRecognition.start();
-  console.log('Loop iniciado - aguardando voz...');
-}
-function gnListenOnce(callback){
-  if(!gnContinuousMode)return;
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  gnWakeRecognition=new SR();
-  gnWakeRecognition.lang='pt-BR';gnWakeRecognition.continuous=false;gnWakeRecognition.interimResults=false;
-  let heard='';
-  gnWakeRecognition.onresult=function(e){for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)heard+=e.results[i][0].transcript;}};
-  gnWakeRecognition.onend=function(){gnWakeRecognition=null;if(callback)callback(heard);else if(heard.trim())gnProcessCommand(heard.trim());else setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},300);};
-  gnWakeRecognition.onerror=function(){gnWakeRecognition=null;setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},1000);};
-  try{gnWakeRecognition.start();}catch(e){setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},500);}
-}
-function gnStartListen(){
-  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){gnSetStatus('Navegador não suporta voz','');return;}
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  gnRecognition=new SR();gnRecognition.lang='pt-BR';gnRecognition.continuous=false;gnRecognition.interimResults=true;
-  gnRecognition.onstart=function(){gnListening=true;document.getElementById('gnCore').classList.add('listening');document.getElementById('gnMicBtn').classList.add('listening');document.getElementById('gnMicBtn').textContent='🔴';gnSetStatus('Ouvindo... fale seu comando','listening');gnSetBars('active');document.getElementById('gnResponse').style.display='none';};
-  gnRecognition.onresult=function(e){let interim='',final='';for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)final+=e.results[i][0].transcript;else interim+=e.results[i][0].transcript;}if(final)gnProcessCommand(final.trim());};
-  gnRecognition.onerror=function(e){gnSetStatus('Erro no microfone: '+e.error,'');gnStopListen();};
-  gnRecognition.onend=function(){if(gnListening)gnStopListen();};
-  gnRecognition.start();
-}
-function gnStopListen(){
-  gnListening=false;if(gnRecognition){try{gnRecognition.stop();}catch(e){}gnRecognition=null;}
-  document.getElementById('gnCore').classList.remove('listening');document.getElementById('gnMicBtn').classList.remove('listening');document.getElementById('gnMicBtn').textContent='🎙️';gnSetBars('');
-  if(!document.getElementById('gnCore').classList.contains('speaking')){
-    if(gnContinuousMode){gnSetStatus('Diga "Jarvis" para ativar','');setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},300);}
-    else gnSetStatus('Clique em Jarvis ou no microfone para ativar','');
+  try{
+    gnRecognition.start();
+    gnListening = true;
+    console.log('Loop iniciado - aguardando voz...');
+  }catch(e){
+    console.error('Erro ao iniciar reconhecimento:', e);
+    gnListening = false;
+    setTimeout(gnReiniciar, 1000);
   }
 }
-async function gnProcessCommand(comando){
-  gnStopListen();gnSetStatus('Processando...','');gnDeactivateNodes();
-  const cmd=comando.toLowerCase();
-  if(cmd.includes('elev')||cmd.includes('venc')||cmd.includes('manut'))gnActivateNode('preditiva');
-  else if(cmd.includes('hora extra')||cmd.includes('he ')||cmd.includes('autoriza'))gnActivateNode('he');
-  else if(cmd.includes('banco')||cmd.includes('saldo'))gnActivateNode('banco');
-  else if(cmd.includes('reconhece')||cmd.includes('desempenho')||cmd.includes('ranking'))gnActivateNode('reconhece');
-  else if(cmd.includes('reparo')||cmd.includes('servi')||cmd.includes('or'))gnActivateNode('reparo');
-  else if(cmd.includes('plano')||cmd.includes('a'))gnActivateNode('plano');
+
+function gnReiniciar(){
+  if(!gnContinuousMode) return;
+  setTimeout(()=>{
+    if(gnContinuousMode && !gnListening) gnListen();
+  }, 300);
+}
+
+async function gnExecutar(comando){
+  gnListening = false;
+  if(gnRecognition){ try{ gnRecognition.abort(); }catch(e){} gnRecognition=null; }
+  document.getElementById('gnCore').classList.add('listening');
+  gnSetStatus('Processando...','listening');
+  gnSetBars('active');
+  gnDeactivateNodes();
+  const cmd = comando.toLowerCase();
+  if(cmd.includes('elev')||cmd.includes('venc')||cmd.includes('manut')) gnActivateNode('preditiva');
+  else if(cmd.includes('hora extra')||cmd.includes('autoriza')) gnActivateNode('he');
+  else if(cmd.includes('banco')||cmd.includes('saldo')) gnActivateNode('banco');
+  else if(cmd.includes('reconhece')||cmd.includes('desempenho')) gnActivateNode('reconhece');
+  else if(cmd.includes('reparo')||cmd.includes('servi')) gnActivateNode('reparo');
+  else if(cmd.includes('plano')) gnActivateNode('plano');
   try{
-    const res=await fetch(GN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comando:comando})});
-    const data=await res.json();
-    const resposta=data.resposta||data.response||'Não consegui processar o comando.';
-    const respEl=document.getElementById('gnResponse');respEl.textContent=resposta;respEl.style.display='block';
+    const res = await fetch(GN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comando:comando})});
+    const data = await res.json();
+    const resposta = data.resposta||data.response||'Não consegui processar o comando.';
+    const respEl = document.getElementById('gnResponse');
+    if(respEl){ respEl.textContent=resposta; respEl.style.display='block'; }
     await gnSpeak(resposta);
   }catch(err){
-    gnSetStatus('Erro ao conectar com o servidor','');console.error('GN erro:',err);gnDeactivateNodes();
-    if(gnContinuousMode){gnSetStatus('Diga "Jarvis" para ativar','');setTimeout(()=>{if(gnContinuousMode)gnListenLoop();},1000);}
+    console.error('Erro ao processar comando:', err);
+    gnSetStatus("Diga 'Jarvis' para ativar",'');
+    gnSetBars('');
+    gnDeactivateNodes();
+    gnListening = false;
+    gnReiniciar();
   }
 }
 async function gnSpeak(texto){
