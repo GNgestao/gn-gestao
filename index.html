@@ -7037,7 +7037,6 @@ let gnConversationMode = false;
 let gnConversationTimer = null;
 let gnListening = false;
 let gnRecognition = null;
-let gnProcessing = false;
 (function gnInitCanvas(){
   const canvas=document.getElementById('gnCanvas');
   if(!canvas)return;
@@ -7185,8 +7184,6 @@ function gnReiniciar(){
 }
 
 async function gnExecutar(comando){
-  if(gnProcessing) return;
-  gnProcessing = true;
   gnListening = false;
   if(gnRecognition){ try{ gnRecognition.abort(); }catch(e){} gnRecognition=null; }
   document.getElementById('gnCore').classList.add('listening');
@@ -7216,10 +7213,13 @@ async function gnExecutar(comando){
     gnReiniciar();
   }
 }
+
 async function gnSpeak(texto){
   document.getElementById('gnCore').classList.add('speaking');
   gnSetStatus('Jarvis respondendo...','speaking');
   gnSetBars('speaking');
+  if(gnRecognition){ try{ gnRecognition.abort(); }catch(e){} gnRecognition=null; }
+  gnListening = false;
   try{
     const res = await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts',{
       method:'POST',
@@ -7235,17 +7235,9 @@ async function gnSpeak(texto){
     const audio = new Audio(url);
     audio.type = 'audio/mpeg';
     await new Promise((resolve, reject)=>{
-      audio.onended = function(){
-        console.log('Audio terminou');
-        resolve();
-      };
-      audio.onerror = function(e){
-        console.error('Audio erro:', e);
-        reject(e);
-      };
-      audio.play().then(()=>{
-        console.log('Audio tocando...');
-      }).catch(reject);
+      audio.onended = function(){ console.log('Audio terminou'); resolve(); };
+      audio.onerror = function(e){ console.error('Audio erro:', e); reject(e); };
+      audio.play().then(()=>{ console.log('Audio tocando...'); }).catch(reject);
     });
     URL.revokeObjectURL(url);
   }catch(err){
@@ -7265,7 +7257,6 @@ async function gnSpeak(texto){
       gnConversationMode = false;
       gnSetStatus("Diga 'Jarvis' para ativar",'');
     }, 60000);
-    gnProcessing = false;
     gnListening = false;
     gnSetBars('');
     setTimeout(()=>{
