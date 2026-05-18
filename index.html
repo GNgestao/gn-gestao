@@ -7150,7 +7150,7 @@ async function gnListen(){
 
         if(volume < 2){
           if(!silenceStart) silenceStart = Date.now();
-          else if(Date.now() - silenceStart > 3000){
+          else if(Date.now() - silenceStart > 2000){
             console.log('Silêncio detectado - processando...');
             if(gnMediaRecorder && gnMediaRecorder.state === 'recording'){
               gnMediaRecorder.stop();
@@ -7327,7 +7327,7 @@ async function gnSpeak(texto){
     setTimeout(()=>{
       console.log('Reiniciando loop - modo conversa:', gnConversationMode);
       if(gnContinuousMode) gnListen();
-    }, 2500);
+    }, 2000);
   }
 }
 </script>
