@@ -7187,6 +7187,7 @@ function gnReiniciar(){
 }
 
 async function gnExecutar(comando){
+  if(gnSpeaking) return;
   gnListening = false;
   if(gnRecognition){ try{ gnRecognition.abort(); }catch(e){} gnRecognition=null; }
   document.getElementById('gnCore').classList.add('listening');
