@@ -131,7 +131,7 @@ Rede neural animada. GN no centro, módulos ao redor flutuando. Fundo estrelado 
 ## PENDÊNCIAS ABERTAS
 - [ ] Servidor Kokoro não inicia automaticamente após reboot da VPS (falta configurar systemd)
 - [ ] ElevenLabs cota esgotada (10k/mês free) — substituído pelo Kokoro
-- [ ] Integração TK Mobile para consulta de horas extras em tempo real
+- [ ] Integração TK Mobile — demandas operacionais (OS abertas e outros — detalhes a definir)
 - [ ] Fluxo de monitoramento de prazos (tokens, credenciais) via Jarvis
 - [ ] Módulo Gestão da Equipe
 - [ ] Módulo Documentação
