@@ -7038,6 +7038,7 @@ let gnConversationTimer = null;
 let gnListening = false;
 let gnRecognition = null;
 let gnSpeaking = false;
+let gnSpeakingTimeout = null;
 (function gnInitCanvas(){
   const canvas=document.getElementById('gnCanvas');
   if(!canvas)return;
@@ -7118,6 +7119,7 @@ function gnListen(){
   gnRecognition.lang = 'pt-BR';
   gnRecognition.continuous = false;
   gnRecognition.interimResults = false;
+  gnRecognition.continuous = true;
 
   gnRecognition.onstart = function(){
     console.log('Microfone ativo - pode falar');
@@ -7126,31 +7128,38 @@ function gnListen(){
   gnRecognition.onresult = function(e){
     const texto = Array.from(e.results).map(r=>r[0].transcript).join(' ').trim().toLowerCase();
     console.log('Ouvido:', texto);
-    const temWake = texto.includes('jarvis');
-    if(gnConversationMode){
-      const comando = temWake ? texto.replace(/.*jarvis[,\s]*/i,'').trim() : texto;
-      if(comando.length > 1){
-        console.log('Comando (conversa):', comando);
-        gnExecutar(comando);
+
+    if(gnSpeakingTimeout) clearTimeout(gnSpeakingTimeout);
+
+    gnSpeakingTimeout = setTimeout(()=>{
+      const temWake = texto.includes('jarvis');
+      if(gnConversationMode){
+        const comando = temWake ? texto.replace(/.*jarvis[,\s]*/i,'').trim() : texto;
+        if(comando.length > 1){
+          console.log('Comando (conversa):', comando);
+          gnRecognition.stop();
+          gnExecutar(comando);
+        } else {
+          gnReiniciar();
+        }
+      } else if(temWake){
+        const comando = texto.replace(/.*jarvis[,\s]*/i,'').trim();
+        console.log('Comando (wake):', comando);
+        if(comando.length > 1){
+          gnRecognition.stop();
+          gnExecutar(comando);
+        } else {
+          gnSetStatus('Pode falar seu comando...','listening');
+          gnConversationMode = true;
+          document.getElementById('gnCore').classList.add('listening');
+          gnListening = false;
+          gnReiniciar();
+        }
       } else {
-        gnReiniciar();
-      }
-    } else if(temWake){
-      const comando = texto.replace(/.*jarvis[,\s]*/i,'').trim();
-      console.log('Comando (wake):', comando);
-      if(comando.length > 1){
-        gnExecutar(comando);
-      } else {
-        gnSetStatus('Pode falar seu comando...','listening');
-        gnConversationMode = true;
-        document.getElementById('gnCore').classList.add('listening');
         gnListening = false;
         gnReiniciar();
       }
-    } else {
-      gnListening = false;
-      gnReiniciar();
-    }
+    }, 3000);
   };
 
   gnRecognition.onerror = function(e){
