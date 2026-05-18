@@ -7175,15 +7175,16 @@ function gnResetSilenceTimer(){
 
 async function gnTranscrever(blob){
   try {
-    const formData = new FormData();
-    formData.append('audio', blob, 'audio.webm');
-
-    const res = await fetch('https://n8n.srv1610251.hstgr.cloud/jarvis/stt', {
+    const res = await fetch('https://api.deepgram.com/v1/listen?language=pt-BR&model=nova-2&punctuate=true&utterances=true', {
       method: 'POST',
-      body: formData
+      headers: {
+        'Authorization': 'Token bd90f336d163b04c49e60474af21737e635396f4',
+        'Content-Type': 'audio/webm'
+      },
+      body: blob
     });
     const data = await res.json();
-    const texto = (data.texto || '').trim().toLowerCase();
+    const texto = (data?.results?.channels?.[0]?.alternatives?.[0]?.transcript || '').trim().toLowerCase();
     console.log('Ouvido:', texto);
 
     if(!texto || texto.length < 2){
