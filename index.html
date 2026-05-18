@@ -7238,7 +7238,7 @@ async function gnSpeak(texto){
     console.log('TTS blob size:', blob.size);
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
-    audio.type = 'audio/mpeg';
+    audio.type = 'audio/wav';
     await new Promise((resolve, reject)=>{
       audio.onended = function(){ console.log('Audio terminou'); resolve(); };
       audio.onerror = function(e){ console.error('Audio erro:', e); reject(e); };
