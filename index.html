@@ -7103,7 +7103,6 @@ function gnStopContinuous(){
   gnListening = false;
   gnConversationMode = false;
   if(gnConversationTimer) clearTimeout(gnConversationTimer);
-  if(gnSilenceTimer) clearTimeout(gnSilenceTimer);
   if(gnMediaRecorder && gnMediaRecorder.state !== 'inactive') gnMediaRecorder.stop();
   if(gnStream) { gnStream.getTracks().forEach(t=>t.stop()); gnStream=null; }
   gnMediaRecorder = null;
@@ -7133,7 +7132,39 @@ async function gnListen(){
     gnMediaRecorder.onstart = function(){
       console.log('Microfone ativo - pode falar');
       gnSetStatus('Ouvindo...','listening');
-      gnResetSilenceTimer();
+
+      // VAD - detecta silêncio real no áudio
+      const audioCtx = new AudioContext();
+      const source = audioCtx.createMediaStreamSource(gnStream);
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 512;
+      source.connect(analyser);
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      let silenceStart = null;
+
+      function checkSilence(){
+        if(!gnListening) return;
+        analyser.getByteFrequencyData(dataArray);
+        const volume = dataArray.reduce((a,b)=>a+b,0) / dataArray.length;
+
+        if(volume < 5){
+          if(!silenceStart) silenceStart = Date.now();
+          else if(Date.now() - silenceStart > 3000){
+            console.log('Silêncio detectado - processando...');
+            if(gnMediaRecorder && gnMediaRecorder.state === 'recording'){
+              gnMediaRecorder.stop();
+              gnStream.getTracks().forEach(t=>t.stop());
+              gnStream = null;
+            }
+            return;
+          }
+        } else {
+          silenceStart = null;
+        }
+        requestAnimationFrame(checkSilence);
+      }
+      checkSilence();
     };
 
     gnMediaRecorder.onstop = async function(){
@@ -7161,17 +7192,6 @@ async function gnListen(){
   }
 }
 
-function gnResetSilenceTimer(){
-  if(gnSilenceTimer) clearTimeout(gnSilenceTimer);
-  gnSilenceTimer = setTimeout(()=>{
-    if(gnMediaRecorder && gnMediaRecorder.state === 'recording'){
-      console.log('Silêncio detectado - processando...');
-      gnMediaRecorder.stop();
-      gnStream.getTracks().forEach(t=>t.stop());
-      gnStream = null;
-    }
-  }, 3000);
-}
 
 async function gnTranscrever(blob){
   try {
