@@ -7147,6 +7147,7 @@ async function gnListen(){
         if(!gnListening) return;
         analyser.getByteFrequencyData(dataArray);
         const volume = dataArray.reduce((a,b)=>a+b,0) / dataArray.length;
+        if(Math.random() < 0.05) console.log('Volume atual:', volume.toFixed(2));
 
         if(volume < 2){
           if(!silenceStart) silenceStart = Date.now();
