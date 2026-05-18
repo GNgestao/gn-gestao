@@ -72,7 +72,8 @@ Rede neural animada. GN no centro, módulos ao redor flutuando. Fundo estrelado 
 ### GN — Texto para fala
 - Webhook: POST /webhook/gn-tts
 - Body recebido: {texto: resposta}
-- Retorna: audio/mpeg binário via ElevenLabs
+- Retorna: audio/wav binário via Kokoro (VPS porta 5050)
+- ATENÇÃO n8n: usar {{ $json.body.texto }} SEM o = antes
 
 ## 24 TÉCNICOS (matrícula: nome)
 55007445: ADRIANO FRANCISCO DA SILVA
@@ -100,6 +101,24 @@ Rede neural animada. GN no centro, módulos ao redor flutuando. Fundo estrelado 
 55021085: TONE GABRIEL DE ARAUJO MARQUES
 55013040: WELLINGTON JOSE DO REGO BARRETO
 
+## TTS — KOKORO (Edge TTS substituído)
+- Servidor: /usr/local/bin/jarvis-tts-server.py rodando na porta 5050
+- Voz: pm_alex (masculina, português brasileiro)
+- Iniciar: nohup python3 /usr/local/bin/jarvis-tts-server.py > /var/log/jarvis-tts.log 2>&1 &
+- Dependências: kokoro, soundfile, flask, espeak-ng
+- ATENÇÃO: no n8n o campo texto deve ser {{ $json.body.texto }} SEM o = antes
+
+## JARVIS — CORREÇÕES APLICADAS (2026-05-18)
+- gnListenLoop → gnListen (fix referência morta)
+- gnConversationMode ativado ao ouvir wake word sem comando
+- gnSpeaking como semáforo para bloquear microfone durante fala
+- gnExecutar ignora comando se gnSpeaking=true
+- onend chama gnReiniciar para continuidade do loop
+- gnProcessing removido (causava travamento)
+- Fallback SpeechSynthesis removido (causava voz do navegador)
+- audio.type = audio/wav (Kokoro gera WAV)
+- Delay pós-resposta: 2500ms
+
 ## REGRAS DE DESENVOLVIMENTO
 - App: HTML/CSS/JS puro, sem frameworks
 - Sempre usar git pull antes de editar
@@ -107,12 +126,12 @@ Rede neural animada. GN no centro, módulos ao redor flutuando. Fundo estrelado 
 - Git config: user.email gabrielnascimento1995@gmail.com / user.name GNgestao
 - Nunca hardcodar JWT do Sênior — sempre dinâmico
 - Testes do Fluxo 2 apenas em horário comercial
-- ElevenLabs plano free: usar apenas vozes padrão (não de biblioteca)
+- TTS agora via Kokoro na VPS (porta 5050) — ElevenLabs descontinuado
 
-## PENDÊNCIAS
-- [ ] Wake word "Jarvis" ativando automaticamente ao entrar no módulo
-- [ ] Voz Jarvis em português brasileiro (model eleven_multilingual_v2)
+## PENDÊNCIAS ABERTAS
+- [ ] Servidor Kokoro não inicia automaticamente após reboot da VPS (falta configurar systemd)
+- [ ] ElevenLabs cota esgotada (10k/mês free) — substituído pelo Kokoro
+- [ ] Integração TK Mobile para consulta de horas extras em tempo real
 - [ ] Fluxo de monitoramento de prazos (tokens, credenciais) via Jarvis
 - [ ] Módulo Gestão da Equipe
 - [ ] Módulo Documentação
-- [ ] Upgrade ElevenLabs para voz masculina Adam
