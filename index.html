@@ -7038,6 +7038,10 @@ let gnConversationTimer = null;
 let gnListening = false;
 let gnRecognition = null;
 let gnSpeaking = false;
+let gnMediaRecorder = null;
+let gnAudioChunks = [];
+let gnSilenceTimer = null;
+let gnStream = null;
 (function gnInitCanvas(){
   const canvas=document.getElementById('gnCanvas');
   if(!canvas)return;
@@ -7087,9 +7091,6 @@ function gnToggleListen(){
 }
 
 function gnStartContinuous(){
-  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){
-    gnSetStatus('Navegador não suporta voz',''); return;
-  }
   gnContinuousMode = true;
   document.getElementById('gnMicBtn').classList.add('listening');
   document.getElementById('gnMicBtn').textContent = '🔴';
@@ -7102,31 +7103,94 @@ function gnStopContinuous(){
   gnListening = false;
   gnConversationMode = false;
   if(gnConversationTimer) clearTimeout(gnConversationTimer);
-  if(gnRecognition){ try{ gnRecognition.abort(); }catch(e){} gnRecognition=null; }
+  if(gnSilenceTimer) clearTimeout(gnSilenceTimer);
+  if(gnMediaRecorder && gnMediaRecorder.state !== 'inactive') gnMediaRecorder.stop();
+  if(gnStream) { gnStream.getTracks().forEach(t=>t.stop()); gnStream=null; }
+  gnMediaRecorder = null;
+  gnAudioChunks = [];
   document.getElementById('gnCore').classList.remove('listening','speaking');
   document.getElementById('gnMicBtn').classList.remove('listening');
-  document.getElementById('gnMicBtn').textContent = '🎙️';
+  document.getElementById('gnMicBtn').textContent = '🎙️ ';
   gnSetBars('');
   gnSetStatus('Clique em Jarvis ou no microfone para ativar','');
   gnDeactivateNodes();
 }
 
-function gnListen(){
-  if(!gnContinuousMode || gnListening) return;
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  gnRecognition = new SR();
-  gnRecognition.lang = 'pt-BR';
-  gnRecognition.continuous = false;
-  gnRecognition.interimResults = false;
-  gnRecognition.continuous = false;
+async function gnListen(){
+  if(!gnContinuousMode || gnListening || gnSpeaking) return;
+  gnListening = true;
+  console.log('Loop iniciado - aguardando voz...');
 
-  gnRecognition.onstart = function(){
-    console.log('Microfone ativo - pode falar');
-  };
+  try {
+    gnStream = await navigator.mediaDevices.getUserMedia({audio: true});
+    gnAudioChunks = [];
+    gnMediaRecorder = new MediaRecorder(gnStream, {mimeType: 'audio/webm'});
 
-  gnRecognition.onresult = function(e){
-    const texto = Array.from(e.results).map(r=>r[0].transcript).join(' ').trim().toLowerCase();
+    gnMediaRecorder.ondataavailable = function(e){
+      if(e.data.size > 0) gnAudioChunks.push(e.data);
+    };
+
+    gnMediaRecorder.onstart = function(){
+      console.log('Microfone ativo - pode falar');
+      gnSetStatus('Ouvindo...','listening');
+      gnResetSilenceTimer();
+    };
+
+    gnMediaRecorder.onstop = async function(){
+      if(!gnContinuousMode) return;
+      const blob = new Blob(gnAudioChunks, {type:'audio/webm'});
+      gnAudioChunks = [];
+      gnListening = false;
+
+      if(blob.size < 5000){
+        console.log('Audio muito curto, ignorando');
+        gnReiniciar();
+        return;
+      }
+
+      console.log('Processando audio:', blob.size, 'bytes');
+      await gnTranscrever(blob);
+    };
+
+    gnMediaRecorder.start(100);
+
+  } catch(err) {
+    console.error('Erro ao acessar microfone:', err);
+    gnListening = false;
+    setTimeout(gnReiniciar, 1000);
+  }
+}
+
+function gnResetSilenceTimer(){
+  if(gnSilenceTimer) clearTimeout(gnSilenceTimer);
+  gnSilenceTimer = setTimeout(()=>{
+    if(gnMediaRecorder && gnMediaRecorder.state === 'recording'){
+      console.log('Silêncio detectado - processando...');
+      gnMediaRecorder.stop();
+      gnStream.getTracks().forEach(t=>t.stop());
+      gnStream = null;
+    }
+  }, 3000);
+}
+
+async function gnTranscrever(blob){
+  try {
+    const formData = new FormData();
+    formData.append('audio', blob, 'audio.webm');
+
+    const res = await fetch('http://187.127.26.136:5051/stt', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    const texto = (data.texto || '').trim().toLowerCase();
     console.log('Ouvido:', texto);
+
+    if(!texto || texto.length < 2){
+      gnReiniciar();
+      return;
+    }
+
     const temWake = texto.includes('jarvis');
     if(gnConversationMode){
       const comando = temWake ? texto.replace(/.*jarvis[,\s]*/i,'').trim() : texto;
@@ -7145,38 +7209,14 @@ function gnListen(){
         gnSetStatus('Pode falar seu comando...','listening');
         gnConversationMode = true;
         document.getElementById('gnCore').classList.add('listening');
-        gnListening = false;
         gnReiniciar();
       }
     } else {
-      gnListening = false;
       gnReiniciar();
     }
-  };
-
-  gnRecognition.onerror = function(e){
-    console.log('Erro reconhecimento:', e.error);
-    if(e.error==='no-speech'||e.error==='aborted'||e.error==='network'){
-      gnReiniciar();
-    } else {
-      gnStopContinuous();
-    }
-  };
-
-  gnRecognition.onend = function(){
-    console.log('Reconhecimento encerrou');
-    gnListening = false;
-    if(gnContinuousMode) gnReiniciar();
-  };
-
-  try{
-    gnRecognition.start();
-    gnListening = true;
-    console.log('Loop iniciado - aguardando voz...');
-  }catch(e){
-    console.error('Erro ao iniciar reconhecimento:', e);
-    gnListening = false;
-    setTimeout(gnReiniciar, 1000);
+  } catch(err){
+    console.error('Erro STT:', err);
+    gnReiniciar();
   }
 }
 
