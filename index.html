@@ -7037,6 +7037,7 @@ let gnConversationMode = false;
 let gnConversationTimer = null;
 let gnListening = false;
 let gnRecognition = null;
+let gnSpeaking = false;
 (function gnInitCanvas(){
   const canvas=document.getElementById('gnCanvas');
   if(!canvas)return;
@@ -7179,9 +7180,9 @@ function gnListen(){
 }
 
 function gnReiniciar(){
-  if(!gnContinuousMode || gnListening) return;
+  if(!gnContinuousMode || gnListening || gnSpeaking) return;
   setTimeout(()=>{
-    if(gnContinuousMode && !gnListening) gnListen();
+    if(gnContinuousMode && !gnListening && !gnSpeaking) gnListen();
   }, 300);
 }
 
@@ -7218,6 +7219,7 @@ async function gnExecutar(comando){
 
 async function gnSpeak(texto){
   document.getElementById('gnCore').classList.add('speaking');
+  gnSpeaking = true;
   gnSetStatus('Jarvis respondendo...','speaking');
   gnSetBars('speaking');
   if(gnRecognition){ try{ gnRecognition.abort(); }catch(e){} gnRecognition=null; }
@@ -7259,6 +7261,7 @@ async function gnSpeak(texto){
       gnConversationMode = false;
       gnSetStatus("Diga 'Jarvis' para ativar",'');
     }, 60000);
+    gnSpeaking = false;
     gnListening = false;
     gnSetBars('');
     setTimeout(()=>{
