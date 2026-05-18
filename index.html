@@ -7148,7 +7148,7 @@ async function gnListen(){
         analyser.getByteFrequencyData(dataArray);
         const volume = dataArray.reduce((a,b)=>a+b,0) / dataArray.length;
 
-        if(volume < 5){
+        if(volume < 2){
           if(!silenceStart) silenceStart = Date.now();
           else if(Date.now() - silenceStart > 3000){
             console.log('Silêncio detectado - processando...');
