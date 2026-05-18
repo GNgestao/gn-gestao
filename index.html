@@ -7164,6 +7164,7 @@ function gnListen(){
   gnRecognition.onend = function(){
     console.log('Reconhecimento encerrou');
     gnListening = false;
+    gnReiniciar();
   };
 
   try{
