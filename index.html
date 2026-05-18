@@ -7178,7 +7178,7 @@ async function gnTranscrever(blob){
     const formData = new FormData();
     formData.append('audio', blob, 'audio.webm');
 
-    const res = await fetch('https://187.127.26.136:5443/stt', {
+    const res = await fetch('https://jarvis.srv1610251.hstgr.cloud/stt', {
       method: 'POST',
       body: formData
     });
