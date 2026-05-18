@@ -7257,6 +7257,8 @@ async function gnSpeak(texto){
     gnConversationTimer = setTimeout(()=>{
       gnConversationMode = false;
       gnSetStatus("Diga 'Jarvis' para ativar",'');
+      gnListening = false;
+      gnReiniciar();
     }, 60000);
     gnSpeaking = false;
     gnListening = false;
