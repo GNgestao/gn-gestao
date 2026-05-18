@@ -7247,12 +7247,7 @@ async function gnSpeak(texto){
     URL.revokeObjectURL(url);
   }catch(err){
     console.error('gnSpeak erro:', err);
-    await new Promise((resolve)=>{
-      const msg = new SpeechSynthesisUtterance(texto);
-      msg.lang='pt-BR'; msg.rate=0.88; msg.pitch=0.7;
-      msg.onend = resolve;
-      window.speechSynthesis.speak(msg);
-    });
+    // Sem fallback de voz — apenas reinicia o loop silenciosamente
   }finally{
     document.getElementById('gnCore').classList.remove('speaking');
     gnConversationMode = true;
