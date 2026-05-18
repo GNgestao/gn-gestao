@@ -7115,7 +7115,7 @@ function gnListen(){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   gnRecognition = new SR();
   gnRecognition.lang = 'pt-BR';
-  gnRecognition.continuous = true;
+  gnRecognition.continuous = false;
   gnRecognition.interimResults = false;
 
   gnRecognition.onstart = function(){
@@ -7123,7 +7123,7 @@ function gnListen(){
   };
 
   gnRecognition.onresult = function(e){
-    const texto = e.results[0][0].transcript.trim().toLowerCase();
+    const texto = Array.from(e.results).map(r=>r[0].transcript).join(' ').trim().toLowerCase();
     console.log('Ouvido:', texto);
     const temWake = texto.includes('jarvis');
     if(gnConversationMode){
@@ -7154,7 +7154,7 @@ function gnListen(){
 
   gnRecognition.onerror = function(e){
     console.log('Erro reconhecimento:', e.error);
-    if(e.error==='no-speech'||e.error==='network'){
+    if(e.error==='no-speech'||e.error==='aborted'||e.error==='network'){
       gnReiniciar();
     } else {
       gnStopContinuous();
