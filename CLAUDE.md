@@ -7,9 +7,10 @@ Sistema de gestão operacional pessoal e profissional de Gabriel Nascimento, ges
 - VPS: Hostinger, IP 187.127.26.136, Ubuntu 24.04
 - n8n: https://n8n.srv1610251.hstgr.cloud (container n8n-n8n-1)
 - App: https://gngestao.github.io/gn-gestao/
-- GitHub: github.com/GNgestao/gn-gestao (arquivo principal: index.html)
+- GitHub: github.com/GNgestao/gn-gestao (arquivo principal: index.html, 7500+ linhas)
 - Evolution API (WhatsApp): http://187.127.26.136:8081, instância gn-whatsapp, apikey gn-evolution-2026, número 5581982381146
 - SSH: ssh root@187.127.26.136
+- GitHub token (sem expiração): ghp_*** (ver com Gabriel)
 
 ## FIREBASE
 - Projeto: gn-gestao
@@ -36,44 +37,84 @@ Single-page HTML/CSS/JS puro. Tema escuro roxo/laranja, fontes Syne + DM Sans.
 ### Hub:
 Rede neural animada. GN no centro, módulos ao redor flutuando. Fundo estrelado global.
 
-## JARVIS (ASSISTENTE DE VOZ)
+## JARVIS — ASSISTENTE DE VOZ
+
+### Configuração atual:
 - Wake word: "Jarvis"
-- Chama Gabriel de "Chefe"
+- Chama Gabriel de "Chefe" ou "Senhor" (alterna aleatoriamente)
 - Webhook principal: POST https://n8n.srv1610251.hstgr.cloud/webhook/gn-assistente (body: {comando: texto})
 - Webhook TTS: POST https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts (body: {texto: resposta})
-- ElevenLabs Voice ID: EXAVITQu4vr4xnSDxMaL (Bella — plano free)
-- ElevenLabs API Key: sk_*** (ver em ElevenLabs → Desenvolvedores)
-- Modelo ElevenLabs: eleven_multilingual_v2
-- Cérebro: Claude API (claude-sonnet-4-5) via n8n
-- Anthropic API Key: sk-ant-api03-*** (ver no n8n, nó Claude API)
-- Acesso: exclusivo superadmin (gabrielnascimento1995@gmail.com)
+
+### STT — DEEPGRAM
+- API Key: bd90f336d163b04c49e60474af21737e635396f4
+- Modelo: nova-2, pt-BR, punctuate=true
+- Chamada direta da API no frontend (sem passar pela VPS)
+- Custo: $0,0043/minuto de áudio transcrito
+- Crédito inicial: $200 grátis
+- Implementação: MediaRecorder grava WebM, envia ao Deepgram após silêncio
+
+### VAD — DETECÇÃO DE SILÊNCIO
+- Implementado via AudioContext + analyser no frontend
+- Threshold de silêncio: 15 (volume médio abaixo disso = silêncio)
+- Tempo de silêncio para processar: 2000ms
+- Delay pós-resposta (antes de reativar microfone): 2000ms
+
+### TTS — KOKORO
+- Servidor: /usr/local/bin/jarvis-tts-server.py rodando na porta 5050
+- Voz: pm_alex (masculina, português brasileiro)
+- Iniciar: nohup python3 /usr/local/bin/jarvis-tts-server.py > /var/log/jarvis-tts.log 2>&1 &
+- Dependências: kokoro, soundfile, flask, espeak-ng
+- Retorna: audio/wav
+- ATENÇÃO: no n8n o campo texto deve ser {{ $json.body.texto }} SEM o = antes
+
+### JARVIS PROXY HTTPS
+- Container Docker: jarvis-jarvis-api-1 em /docker/jarvis
+- Rota: https://n8n.srv1610251.hstgr.cloud/jarvis/stt e /tts
+- Traefik gerencia SSL via Let's Encrypt
+- Iniciar: cd /docker/jarvis && docker compose up -d
+
+### MEMÓRIA — POSTGRESQL
+- Container: evolution-postgres
+- Credenciais: host=evolution-postgres, db=evolution, user=postgres, password=evo123
+- Tabela: jarvis_memoria (id, role, conteudo, criado_em)
+- Credencial n8n: jarvis-postgres
+- Guarda TODAS as conversas permanentemente
+- Busca as últimas 20 mensagens como contexto para o Claude
+
+### CÉREBRO — CLAUDE API
+- Modelo: claude-sonnet-4-5
+- API Key: no nó API Claude do n8n (x-api-key)
+- Fluxo n8n: Webhook → Buscar Memória → Código JS → API Claude → Responder ao Webhook + Salvar Memória
+
+### FLUXO N8N — GN Assistente Inteligente
+Sequência:
+1. Webhook recebe {comando: texto}
+2. Buscar Memória: SELECT role, conteudo FROM jarvis_memoria ORDER BY criado_em DESC LIMIT 20
+3. Código JS: monta system prompt com histórico + mensagem atual
+4. API Claude: chama https://api.anthropic.com/v1/messages
+5. Responder ao Webhook: retorna {resposta: texto}
+6. Salvar Memória: INSERT INTO jarvis_memoria (role, conteudo) VALUES (user, comando), (assistant, resposta)
+
+### FLUXO N8N — GN Texto para Fala
+- Webhook recebe {texto: resposta}
+- Nó Code: substitui vírgulas por pontos (evita bug de pronúncia)
+- HTTP Request: POST http://187.127.26.136:5050/tts
+- ATENÇÃO: usar {{ $json.body.texto }} SEM o = antes
+- Retorna: audio/wav binário
 
 ## FLUXOS N8N
 
 ### Fluxo 2 — Autorização Automática HE Sênior
 - Cron: 0 8 * * 1-5 (seg-sex 8h)
-- Login: POST https://platform.senior.com.br/auth/LoginServlet (form-urlencoded)
+- Login: POST https://platform.senior.com.br/auth/LoginServlet
 - Usuário: 10583194@thyssenkrupp.com / Senha: Initpass*1
 - Empresa: 8550-1, codigoCalculo: 1370
 - Autoriza HE ≤ 2h, códigos 613→663, 614→664
-- IMPORTANTE: funciona apenas em horário comercial (token G5 fora do horário)
+- IMPORTANTE: funciona apenas em horário comercial
 
 ### Fluxo 3 — Saldo Banco de Horas
 - Cron: 0 14 * * 5 (toda sexta 14h)
-- Webhook teste: https://n8n.srv1610251.hstgr.cloud/webhook-test/teste-ranking
-- Busca saldo via /bancos-horas/saldo-mensal?codigoCalculo=1370&projecaoMeses=3&gestor=S
-- Período: dia 11 do mês atual até dia 10 do próximo (se dia >= 11)
-
-### GN — Assistente Inteligente
-- Webhook: POST /webhook/gn-assistente
-- Body recebido: {comando: texto}
-- Resposta: {resposta: texto}
-
-### GN — Texto para fala
-- Webhook: POST /webhook/gn-tts
-- Body recebido: {texto: resposta}
-- Retorna: audio/wav binário via Kokoro (VPS porta 5050)
-- ATENÇÃO n8n: usar {{ $json.body.texto }} SEM o = antes
+- Busca saldo via /bancos-horas/saldo-mensal
 
 ## 24 TÉCNICOS (matrícula: nome)
 55007445: ADRIANO FRANCISCO DA SILVA
@@ -101,46 +142,31 @@ Rede neural animada. GN no centro, módulos ao redor flutuando. Fundo estrelado 
 55021085: TONE GABRIEL DE ARAUJO MARQUES
 55013040: WELLINGTON JOSE DO REGO BARRETO
 
-## TTS — KOKORO (Edge TTS substituído)
-- Servidor: /usr/local/bin/jarvis-tts-server.py rodando na porta 5050
-- Voz: pm_alex (masculina, português brasileiro)
-- Iniciar: nohup python3 /usr/local/bin/jarvis-tts-server.py > /var/log/jarvis-tts.log 2>&1 &
-- Dependências: kokoro, soundfile, flask, espeak-ng
-- ATENÇÃO: no n8n o campo texto deve ser {{ $json.body.texto }} SEM o = antes
-
-## JARVIS — CORREÇÕES APLICADAS (2026-05-18)
-- gnListenLoop → gnListen (fix referência morta)
-- gnConversationMode ativado ao ouvir wake word sem comando
-- gnSpeaking como semáforo para bloquear microfone durante fala
-- gnExecutar ignora comando se gnSpeaking=true
-- onend chama gnReiniciar para continuidade do loop
-- gnProcessing removido (causava travamento)
-- Fallback SpeechSynthesis removido (causava voz do navegador)
-- audio.type = audio/wav (Kokoro gera WAV)
-- Delay pós-resposta: 2500ms
-
 ## REGRAS DE DESENVOLVIMENTO
 - App: HTML/CSS/JS puro, sem frameworks
 - Sempre usar git pull antes de editar
-- Push sempre com token: git push https://ghp_***@github.com/GNgestao/gn-gestao.git main (renovar quando necessário)
+- Push sempre com token: git push https://ghp_***@github.com/GNgestao/gn-gestao.git main
 - Git config: user.email gabrielnascimento1995@gmail.com / user.name GNgestao
 - Nunca hardcodar JWT do Sênior — sempre dinâmico
 - Testes do Fluxo 2 apenas em horário comercial
 - TTS agora via Kokoro na VPS (porta 5050) — ElevenLabs descontinuado
+- No n8n expressões dentro de campos Raw: usar {{ }} SEM o = antes
+
+## INFORMAÇÕES PESSOAIS DO GABRIEL
+- Esposa: Sheila
+- Filha: Lara
+- Trabalha na ThyssenKrupp em Recife-PE como gestor de manutenção de elevadores
+- Mora no Janga, Paulista-PE
 
 ## PENDÊNCIAS ABERTAS
-- [x] Memória persistente com PostgreSQL (container evolution-postgres)
-- [x] STT via Deepgram nova-2 pt-BR (API key: bd90f336d163b04c49e60474af21737e635396f4)
-- [x] VAD via AudioContext com threshold 15 e silêncio 2000ms
-- [ ] Servidor Kokoro não inicia automaticamente após reboot da VPS (falta configurar systemd)
-- [ ] ElevenLabs cota esgotada (10k/mês free) — substituído pelo Kokoro
-- [ ] Integração TK Mobile — demandas operacionais (OS abertas e outros — detalhes a definir)
-- [ ] Fluxo de monitoramento de prazos (tokens, credenciais) via Jarvis
+- [ ] Busca web no n8n para o Jarvis responder perguntas atuais (notícias, dados em tempo real)
+- [ ] Systemd para iniciar Kokoro TTS e jarvis-proxy automaticamente no reboot da VPS
+- [ ] Campo de texto no módulo Jarvis para comandos sem voz
+- [ ] Monitoramento créditos Deepgram com alerta via WhatsApp
+- [ ] Agente Windows para abrir sites/Chrome via comando de voz
+- [ ] Integração TK Mobile — OS abertas e demandas operacionais
+- [ ] Fluxo Sênior para consulta de horas extras em tempo real via Jarvis
 - [ ] Módulo Gestão da Equipe
 - [ ] Módulo Documentação
-- [ ] Busca web no n8n para o Jarvis responder perguntas atuais
-- [ ] Agente Windows para abrir sites/Chrome via comando de voz
-- [ ] Campo de texto no módulo Jarvis para comandos sem voz
-- [ ] Systemd para iniciar Kokoro TTS e jarvis-proxy automaticamente no reboot
-- [ ] Monitoramento créditos Deepgram com alerta via WhatsApp
-- [ ] Fluxo n8n TK Mobile para demandas operacionais
+- [ ] Upgrade ElevenLabs para voz Adam (quando quiser qualidade premium)
+- [ ] Fluxo de monitoramento de prazos (tokens, credenciais) via Jarvis
