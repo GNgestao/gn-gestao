@@ -153,10 +153,15 @@ Sequência:
 - No n8n expressões dentro de campos Raw: usar {{ }} SEM o = antes
 
 ## INFORMAÇÕES PESSOAIS DO GABRIEL
+- Nome completo: Gabriel Nascimento
 - Esposa: Sheila
 - Filha: Lara
-- Trabalha na ThyssenKrupp em Recife-PE como gestor de manutenção de elevadores
-- Mora no Janga, Paulista-PE
+- Formação: Engenheiro Mecânico, Pós-graduação em Engenharia de Segurança do Trabalho
+- Cargo: Supervisor de Serviços
+- Empresa: TK Elevator (falar sempre TK Elevator, não ThyssenKrupp)
+- Localização: Recife-PE, mora no Janga em Paulista-PE
+- WhatsApp pessoal: 5581997818685
+- Email: gabrielnascimento1995@gmail.com
 
 ## PENDÊNCIAS ABERTAS
 - [ ] Busca web no n8n para o Jarvis responder perguntas atuais (notícias, dados em tempo real)
@@ -170,3 +175,6 @@ Sequência:
 - [ ] Módulo Documentação
 - [ ] Upgrade ElevenLabs para voz Adam (quando quiser qualidade premium)
 - [ ] Fluxo de monitoramento de prazos (tokens, credenciais) via Jarvis
+- [ ] Integrar busca web no n8n para Jarvis ter acesso à internet em tempo real
+- [ ] Verificar possibilidade do Jarvis abrir aplicativos no Windows via comando de voz
+- [ ] Melhorias de layout no app GN Gestão (detalhes a definir)
