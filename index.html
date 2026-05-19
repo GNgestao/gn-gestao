@@ -7148,7 +7148,7 @@ async function gnListen(){
         analyser.getByteFrequencyData(dataArray);
         const volume = dataArray.reduce((a,b)=>a+b,0) / dataArray.length;
 
-        if(volume < 12){
+        if(volume < 10){
           if(!silenceStart) silenceStart = Date.now();
           else if(Date.now() - silenceStart > 2000){
             console.log('Silêncio detectado - processando...');
@@ -7215,7 +7215,7 @@ async function gnTranscrever(blob){
     const temWake = texto.includes('jarvis') || texto.includes('charles') || texto.includes('chaves') || texto.includes('jarves') || texto.includes('jarvi');
     if(gnConversationMode){
       const comando = temWake ? texto.replace(/.*jarvis[,\s]*/i,'').trim() : texto;
-      if(comando.length > 1){
+      if(comando.length > 2){
         console.log('Comando (conversa):', comando);
         gnExecutar(comando);
       } else {
@@ -7224,7 +7224,7 @@ async function gnTranscrever(blob){
     } else if(temWake){
       const comando = texto.replace(/.*jarvis[,\s]*/i,'').trim();
       console.log('Comando (wake):', comando);
-      if(comando.length > 1){
+      if(comando.length > 2){
         gnExecutar(comando);
       } else {
         gnSetStatus('Pode falar seu comando...','listening');
