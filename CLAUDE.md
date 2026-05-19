@@ -40,7 +40,7 @@ Rede neural animada. GN no centro, módulos ao redor flutuando. Fundo estrelado 
 ## JARVIS — ASSISTENTE DE VOZ
 
 ### Configuração atual:
-- Wake word: "Jarvis"
+- Wake words reconhecidas: jarvis, charles, chaves, jarves, jarvi
 - Chama Gabriel de "Chefe" ou "Senhor" (alterna aleatoriamente)
 - Webhook principal: POST https://n8n.srv1610251.hstgr.cloud/webhook/gn-assistente (body: {comando: texto})
 - Webhook TTS: POST https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts (body: {texto: resposta})
@@ -55,9 +55,10 @@ Rede neural animada. GN no centro, módulos ao redor flutuando. Fundo estrelado 
 
 ### VAD — DETECÇÃO DE SILÊNCIO
 - Implementado via AudioContext + analyser no frontend
-- Threshold de silêncio: 15 (volume médio abaixo disso = silêncio)
+- Threshold de silêncio: 10 (volume médio abaixo disso = silêncio)
 - Tempo de silêncio para processar: 2000ms
 - Delay pós-resposta (antes de reativar microfone): 2000ms
+- Timeout de conversa: 5 minutos sem interação encerra a sessão
 
 ### TTS — KOKORO
 - Servidor: /usr/local/bin/jarvis-tts-server.py rodando na porta 5050
@@ -80,6 +81,12 @@ Rede neural animada. GN no centro, módulos ao redor flutuando. Fundo estrelado 
 - Credencial n8n: jarvis-postgres
 - Guarda TODAS as conversas permanentemente
 - Busca as últimas 20 mensagens como contexto para o Claude
+
+### BUSCA WEB — SERPER API
+- API Key: 8c08a1872542c56d51ca5fe6f6780a434157ea35
+- Detecta gatilhos automáticos na pergunta: hoje, dólar, notícia, clima, cotação, preço, agora, atual, previsão, temperatura
+- Quando detectado, faz busca antes de chamar o Claude e injeta resultado no contexto
+- Endpoint: https://google.serper.dev/search
 
 ### CÉREBRO — CLAUDE API
 - Modelo: claude-sonnet-4-5
@@ -164,8 +171,8 @@ Sequência:
 - Email: gabrielnascimento1995@gmail.com
 
 ## PENDÊNCIAS ABERTAS
-- [ ] Busca web no n8n para o Jarvis responder perguntas atuais (notícias, dados em tempo real)
-- [ ] Systemd para iniciar Kokoro TTS e jarvis-proxy automaticamente no reboot da VPS
+- [x] Busca web no n8n para o Jarvis responder perguntas atuais (notícias, dados em tempo real)
+- [x] Systemd para iniciar Kokoro TTS e jarvis-proxy automaticamente no reboot da VPS
 - [ ] Campo de texto no módulo Jarvis para comandos sem voz
 - [ ] Monitoramento créditos Deepgram com alerta via WhatsApp
 - [ ] Agente Windows para abrir sites/Chrome via comando de voz
@@ -175,6 +182,10 @@ Sequência:
 - [ ] Módulo Documentação
 - [ ] Upgrade ElevenLabs para voz Adam (quando quiser qualidade premium)
 - [ ] Fluxo de monitoramento de prazos (tokens, credenciais) via Jarvis
-- [ ] Integrar busca web no n8n para Jarvis ter acesso à internet em tempo real
+- [x] Integrar busca web no n8n para Jarvis ter acesso à internet em tempo real
 - [ ] Verificar possibilidade do Jarvis abrir aplicativos no Windows via comando de voz
 - [ ] Melhorias de layout no app GN Gestão (detalhes a definir)
+- [ ] Retirar mensagem de status quando Jarvis está falando
+- [ ] TTS streaming para reduzir tempo de resposta em textos longos
+- [ ] Memória permanente de fatos e perfil do Gabriel (separada das conversas)
+- [ ] Aumentar limite de memória de 20 para 50 mensagens no contexto do Claude
