@@ -797,7 +797,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 .gn-node-pill.active{border-color:#FF6200;background:rgba(255,98,0,.12);color:#FF6200;box-shadow:0 0 10px rgba(255,98,0,.15)}
 #gnHint{margin-top:1rem;font-family:'DM Sans',sans-serif;font-size:.68rem;color:rgba(196,181,253,.3);letter-spacing:.05em;text-align:center}
 @keyframes hubJarvisPulse{0%,100%{box-shadow:0 0 30px rgba(255,98,0,.35),0 0 60px rgba(124,58,237,.15);transform:scale(1)}50%{box-shadow:0 0 55px rgba(255,98,0,.6),0 0 100px rgba(124,58,237,.25);transform:scale(1.05)}}
-#hubJarvis{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;cursor:grab;user-select:none}
+#hubJarvis{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;user-select:none}
 #hubJarvisCore{width:100px;height:100px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#4c1d95,#1a0535);border:2.5px solid #FF6200;display:flex;align-items:center;justify-content:center;animation:hubJarvisPulse 2.2s ease-in-out infinite;font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:#fff;letter-spacing:.05em}
 #hubJarvisChat{display:none;position:absolute;z-index:11;background:#1a0535;border:1px solid rgba(255,98,0,.4);border-radius:16px;padding:1rem;width:290px;box-shadow:0 8px 32px rgba(0,0,0,.6)}
 #hubJarvisChatResp{min-height:2.5rem;font-family:'DM Sans',sans-serif;font-size:.82rem;color:rgba(196,181,253,.85);margin-bottom:.75rem;line-height:1.55;max-height:140px;overflow-y:auto;white-space:pre-wrap}
@@ -848,8 +848,8 @@ tr:hover td{background:rgba(91,33,182,.05)}
   </div>
   <div id="hubOverlay" style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh">
     <div style="font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.25em;color:rgba(196,181,253,.35);text-transform:uppercase;margin-bottom:2rem">GN Gestão — Zona Vip</div>
-    <div id="hubUserDisplay" style="font-family:'DM Sans',sans-serif;font-size:.78rem;color:rgba(196,181,253,.5);margin-bottom:3rem;display:flex;align-items:center;gap:.5rem"><span id="hubRoleBadge2"></span><span id="hubUserName2"></span></div>
-    <div style="font-family:'DM Sans',sans-serif;font-size:.7rem;color:rgba(196,181,253,.25);margin-top:3rem;letter-spacing:.08em">Clique em qualquer módulo para acessar</div>
+    <div id="hubUserDisplay" style="display:none"><span id="hubRoleBadge2"></span><span id="hubUserName2"></span></div>
+    <div style="display:none;font-family:'DM Sans',sans-serif;font-size:.7rem;color:rgba(196,181,253,.25);margin-top:3rem;letter-spacing:.08em">Clique em qualquer módulo para acessar</div>
     <div style="position:absolute;bottom:2rem;font-family:'DM Sans',sans-serif;font-size:.72rem;color:rgba(196,181,253,.3);cursor:pointer;letter-spacing:.08em;text-transform:uppercase" onclick="hubLogout()">⬅ Sair</div>
   </div>
 </div>
@@ -7055,6 +7055,7 @@ let gnConversationTimer = null;
 let gnListening = false;
 let gnRecognition = null;
 let gnSpeaking = false;
+let gnCommandSource = 'voice';
 let gnMediaRecorder = null;
 let gnAudioChunks = [];
 let gnSilenceTimer = null;
@@ -7286,7 +7287,16 @@ async function gnExecutar(comando){
     const resposta = data.resposta||data.response||'Não consegui processar o comando.';
     const respEl = document.getElementById('gnResponse');
     if(respEl){ respEl.textContent=resposta; respEl.style.display='none'; }
-    await gnSpeak(resposta);
+    if(gnCommandSource === 'text'){
+      gnCommandSource = 'voice';
+      const chatResp = document.getElementById('hubJarvisChatResp');
+      if(chatResp) chatResp.textContent = resposta;
+      gnSetStatus("Diga 'Jarvis' para ativar",'');
+      gnSetBars('');
+      gnDeactivateNodes();
+    } else {
+      await gnSpeak(resposta);
+    }
   }catch(err){
     console.error('Erro ao processar comando:', err);
     gnSetStatus("Diga 'Jarvis' para ativar",'');
@@ -7579,6 +7589,8 @@ async function gnSpeak(texto){
         b2.style.cssText=`font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:99px;background:${role==='superadmin'?'rgba(255,98,0,.2)':'rgba(196,181,253,.1)'};color:${role==='superadmin'?'#FF6200':'#c4b5fd'}`;
       }
     }
+    // Inicia microfone contínuo automaticamente no Hub
+    setTimeout(function(){ if(typeof gnStartContinuous==='function') gnStartContinuous(); }, 1000);
   }
 
   // Wrap showApp to trigger hub init
@@ -7603,51 +7615,18 @@ async function gnSpeak(texto){
 
     el.style.display = 'block';
 
-    // Drag logic — distinguishes click from drag via movement threshold
-    let dragging = false, moved = false, startX, startY, offX, offY;
-
-    el.addEventListener('mousedown', function(e){
-      if(e.target.closest('#hubJarvisChat')) return;
-      e.preventDefault();
-      dragging = true; moved = false;
-      startX = e.clientX; startY = e.clientY;
-      const rect = el.getBoundingClientRect();
-      offX = e.clientX - rect.left - rect.width/2;
-      offY = e.clientY - rect.top  - rect.height/2;
-      el.style.cursor = 'grabbing';
-    });
-
-    document.addEventListener('mousemove', function(e){
-      if(!dragging) return;
-      if(Math.abs(e.clientX-startX)>4 || Math.abs(e.clientY-startY)>4) moved = true;
-      if(!moved) return;
-      const hub  = document.getElementById('hubScreen').getBoundingClientRect();
-      el.style.left      = (e.clientX - offX - hub.left) + 'px';
-      el.style.top       = (e.clientY - offY - hub.top)  + 'px';
-      el.style.transform = 'none';
-      if(chat.style.display !== 'none') positionChat();
-    });
-
-    document.addEventListener('mouseup', function(){
-      if(!dragging) return;
-      dragging = false;
-      el.style.cursor = 'grab';
-    });
-
     function positionChat(){
-      const hub  = document.getElementById('hubScreen').getBoundingClientRect();
       const rect = el.getBoundingClientRect();
-      let cx = rect.left - hub.left + rect.width/2 - 145;
-      let cy = rect.bottom - hub.top + 12;
-      // keep within screen bounds
-      cx = Math.max(8, Math.min(hub.width - 298, cx));
-      cy = Math.max(8, Math.min(hub.height - 240, cy));
+      let cx = rect.left + rect.width/2 - 145;
+      let cy = rect.bottom + 12;
+      cx = Math.max(8, Math.min(window.innerWidth - 298, cx));
+      cy = Math.max(8, Math.min(window.innerHeight - 240, cy));
+      chat.style.position = 'fixed';
       chat.style.left = cx + 'px';
       chat.style.top  = cy + 'px';
     }
 
     document.getElementById('hubJarvisCore').addEventListener('click', function(){
-      if(moved) return;
       if(chat.style.display === 'none'){
         positionChat();
         chat.style.display = 'block';
@@ -7663,35 +7642,15 @@ async function gnSpeak(texto){
     });
   }
 
-  window.hubJarvisSend = async function(){
+  window.hubJarvisSend = function(){
     const input = document.getElementById('hubJarvisChatInput');
     const resp  = document.getElementById('hubJarvisChatResp');
     const texto = (input.value||'').trim();
     if(!texto) return;
     input.value = '';
     resp.textContent = '...';
-    try {
-      const r = await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-assistente',{
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({comando: texto})
-      });
-      const data = await r.json();
-      const resposta = data.resposta || data.response || JSON.stringify(data);
-      resp.textContent = resposta;
-      // TTS — reproduce audio
-      fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts',{
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({texto: resposta})
-      }).then(r2=>r2.arrayBuffer()).then(buf=>{
-        const actx = new (window.AudioContext||window.webkitAudioContext)();
-        actx.decodeAudioData(buf, function(decoded){
-          const src = actx.createBufferSource();
-          src.buffer = decoded; src.connect(actx.destination); src.start();
-        });
-      }).catch(()=>{});
-    } catch(err){
-      resp.textContent = 'Erro ao contactar o Jarvis.';
-    }
+    gnCommandSource = 'text';
+    if(typeof gnExecutar === 'function') gnExecutar(texto);
   };
 
   const origShow = window.showApp;
