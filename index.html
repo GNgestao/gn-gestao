@@ -7268,7 +7268,7 @@ async function gnExecutar(comando){
     const data = await res.json();
     const resposta = data.resposta||data.response||'Não consegui processar o comando.';
     const respEl = document.getElementById('gnResponse');
-    if(respEl){ respEl.textContent=resposta; respEl.style.display='block'; }
+    if(respEl){ respEl.textContent=resposta; respEl.style.display='none'; }
     await gnSpeak(resposta);
   }catch(err){
     console.error('Erro ao processar comando:', err);
