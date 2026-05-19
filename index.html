@@ -7123,7 +7123,7 @@ async function gnListen(){
   try {
     gnStream = await navigator.mediaDevices.getUserMedia({audio: true});
     gnAudioChunks = [];
-    gnMediaRecorder = new MediaRecorder(gnStream, {mimeType: 'audio/webm'});
+    gnMediaRecorder = new MediaRecorder(gnStream);
 
     gnMediaRecorder.ondataavailable = function(e){
       if(e.data.size > 0) gnAudioChunks.push(e.data);
