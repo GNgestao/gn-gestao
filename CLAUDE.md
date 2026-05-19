@@ -129,9 +129,18 @@ Rede neural animada. GN no centro, módulos ao redor flutuando. Fundo estrelado 
 - TTS agora via Kokoro na VPS (porta 5050) — ElevenLabs descontinuado
 
 ## PENDÊNCIAS ABERTAS
+- [x] Memória persistente com PostgreSQL (container evolution-postgres)
+- [x] STT via Deepgram nova-2 pt-BR (API key: bd90f336d163b04c49e60474af21737e635396f4)
+- [x] VAD via AudioContext com threshold 15 e silêncio 2000ms
 - [ ] Servidor Kokoro não inicia automaticamente após reboot da VPS (falta configurar systemd)
 - [ ] ElevenLabs cota esgotada (10k/mês free) — substituído pelo Kokoro
 - [ ] Integração TK Mobile — demandas operacionais (OS abertas e outros — detalhes a definir)
 - [ ] Fluxo de monitoramento de prazos (tokens, credenciais) via Jarvis
 - [ ] Módulo Gestão da Equipe
 - [ ] Módulo Documentação
+- [ ] Busca web no n8n para o Jarvis responder perguntas atuais
+- [ ] Agente Windows para abrir sites/Chrome via comando de voz
+- [ ] Campo de texto no módulo Jarvis para comandos sem voz
+- [ ] Systemd para iniciar Kokoro TTS e jarvis-proxy automaticamente no reboot
+- [ ] Monitoramento créditos Deepgram com alerta via WhatsApp
+- [ ] Fluxo n8n TK Mobile para demandas operacionais
