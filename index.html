@@ -7212,7 +7212,7 @@ async function gnTranscrever(blob){
       return;
     }
 
-    const temWake = texto.includes('jarvis');
+    const temWake = texto.includes('jarvis') || texto.includes('charles') || texto.includes('chaves') || texto.includes('jarves') || texto.includes('jarvi');
     if(gnConversationMode){
       const comando = temWake ? texto.replace(/.*jarvis[,\s]*/i,'').trim() : texto;
       if(comando.length > 1){
