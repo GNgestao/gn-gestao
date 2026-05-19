@@ -7323,6 +7323,7 @@ async function gnSpeak(texto){
     }, 300000);
     gnSpeaking = false;
     gnListening = false;
+    if(gnStream){ gnStream.getTracks().forEach(t=>t.stop()); gnStream=null; }
     gnSetBars('');
     setTimeout(()=>{
       console.log('Reiniciando loop - modo conversa:', gnConversationMode);
