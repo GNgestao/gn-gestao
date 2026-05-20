@@ -805,6 +805,14 @@ tr:hover td{background:rgba(91,33,182,.05)}
 #hubJarvisChatInput::placeholder{color:rgba(196,181,253,.35)}
 #hubJarvisSendBtn{width:100%;background:rgba(255,98,0,.2);border:1px solid rgba(255,98,0,.4);color:#FF6200;border-radius:8px;padding:.45rem;font-size:.82rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s}
 #hubJarvisSendBtn:hover{background:rgba(255,98,0,.35)}
+#globalJarvis{display:none;position:fixed;bottom:2rem;right:2rem;z-index:10002;cursor:grab;user-select:none}
+#globalJarvisCore{width:80px;height:80px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#4c1d95,#1a0535);border:2.5px solid #FF6200;display:flex;align-items:center;justify-content:center;animation:hubJarvisPulse 2.2s ease-in-out infinite;font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;color:#fff;letter-spacing:.05em}
+#globalJarvisChat{display:none;position:fixed;z-index:10003;background:#1a0535;border:1px solid rgba(255,98,0,.4);border-radius:16px;padding:1rem;width:290px;box-shadow:0 8px 32px rgba(0,0,0,.6)}
+#globalJarvisChatResp{min-height:2.5rem;font-family:'DM Sans',sans-serif;font-size:.82rem;color:rgba(196,181,253,.85);margin-bottom:.75rem;line-height:1.55;max-height:140px;overflow-y:auto;white-space:pre-wrap}
+#globalJarvisChatInput{width:100%;box-sizing:border-box;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:.45rem .75rem;color:#fff;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;margin-bottom:.5rem}
+#globalJarvisChatInput::placeholder{color:rgba(196,181,253,.35)}
+#globalJarvisSendBtn{width:100%;background:rgba(255,98,0,.2);border:1px solid rgba(255,98,0,.4);color:#FF6200;border-radius:8px;padding:.45rem;font-size:.82rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s}
+#globalJarvisSendBtn:hover{background:rgba(255,98,0,.35)}
 </style>
 </head>
 <body>
@@ -847,11 +855,12 @@ tr:hover td{background:rgba(91,33,182,.05)}
     <button id="hubJarvisSendBtn" onclick="hubJarvisSend()">Enviar</button>
   </div>
   <div id="hubOverlay" style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh">
-    <div style="font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.25em;color:rgba(196,181,253,.35);text-transform:uppercase;margin-bottom:2rem">GN Gestão — Zona Vip</div>
+    <div style="display:none;font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.25em;color:rgba(196,181,253,.35);text-transform:uppercase;margin-bottom:2rem">GN Gestão — Zona Vip</div>
     <div id="hubUserDisplay" style="display:none"><span id="hubRoleBadge2"></span><span id="hubUserName2"></span></div>
     <div style="display:none;font-family:'DM Sans',sans-serif;font-size:.7rem;color:rgba(196,181,253,.25);margin-top:3rem;letter-spacing:.08em">Clique em qualquer módulo para acessar</div>
     <div style="position:absolute;bottom:2rem;font-family:'DM Sans',sans-serif;font-size:.72rem;color:rgba(196,181,253,.3);cursor:pointer;letter-spacing:.08em;text-transform:uppercase" onclick="hubLogout()">⬅ Sair</div>
   </div>
+  <div id="hubUserCorner" style="display:none;position:fixed;top:1rem;right:1.5rem;z-index:20;background:rgba(10,4,30,.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(124,58,237,.2);border-radius:10px;padding:.35rem .85rem;font-family:'DM Sans',sans-serif;font-size:.7rem;color:rgba(196,181,253,.65);align-items:center;gap:.5rem"><span id="hubCornerRole"></span>&nbsp;<span id="hubCornerName"></span></div>
 </div>
 
 <div id="appScreen">
@@ -7056,6 +7065,7 @@ let gnListening = false;
 let gnRecognition = null;
 let gnSpeaking = false;
 let gnCommandSource = 'voice';
+let gnTextTargetEl = null;
 let gnMediaRecorder = null;
 let gnAudioChunks = [];
 let gnSilenceTimer = null;
@@ -7289,11 +7299,11 @@ async function gnExecutar(comando){
     if(respEl){ respEl.textContent=resposta; respEl.style.display='none'; }
     if(gnCommandSource === 'text'){
       gnCommandSource = 'voice';
-      const chatResp = document.getElementById('hubJarvisChatResp');
-      if(chatResp) chatResp.textContent = resposta;
+      if(gnTextTargetEl){ gnTextTargetEl.textContent = resposta; gnTextTargetEl = null; }
       gnSetStatus("Diga 'Jarvis' para ativar",'');
       gnSetBars('');
       gnDeactivateNodes();
+      setTimeout(function(){ if(typeof gnReiniciar==='function') gnReiniciar(); }, 500);
     } else {
       await gnSpeak(resposta);
     }
@@ -7485,22 +7495,6 @@ async function gnSpeak(texto){
         ctx.setLineDash([]);
       });
 
-      // Center node
-      const cglow = .3+centerNode.pulse*.3;
-      ctx.save();
-      ctx.shadowBlur=40+centerNode.pulse*20; ctx.shadowColor='rgba(255,98,0,'+cglow+')';
-      ctx.beginPath(); ctx.arc(cx,cy,centerNode.r,0,Math.PI*2);
-      const cg=ctx.createRadialGradient(cx-10,cy-10,5,cx,cy,centerNode.r);
-      cg.addColorStop(0,'#4c1d95'); cg.addColorStop(1,'#1a0535');
-      ctx.fillStyle=cg; ctx.fill();
-      ctx.strokeStyle='rgba(255,98,0,'+(0.7+centerNode.pulse*.3)+')';
-      ctx.lineWidth=2; ctx.stroke();
-      ctx.restore();
-      ctx.fillStyle='#fff'; ctx.font='700 15px Syne,sans-serif'; ctx.textAlign='center';
-      ctx.fillText('GN',cx,cy-4);
-      ctx.fillStyle='rgba(196,181,253,.6)'; ctx.font='500 8px DM Sans,sans-serif';
-      ctx.fillText('Gestão',cx,cy+10);
-
       // Module nodes
       nodes.forEach(n=>{
         const accessible = n.roles.includes(role);
@@ -7588,6 +7582,16 @@ async function gnSpeak(texto){
         b2.textContent=role==='superadmin'?'👑 SuperAdmin':role==='admin'?'🔧 Admin':'👁 Viewer';
         b2.style.cssText=`font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:99px;background:${role==='superadmin'?'rgba(255,98,0,.2)':'rgba(196,181,253,.1)'};color:${role==='superadmin'?'#FF6200':'#c4b5fd'}`;
       }
+      // Corner user info
+      const corner=document.getElementById('hubUserCorner');
+      const cr=document.getElementById('hubCornerRole');
+      const cn=document.getElementById('hubCornerName');
+      if(corner&&cr&&cn){
+        const role=u.role||'viewer';
+        cr.textContent=role==='superadmin'?'👑':role==='admin'?'🔧':'👁';
+        cn.textContent=u.name||u.email;
+        corner.style.display='flex';
+      }
     }
     // Inicia microfone contínuo automaticamente no Hub
     setTimeout(function(){ if(typeof gnStartContinuous==='function') gnStartContinuous(); }, 1000);
@@ -7650,6 +7654,7 @@ async function gnSpeak(texto){
     input.value = '';
     resp.textContent = '...';
     gnCommandSource = 'text';
+    gnTextTargetEl = resp;
     if(typeof gnExecutar === 'function') gnExecutar(texto);
   };
 
@@ -7657,6 +7662,125 @@ async function gnSpeak(texto){
   window.showApp = function(){
     if(origShow) origShow();
     setTimeout(initHubJarvis, 350);
+  };
+})();
+</script>
+
+<!-- Jarvis Flutuante Global (abas de módulo) -->
+<div id="globalJarvis">
+  <div id="globalJarvisCore">Jarvis</div>
+</div>
+<div id="globalJarvisChat">
+  <div id="globalJarvisChatResp"></div>
+  <input id="globalJarvisChatInput" type="text" placeholder="Fale com o Jarvis..." autocomplete="off">
+  <button id="globalJarvisSendBtn" onclick="globalJarvisSend()">Enviar</button>
+</div>
+
+<script>
+// Jarvis Global — abas de módulo
+(function(){
+  function initGlobalJarvis(){
+    const role = window._currentUser?.role || 'viewer';
+    if(role !== 'superadmin') return;
+
+    const el    = document.getElementById('globalJarvis');
+    const chat  = document.getElementById('globalJarvisChat');
+    const input = document.getElementById('globalJarvisChatInput');
+    const resp  = document.getElementById('globalJarvisChatResp');
+    if(!el) return;
+
+    // Drag
+    let dragging = false, moved = false, startX, startY, curL, curT;
+    el.addEventListener('mousedown', function(e){
+      if(e.target.closest('#globalJarvisChat')) return;
+      e.preventDefault();
+      dragging = true; moved = false;
+      startX = e.clientX; startY = e.clientY;
+      const rect = el.getBoundingClientRect();
+      curL = rect.left; curT = rect.top;
+      el.style.right = 'auto'; el.style.bottom = 'auto';
+      el.style.left = curL + 'px'; el.style.top = curT + 'px';
+      el.style.cursor = 'grabbing';
+    });
+    document.addEventListener('mousemove', function(e){
+      if(!dragging) return;
+      if(Math.abs(e.clientX-startX)>4 || Math.abs(e.clientY-startY)>4) moved = true;
+      if(!moved) return;
+      el.style.left = (curL + e.clientX - startX) + 'px';
+      el.style.top  = (curT + e.clientY - startY) + 'px';
+      if(chat.style.display !== 'none') positionChat();
+    });
+    document.addEventListener('mouseup', function(){
+      if(!dragging) return;
+      dragging = false; el.style.cursor = 'grab';
+    });
+
+    function positionChat(){
+      const rect = el.getBoundingClientRect();
+      let cx = rect.left + rect.width/2 - 145;
+      let cy = rect.top - 12;
+      cx = Math.max(8, Math.min(window.innerWidth - 298, cx));
+      cy = Math.max(8, cy);
+      // prefer above, but flip below if not enough space
+      if(cy - 230 < 8) cy = rect.bottom + 12;
+      chat.style.left = cx + 'px';
+      chat.style.top  = cy + 'px';
+    }
+
+    document.getElementById('globalJarvisCore').addEventListener('click', function(){
+      if(moved) return;
+      if(chat.style.display === 'none'){
+        positionChat();
+        chat.style.display = 'block';
+        resp.textContent = '';
+        input.focus();
+      } else {
+        chat.style.display = 'none';
+      }
+    });
+
+    input.addEventListener('keydown', function(e){
+      if(e.key === 'Enter') window.globalJarvisSend();
+    });
+  }
+
+  window.globalJarvisSend = function(){
+    const input = document.getElementById('globalJarvisChatInput');
+    const resp  = document.getElementById('globalJarvisChatResp');
+    const texto = (input.value||'').trim();
+    if(!texto) return;
+    input.value = '';
+    resp.textContent = '...';
+    gnCommandSource = 'text';
+    gnTextTargetEl = resp;
+    if(typeof gnExecutar === 'function') gnExecutar(texto);
+  };
+
+  function showGJ(){ const el=document.getElementById('globalJarvis'); if(el) el.style.display='block'; if(typeof gnStartContinuous==='function'&&!gnContinuousMode) gnStartContinuous(); }
+  function hideGJ(){ const el=document.getElementById('globalJarvis'); if(el) el.style.display='none'; const c=document.getElementById('globalJarvisChat'); if(c) c.style.display='none'; }
+
+  // Wrap enter functions → show global Jarvis
+  ['enterModule','enterReconhece','enterReparo','enterPlano'].forEach(function(name){
+    const orig = window[name];
+    window[name] = function(){ if(orig) orig.apply(this,arguments); setTimeout(showGJ,150); };
+  });
+
+  // Wrap back functions → hide global Jarvis
+  ['backToHub','backFromReconhece','backFromReparo'].forEach(function(name){
+    const orig = window[name];
+    window[name] = function(){ hideGJ(); if(orig) orig.apply(this,arguments); };
+  });
+  // planoGoBack may be defined after this, wrap on DOMContentLoaded
+  window.addEventListener('load', function(){
+    const orig = window.planoGoBack;
+    if(orig) window.planoGoBack = function(){ hideGJ(); orig.apply(this,arguments); };
+  });
+
+  // Init after login
+  const origShow = window.showApp;
+  window.showApp = function(){
+    if(origShow) origShow();
+    setTimeout(initGlobalJarvis, 400);
   };
 })();
 </script>
