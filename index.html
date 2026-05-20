@@ -7293,6 +7293,7 @@ async function gnExecutar(comando){
   else if(cmd.includes('reparo')||cmd.includes('servi')) gnActivateNode('reparo');
   else if(cmd.includes('plano')) gnActivateNode('plano');
   try{
+    console.log('gnExecutar - comando enviado:', comando);
     const res = await fetch(GN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comando:comando})});
     const data = await res.json();
     const resposta = data.resposta||data.response||'Não consegui processar o comando.';
