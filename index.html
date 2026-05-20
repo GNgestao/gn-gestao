@@ -7074,6 +7074,7 @@ let gnMediaRecorder = null;
 let gnAudioChunks = [];
 let gnSilenceTimer = null;
 let gnStream = null;
+let gnSessionHistory = [];
 (function gnInitCanvas(){
   const canvas=document.getElementById('gnCanvas');
   if(!canvas)return;
@@ -7300,9 +7301,11 @@ async function gnExecutar(comando){
   else if(cmd.includes('plano')) gnActivateNode('plano');
   try{
     console.log('gnExecutar - comando enviado:', comando);
-    const res = await fetch(GN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comando:comando})});
+    const res = await fetch(GN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comando:comando,historico:gnSessionHistory.slice(-10)})});
     const data = await res.json();
     const resposta = (data.resposta||data.response||'').replace(/\*+/g,'').replace(/#+/g,'').replace(/_{2,}/g,'').trim() || 'Não consegui processar o comando.';
+    gnSessionHistory.push({role:'user',content:comando});
+    gnSessionHistory.push({role:'assistant',content:resposta});
     const respEl = document.getElementById('gnResponse');
     if(respEl){ respEl.textContent=resposta; respEl.style.display='none'; }
     if(gnCommandSource === 'text'){
@@ -7663,6 +7666,7 @@ async function gnSpeak(texto){
     input.value = '';
     resp.textContent = '...';
     gnCommandSource = 'text';
+    gnSessionHistory.push({role:'user',content:texto});
     gnTextTargetEl = resp;
     if(gnMediaRecorder && gnMediaRecorder.state !== 'inactive'){ gnMediaRecorder.stop(); }
     if(gnStream){ gnStream.getTracks().forEach(t=>t.stop()); gnStream=null; }
@@ -7765,6 +7769,7 @@ async function gnSpeak(texto){
     input.value = '';
     resp.textContent = '...';
     gnCommandSource = 'text';
+    gnSessionHistory.push({role:'user',content:texto});
     gnTextTargetEl = resp;
     if(gnMediaRecorder && gnMediaRecorder.state !== 'inactive'){ gnMediaRecorder.stop(); }
     if(gnStream){ gnStream.getTracks().forEach(t=>t.stop()); gnStream=null; }
