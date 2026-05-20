@@ -7352,7 +7352,7 @@ async function gnSpeak(texto){
     const audio = new Audio(url);
     audio.type = 'audio/wav';
     await new Promise((resolve, reject)=>{
-      audio.onended = function(){ console.log('Audio terminou'); resolve(); };
+      audio.onended = function(){ console.log('Audio terminou'); URL.revokeObjectURL(url); resolve(); };
       audio.onerror = function(e){ console.error('Audio erro:', e); reject(e); };
       audio.play().catch(function(err){
         if(err.name === 'NotAllowedError'){
@@ -7361,13 +7361,13 @@ async function gnSpeak(texto){
             hubChat.style.display = 'block';
             hubChat.textContent = gnCurrentResposta || '';
           }
+          URL.revokeObjectURL(url);
           resolve();
         } else {
           reject(err);
         }
       });
     });
-    URL.revokeObjectURL(url);
   }catch(err){
     console.error('gnSpeak erro:', err);
     // Sem fallback de voz — apenas reinicia o loop silenciosamente
