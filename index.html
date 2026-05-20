@@ -3065,12 +3065,12 @@ document.getElementById('emailModalOverlay').addEventListener('click', function(
 var _loginMode = 'login';
 
 function showLogin(){
+  var hs=document.getElementById('hubScreen');
+  if(hs) hs.style.cssText='display:none!important';
   var ls=document.getElementById('loginScreen');
   var as=document.getElementById('appScreen');
-  var hs=document.getElementById('hubScreen');
   if(ls) ls.style.cssText='display:flex!important';
   if(as) as.style.cssText='display:none!important';
-  if(hs) hs.style.cssText='display:none!important';
 }
 function showApp(){
   var ls=document.getElementById('loginScreen');
