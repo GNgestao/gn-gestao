@@ -7068,6 +7068,7 @@ let gnConversationTimer = null;
 let gnListening = false;
 let gnRecognition = null;
 let gnSpeaking = false;
+let gnCurrentResposta = '';
 let gnCommandSource = 'voice';
 let gnTextTargetEl = null;
 let gnMediaRecorder = null;
@@ -7316,6 +7317,7 @@ async function gnExecutar(comando){
       gnDeactivateNodes();
       setTimeout(function(){ if(typeof gnReiniciar==='function') gnReiniciar(); }, 500);
     } else {
+      gnCurrentResposta = resposta;
       await gnSpeak(resposta);
     }
   }catch(err){
@@ -7354,8 +7356,12 @@ async function gnSpeak(texto){
       audio.onerror = function(e){ console.error('Audio erro:', e); reject(e); };
       audio.play().catch(function(err){
         if(err.name === 'NotAllowedError'){
-          var ctx = new (window.AudioContext || window.webkitAudioContext)();
-          ctx.resume().then(function(){ audio.play(); });
+          var hubChat = document.getElementById('hubJarvisChatResp');
+          if(hubChat){
+            hubChat.style.display = 'block';
+            hubChat.textContent = gnCurrentResposta || '';
+          }
+          resolve();
         } else {
           reject(err);
         }
