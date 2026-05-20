@@ -849,7 +849,8 @@ tr:hover td{background:rgba(91,33,182,.05)}
   <div id="hubJarvis">
     <div id="hubJarvisCore">Jarvis</div>
   </div>
-  <div id="hubJarvisChat">
+  <div id="hubJarvisChat" style="position:relative">
+    <button onclick="document.getElementById('hubJarvisChat').style.display='none'" style="position:absolute;top:8px;right:8px;background:transparent;border:none;color:#fff;cursor:pointer;font-size:1.2rem;line-height:1;padding:0">×</button>
     <div id="hubJarvisChatResp"></div>
     <input id="hubJarvisChatInput" type="text" placeholder="Fale com o Jarvis..." autocomplete="off">
     <button id="hubJarvisSendBtn" onclick="hubJarvisSend()">Enviar</button>
