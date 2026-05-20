@@ -7379,35 +7379,32 @@ async function gnSpeak(texto){
     if(buffer) chunks.push(buffer);
     if(chunks.length === 0) chunks.push(texto);
 
-    for(const chunk of chunks){
-      const res = await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({texto:chunk})
+    // Busca todos os áudios em paralelo
+    const audioBlobs = await Promise.all(chunks.map(async (chunk) => {
+      const res = await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({texto: chunk})
       });
-      if(!res.ok) throw new Error('TTS erro: '+res.status);
-      const contentType = res.headers.get('content-type')||'';
-      console.log('TTS chunk content-type:', contentType);
-      const blob = await res.blob();
-      console.log('TTS chunk blob size:', blob.size);
+      if(!res.ok) throw new Error('TTS erro: ' + res.status);
+      return await res.blob();
+    }));
+
+    // Toca em sequência
+    for(const blob of audioBlobs){
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       audio.type = 'audio/wav';
-      await new Promise((resolve, reject)=>{
-        audio.onended = function(){ console.log('Audio chunk terminou'); URL.revokeObjectURL(url); resolve(); };
-        audio.onerror = function(e){ console.error('Audio chunk erro:', e); reject(e); };
+      await new Promise((resolve, reject) => {
+        audio.onended = function(){ URL.revokeObjectURL(url); resolve(); };
+        audio.onerror = function(e){ reject(e); };
         audio.play().catch(function(err){
           if(err.name === 'NotAllowedError'){
             var hubChat = document.getElementById('hubJarvisChatResp');
-            if(hubChat){
-              hubChat.style.display = 'block';
-              hubChat.textContent = gnCurrentResposta || '';
-            }
+            if(hubChat){ hubChat.style.display='block'; hubChat.textContent=gnCurrentResposta||''; }
             URL.revokeObjectURL(url);
             resolve();
-          } else {
-            reject(err);
-          }
+          } else { reject(err); }
         });
       });
     }
