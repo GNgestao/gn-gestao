@@ -5571,6 +5571,7 @@ function enterReconhece(){
     }
   }
   loadRecMes();
+  console.log('recData após loadRecMes:', JSON.stringify(window._recData));
   setTimeout(applyRoleModule, 100);
 }
 
@@ -5614,6 +5615,7 @@ function recCalcTotal(r){
 }
 
 function recRender(data){
+  console.log('recRender chamado com', data ? data.length : 'null', 'registros');
   window._recData = data;
   var tbody = document.getElementById('recTableBody');
   if(!tbody) return;
