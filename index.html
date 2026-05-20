@@ -7309,9 +7309,9 @@ async function gnExecutar(comando){
   else if(cmd.includes('reparo')||cmd.includes('servi')) gnActivateNode('reparo');
   else if(cmd.includes('plano')) gnActivateNode('plano');
   const respostasFixas = [
-    { gatilhos: ['está aí', 'esta ai', 'está ai', 'esta aí', 'você está aí', 'voce esta ai'], resposta: 'Para o senhor, sempre.' },
-    { gatilhos: ['acorda', 'acordar', 'está acordado', 'esta acordado'], resposta: 'Estou acordado, Chefe. Pronto para atender suas necessidades.' },
-    { gatilhos: ['cheguei', 'voltei', 'estou de volta', 'estou aqui'], resposta: 'Bem-vindo de volta, Senhor. Como posso ajudá-lo?' },
+    { gatilhos: ['está aí', 'esta ai', 'você está aí', 'voce esta ai'], resposta: 'Para o senhor, sempre.' },
+    { gatilhos: ['acorda', 'acordar', 'está acordado', 'esta acordado', 'está acordada', 'esta acordada'], resposta: 'Estou acordado, Chefe. Pronto para atender suas necessidades.' },
+    { gatilhos: ['cheguei', 'voltei', 'estou de volta', 'estou aqui', 'eu voltei', 'eu cheguei'], resposta: 'Bem-vindo de volta, Senhor. Como posso ajudá-lo?' },
     { gatilhos: ['boa noite'], resposta: 'Boa noite, Chefe. Como posso servi-lo esta noite?' },
     { gatilhos: ['bom dia'], resposta: 'Bom dia, Senhor. Pronto para mais um dia de conquistas.' },
     { gatilhos: ['boa tarde'], resposta: 'Boa tarde, Chefe. Em que posso ser útil?' }
