@@ -7361,6 +7361,7 @@ async function gnSpeak(texto){
       gnReiniciar();
     }, 300000);
     gnSpeaking = false;
+    gnCommandSource = 'voice';
     gnListening = false;
     if(gnStream){ gnStream.getTracks().forEach(t=>t.stop()); gnStream=null; }
     gnSetBars('');
@@ -7657,6 +7658,9 @@ async function gnSpeak(texto){
     resp.textContent = '...';
     gnCommandSource = 'text';
     gnTextTargetEl = resp;
+    if(gnMediaRecorder && gnMediaRecorder.state !== 'inactive'){ gnMediaRecorder.stop(); }
+    if(gnStream){ gnStream.getTracks().forEach(t=>t.stop()); gnStream=null; }
+    gnListening = false;
     if(typeof gnExecutar === 'function') gnExecutar(texto);
   };
 
@@ -7756,6 +7760,9 @@ async function gnSpeak(texto){
     resp.textContent = '...';
     gnCommandSource = 'text';
     gnTextTargetEl = resp;
+    if(gnMediaRecorder && gnMediaRecorder.state !== 'inactive'){ gnMediaRecorder.stop(); }
+    if(gnStream){ gnStream.getTracks().forEach(t=>t.stop()); gnStream=null; }
+    gnListening = false;
     if(typeof gnExecutar === 'function') gnExecutar(texto);
   };
 
