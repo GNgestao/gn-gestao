@@ -5554,7 +5554,7 @@ function enterReconhece(){
   var sr = document.getElementById('screenReparo');
   if(sr) sr.style.display = 'none';
   var rs = document.getElementById('screenReconhece');
-  if(rs) rs.style.display = 'block';
+  if(rs){ rs.style.cssText=''; rs.style.display = 'block'; }
   var ui = document.getElementById('recUserInfo');
   if(ui && window._currentUser) ui.textContent = window._currentUser.name || window._currentUser.email || '';
   // Month selector
@@ -5747,7 +5747,7 @@ function enterReparo(){
   var sp = document.getElementById('screenPlano');
   if(sp) sp.style.display = 'none';
   var rs = document.getElementById('screenReparo');
-  if(rs) rs.style.display = 'block';
+  if(rs){ rs.style.cssText=''; rs.style.display = 'block'; }
   repLoadData();
   _repCurrentWeekStart = repGetWeekStart(new Date());
   repRenderCal();
@@ -7109,6 +7109,9 @@ function enterGN(){
 function backFromGN(){
   gnStopContinuous();
   const sc=document.getElementById('screenGN');if(sc)sc.style.display='none';
+  ['appScreen','screenReconhece','screenPlano','screenReparo'].forEach(function(id){
+    const el=document.getElementById(id);if(el) el.style.cssText='';
+  });
   const hs=document.getElementById('hubScreen');if(hs)hs.style.cssText='display:flex!important';
 }
 function gnSetStatus(msg,mode){const el=document.getElementById('gnStatus');if(!el)return;el.textContent=msg;el.className=mode||'';}
@@ -7297,7 +7300,7 @@ async function gnExecutar(comando){
     console.log('gnExecutar - comando enviado:', comando);
     const res = await fetch(GN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comando:comando})});
     const data = await res.json();
-    const resposta = data.resposta||data.response||'Não consegui processar o comando.';
+    const resposta = (data.resposta||data.response||'').replace(/\*+/g,'').replace(/#+/g,'').replace(/_{2,}/g,'').trim() || 'Não consegui processar o comando.';
     const respEl = document.getElementById('gnResponse');
     if(respEl){ respEl.textContent=resposta; respEl.style.display='none'; }
     if(gnCommandSource === 'text'){
@@ -7726,11 +7729,11 @@ async function gnSpeak(texto){
     function positionChat(){
       const rect = el.getBoundingClientRect();
       let cx = rect.left + rect.width/2 - 145;
-      let cy = rect.top - 12;
+      let cy = rect.top - 242;
       cx = Math.max(8, Math.min(window.innerWidth - 298, cx));
-      cy = Math.max(8, cy);
-      // prefer above, but flip below if not enough space
-      if(cy - 230 < 8) cy = rect.bottom + 12;
+      if(cy < 8) cy = rect.bottom + 12;
+      cy = Math.max(8, Math.min(window.innerHeight - 250, cy));
+      chat.style.position = 'fixed';
       chat.style.left = cx + 'px';
       chat.style.top  = cy + 'px';
     }
