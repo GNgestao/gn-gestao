@@ -3187,6 +3187,7 @@ function doLogin(){
         .then(function(){ msg.textContent='Conta criada! Entrando...'; msg.style.color='var(--green)'; })
         .catch(function(e){ msg.textContent=translateAuthError(e.code); msg.style.color='var(--red)'; document.getElementById('loginBtn').disabled=false; });
     } else {
+      if(!window._gnAudioCtx){ window._gnAudioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
       fb.signInWithEmailAndPassword(fb.auth, email, password)
         .catch(function(e){ msg.textContent=translateAuthError(e.code); msg.style.color='var(--red)'; document.getElementById('loginBtn').disabled=false; });
     }
@@ -7617,14 +7618,6 @@ async function gnSpeak(texto){
 
     el.style.display = 'block';
 
-    // Inicializa AudioContext e microfone na primeira interação do usuário
-    let gnHubInitialized = false;
-    el.addEventListener('click', function(){
-      if(gnHubInitialized) return;
-      gnHubInitialized = true;
-      if(typeof gnStartContinuous === 'function' && !gnContinuousMode) gnStartContinuous();
-    }, {capture: true});
-
     function positionChat(){
       const rect = el.getBoundingClientRect();
       let cx = rect.left + rect.width/2 - 145;
@@ -7650,6 +7643,8 @@ async function gnSpeak(texto){
     input.addEventListener('keydown', function(e){
       if(e.key === 'Enter') window.hubJarvisSend();
     });
+
+    setTimeout(function(){ if(!gnContinuousMode) gnStartContinuous(); }, 800);
   }
 
   window.hubJarvisSend = function(){
