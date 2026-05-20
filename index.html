@@ -7352,7 +7352,14 @@ async function gnSpeak(texto){
     await new Promise((resolve, reject)=>{
       audio.onended = function(){ console.log('Audio terminou'); resolve(); };
       audio.onerror = function(e){ console.error('Audio erro:', e); reject(e); };
-      audio.play().then(()=>{ console.log('Audio tocando...'); }).catch(reject);
+      audio.play().catch(function(err){
+        if(err.name === 'NotAllowedError'){
+          var ctx = new (window.AudioContext || window.webkitAudioContext)();
+          ctx.resume().then(function(){ audio.play(); });
+        } else {
+          reject(err);
+        }
+      });
     });
     URL.revokeObjectURL(url);
   }catch(err){
