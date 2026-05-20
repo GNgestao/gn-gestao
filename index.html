@@ -5682,6 +5682,7 @@ function recRender(data){
     });
   });
   tbody.innerHTML = html;
+  console.log('HTML gerado para tbody:', html.length, 'chars, primeiros 200:', html.slice(0,200));
 }
 
 function recEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
