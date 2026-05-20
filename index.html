@@ -7364,36 +7364,53 @@ async function gnSpeak(texto){
   if(gnRecognition){ try{ gnRecognition.abort(); }catch(e){} gnRecognition=null; }
   gnListening = false;
   try{
-    const res = await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({texto:texto})
-    });
-    if(!res.ok) throw new Error('TTS erro: '+res.status);
-    const contentType = res.headers.get('content-type')||'';
-    console.log('TTS content-type:', contentType);
-    const blob = await res.blob();
-    console.log('TTS blob size:', blob.size);
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
-    audio.type = 'audio/wav';
-    await new Promise((resolve, reject)=>{
-      audio.onended = function(){ console.log('Audio terminou'); URL.revokeObjectURL(url); resolve(); };
-      audio.onerror = function(e){ console.error('Audio erro:', e); reject(e); };
-      audio.play().catch(function(err){
-        if(err.name === 'NotAllowedError'){
-          var hubChat = document.getElementById('hubJarvisChatResp');
-          if(hubChat){
-            hubChat.style.display = 'block';
-            hubChat.textContent = gnCurrentResposta || '';
-          }
-          URL.revokeObjectURL(url);
-          resolve();
-        } else {
-          reject(err);
-        }
+    const rawChunks = texto.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
+    const chunks = [];
+    let buffer = '';
+    for(let i = 0; i < rawChunks.length; i++){
+      const part = rawChunks[i].trim();
+      buffer = buffer ? buffer + ' ' + part : part;
+      const wordCount = buffer.split(/\s+/).filter(w => w.length > 0).length;
+      if(wordCount >= 3 || i === rawChunks.length - 1){
+        chunks.push(buffer);
+        buffer = '';
+      }
+    }
+    if(buffer) chunks.push(buffer);
+    if(chunks.length === 0) chunks.push(texto);
+
+    for(const chunk of chunks){
+      const res = await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({texto:chunk})
       });
-    });
+      if(!res.ok) throw new Error('TTS erro: '+res.status);
+      const contentType = res.headers.get('content-type')||'';
+      console.log('TTS chunk content-type:', contentType);
+      const blob = await res.blob();
+      console.log('TTS chunk blob size:', blob.size);
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.type = 'audio/wav';
+      await new Promise((resolve, reject)=>{
+        audio.onended = function(){ console.log('Audio chunk terminou'); URL.revokeObjectURL(url); resolve(); };
+        audio.onerror = function(e){ console.error('Audio chunk erro:', e); reject(e); };
+        audio.play().catch(function(err){
+          if(err.name === 'NotAllowedError'){
+            var hubChat = document.getElementById('hubJarvisChatResp');
+            if(hubChat){
+              hubChat.style.display = 'block';
+              hubChat.textContent = gnCurrentResposta || '';
+            }
+            URL.revokeObjectURL(url);
+            resolve();
+          } else {
+            reject(err);
+          }
+        });
+      });
+    }
   }catch(err){
     console.error('gnSpeak erro:', err);
     // Sem fallback de voz — apenas reinicia o loop silenciosamente
