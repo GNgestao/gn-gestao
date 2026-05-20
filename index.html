@@ -7069,6 +7069,7 @@ let gnListening = false;
 let gnRecognition = null;
 let gnSpeaking = false;
 let gnCurrentResposta = '';
+let gnExecutando = false;
 let gnCommandSource = 'voice';
 let gnTextTargetEl = null;
 let gnMediaRecorder = null;
@@ -7292,6 +7293,8 @@ function gnReiniciar(){
 
 async function gnExecutar(comando){
   if(gnSpeaking) return;
+  if(gnExecutando) return;
+  gnExecutando = true;
   gnListening = false;
   if(gnRecognition){ try{ gnRecognition.abort(); }catch(e){} gnRecognition=null; }
   document.getElementById('gnCore').classList.add('listening');
@@ -7305,6 +7308,22 @@ async function gnExecutar(comando){
   else if(cmd.includes('reconhece')||cmd.includes('desempenho')) gnActivateNode('reconhece');
   else if(cmd.includes('reparo')||cmd.includes('servi')) gnActivateNode('reparo');
   else if(cmd.includes('plano')) gnActivateNode('plano');
+  const respostasFixas = [
+    { gatilhos: ['está aí', 'esta ai', 'está ai', 'esta aí', 'você está aí', 'voce esta ai'], resposta: 'Para o senhor, sempre.' },
+    { gatilhos: ['acorda', 'acordar', 'está acordado', 'esta acordado'], resposta: 'Estou acordado, Chefe. Pronto para atender suas necessidades.' },
+    { gatilhos: ['cheguei', 'voltei', 'estou de volta', 'estou aqui'], resposta: 'Bem-vindo de volta, Senhor. Como posso ajudá-lo?' },
+    { gatilhos: ['boa noite'], resposta: 'Boa noite, Chefe. Como posso servi-lo esta noite?' },
+    { gatilhos: ['bom dia'], resposta: 'Bom dia, Senhor. Pronto para mais um dia de conquistas.' },
+    { gatilhos: ['boa tarde'], resposta: 'Boa tarde, Chefe. Em que posso ser útil?' }
+  ];
+  const lowerComando = comando.toLowerCase();
+  const respostaFixa = respostasFixas.find(r => r.gatilhos.some(g => lowerComando.includes(g)));
+  if(respostaFixa){
+    gnCurrentResposta = respostaFixa.resposta;
+    await gnSpeak(respostaFixa.resposta);
+    gnExecutando = false;
+    return;
+  }
   try{
     console.log('gnExecutar - comando enviado:', comando);
     const res = await fetch(GN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comando:comando,historico:gnSessionHistory.slice(-10)})});
@@ -7332,6 +7351,8 @@ async function gnExecutar(comando){
     gnDeactivateNodes();
     gnListening = false;
     gnReiniciar();
+  }finally{
+    gnExecutando = false;
   }
 }
 
