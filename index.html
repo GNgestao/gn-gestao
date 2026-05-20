@@ -7593,8 +7593,6 @@ async function gnSpeak(texto){
         corner.style.display='flex';
       }
     }
-    // Inicia microfone contínuo automaticamente no Hub
-    setTimeout(function(){ if(typeof gnStartContinuous==='function') gnStartContinuous(); }, 1000);
   }
 
   // Wrap showApp to trigger hub init
@@ -7618,6 +7616,14 @@ async function gnSpeak(texto){
     if(!el) return;
 
     el.style.display = 'block';
+
+    // Inicializa AudioContext e microfone na primeira interação do usuário
+    let gnHubInitialized = false;
+    el.addEventListener('click', function(){
+      if(gnHubInitialized) return;
+      gnHubInitialized = true;
+      if(typeof gnStartContinuous === 'function' && !gnContinuousMode) gnStartContinuous();
+    }, {capture: true});
 
     function positionChat(){
       const rect = el.getBoundingClientRect();
@@ -7670,7 +7676,8 @@ async function gnSpeak(texto){
 <div id="globalJarvis">
   <div id="globalJarvisCore">Jarvis</div>
 </div>
-<div id="globalJarvisChat">
+<div id="globalJarvisChat" style="position:relative">
+  <button onclick="document.getElementById('globalJarvisChat').style.display='none'" style="position:absolute;top:8px;right:8px;background:transparent;border:none;color:#fff;cursor:pointer;font-size:1.2rem;line-height:1;padding:0">×</button>
   <div id="globalJarvisChatResp"></div>
   <input id="globalJarvisChatInput" type="text" placeholder="Fale com o Jarvis..." autocomplete="off">
   <button id="globalJarvisSendBtn" onclick="globalJarvisSend()">Enviar</button>
