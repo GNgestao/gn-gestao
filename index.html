@@ -7279,6 +7279,7 @@ async function gnTranscrever(blob){
 }
 
 function gnReiniciar(){
+  console.log('gnReiniciar - flags:', 'continuousMode:', gnContinuousMode, 'listening:', gnListening, 'speaking:', gnSpeaking);
   if(!gnContinuousMode || gnListening || gnSpeaking) return;
   setTimeout(()=>{
     if(gnContinuousMode && !gnListening && !gnSpeaking) gnListen();
