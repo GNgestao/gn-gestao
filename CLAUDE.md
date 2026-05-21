@@ -45,6 +45,17 @@ Rede neural animada. GN no centro, módulos ao redor flutuando. Fundo estrelado 
 - Webhook principal: POST https://n8n.srv1610251.hstgr.cloud/webhook/gn-assistente (body: {comando: texto})
 - Webhook TTS: POST https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts (body: {texto: resposta})
 
+### PROTEÇÃO CONTRA TRAVAMENTOS
+- Camada 1: comando "reiniciar" chama webhook n8n → Restart API: http://187.127.26.136:5051/restart-tts (systemd: jarvis-restart-api)
+- Camada 2: duplo clique no Jarvis (hub) zera flags e reinicia o frontend imediatamente
+- Camada 3: Watchdog automático — verifica a cada 5s, reinicia loop se travado por 45s sem atividade
+
+### NAVEGAÇÃO POR VOZ (gnAcoes)
+- Módulos: reconhece, reparo, plano, preditiva, manutenção preditiva, documentação, gestão de equipe
+- Hub: central, base, tela principal, menu principal, início, voltar, home
+- Sessão: encerrar, encerrar sessão, desligar → fala despedida e faz logoff
+- Reload automático 1,5s após logoff para garantir login limpo
+
 ### STT — DEEPGRAM
 - API Key: bd90f336d163b04c49e60474af21737e635396f4
 - Modelo: nova-2, pt-BR, punctuate=true
@@ -173,8 +184,13 @@ Sequência:
 ## PENDÊNCIAS ABERTAS
 - [x] Busca web no n8n para o Jarvis responder perguntas atuais (notícias, dados em tempo real)
 - [x] Systemd para iniciar Kokoro TTS e jarvis-proxy automaticamente no reboot da VPS
+- [x] Integrar busca web no n8n para Jarvis ter acesso à internet em tempo real
+- [x] Jarvis abrindo abas e controlando o app por voz (gnAcoes)
+- [x] 3 camadas de proteção contra travamentos do Jarvis
+- [x] Comando encerrar sessão com despedida e logoff
+- [x] Reload automático após logoff
+- [x] Monitoramento créditos Deepgram com alerta via WhatsApp
 - [ ] Campo de texto no módulo Jarvis para comandos sem voz
-- [ ] Monitoramento créditos Deepgram com alerta via WhatsApp
 - [ ] Agente Windows para abrir sites/Chrome via comando de voz
 - [ ] Integração TK Mobile — OS abertas e demandas operacionais
 - [ ] Fluxo Sênior para consulta de horas extras em tempo real via Jarvis
@@ -182,10 +198,19 @@ Sequência:
 - [ ] Módulo Documentação
 - [ ] Upgrade ElevenLabs para voz Adam (quando quiser qualidade premium)
 - [ ] Fluxo de monitoramento de prazos (tokens, credenciais) via Jarvis
-- [x] Integrar busca web no n8n para Jarvis ter acesso à internet em tempo real
 - [ ] Verificar possibilidade do Jarvis abrir aplicativos no Windows via comando de voz
-- [ ] Melhorias de layout no app GN Gestão (detalhes a definir)
 - [ ] Retirar mensagem de status quando Jarvis está falando
 - [ ] TTS streaming para reduzir tempo de resposta em textos longos
 - [ ] Memória permanente de fatos e perfil do Gabriel (separada das conversas)
 - [ ] Aumentar limite de memória de 20 para 50 mensagens no contexto do Claude
+
+## PENDÊNCIAS PÓS 25/05
+- [ ] Tela de login futurista
+- [ ] Rebrand: remover menções Zona Vip
+- [ ] Segurança: senha mestra antes do login
+- [ ] Rotacionar API keys e tokens expostos
+- [ ] Sistema neural 3D com Three.js
+- [ ] Integração Gmail, Google Calendar, Outlook
+- [ ] Captação de serviços extras de engenharia
+- [ ] Módulo Perito Judicial
+- [ ] Gestão de ARTs e Laudos
