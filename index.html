@@ -5575,6 +5575,8 @@ function enterReconhece(){
 }
 
 function backFromReconhece(){
+  var sr = document.getElementById('screenReconhece');
+  if(sr){ sr.style.cssText = ''; sr.style.display = 'none'; }
   var rs = document.getElementById('screenReconhece');
   if(rs) rs.style.display = 'none';
   var as = document.getElementById('appScreen');
@@ -5760,6 +5762,8 @@ function enterReparo(){
 }
 
 function backFromReparo(){
+  var sr = document.getElementById('screenReparo');
+  if(sr){ sr.style.cssText = ''; sr.style.display = 'none'; }
   var rs = document.getElementById('screenReparo');
   if(rs) rs.style.display = 'none';
   var as = document.getElementById('appScreen');
@@ -7085,11 +7089,17 @@ const gnAcoes = {
   'manutenção': () => enterReparo(),
   'plano': () => enterPlano(),
   'plano de ação': () => enterPlano(),
+  'preditiva': () => { if(typeof enterApp === 'function') enterApp(); },
   'manutenção preditiva': () => { if(typeof enterApp === 'function') enterApp(); },
   'documentação': () => { if(typeof enterDocumentacao === 'function') enterDocumentacao(); },
-  'hub': () => backToHub(),
-  'voltar': () => backToHub(),
+  'gestão de equipe': () => { if(typeof enterGestaoEquipe === 'function') enterGestaoEquipe(); },
+  'central': () => backToHub(),
+  'base': () => backToHub(),
+  'tela principal': () => backToHub(),
+  'menu principal': () => backToHub(),
   'início': () => backToHub(),
+  'voltar': () => backToHub(),
+  'home': () => backToHub(),
 };
 (function gnInitCanvas(){
   const canvas=document.getElementById('gnCanvas');
