@@ -7581,8 +7581,8 @@ async function gnSpeak(texto){
     })();
 
     // Jarvis center sphere: radius 6, white + cyan emissive
-    const centerMat = new THREE.MeshStandardMaterial({color:0xffffff, emissive:0x00ffff, emissiveIntensity:0.8, metalness:0.1, roughness:0.3});
-    const centerMesh = new THREE.Mesh(new THREE.SphereGeometry(6, 32, 32), centerMat);
+    const centerMat = new THREE.MeshStandardMaterial({color:0xffffff, emissive:0xff6600, emissiveIntensity:1.2, roughness:0.2, metalness:0.8});
+    const centerMesh = new THREE.Mesh(new THREE.SphereGeometry(8, 32, 32), centerMat);
     scene.add(centerMesh);
 
     // --- Modules ---
