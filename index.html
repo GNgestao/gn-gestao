@@ -7087,8 +7087,11 @@ let gnSilenceTimer = null;
 let gnStream = null;
 let gnSessionHistory = [];
 const gnAcoes = {
-  'manutenção preditiva': () => { if(typeof enterApp === 'function') enterApp(); },
-  'preditiva': () => { if(typeof enterApp === 'function') enterApp(); },
+  'encerrar sessão': () => { gnSpeak('Até logo, Chefe. Foi um prazer servi-lo.').then(() => { if(typeof doLogout === 'function') doLogout(); else if(typeof signOut === 'function') signOut(); }); },
+  'encerrar': () => { gnSpeak('Até logo, Chefe. Foi um prazer servi-lo.').then(() => { if(typeof doLogout === 'function') doLogout(); else if(typeof signOut === 'function') signOut(); }); },
+  'desligar': () => { gnSpeak('Até logo, Chefe. Foi um prazer servi-lo.').then(() => { if(typeof doLogout === 'function') doLogout(); else if(typeof signOut === 'function') signOut(); }); },
+  'manutenção preditiva': () => enterModule('preditiva'),
+  'preditiva': () => enterModule('preditiva'),
   'plano de ação': () => enterPlano(),
   'gestão de equipe': () => { if(typeof enterGestaoEquipe === 'function') enterGestaoEquipe(); },
   'reconhece+': () => enterReconhece(),
