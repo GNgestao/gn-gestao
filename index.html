@@ -8059,33 +8059,36 @@ function docAddItem(){
 }
 
 async function gerarCarta(){
-  const apiKey = typeof getApiKey==='function' ? getApiKey() : '';
-  if(!apiKey){ alert('Configure a chave da API Claude primeiro (botão 🔑 API na tela de Manutenção Preditiva).'); return; }
-  const cliente = document.getElementById('docCartaCliente').value.trim();
-  const assunto = document.getElementById('docCartaAssunto').value.trim();
-  if(!cliente||!assunto){ alert('Preencha o cliente e o assunto.'); return; }
+  const clienteValue = document.getElementById('docCartaCliente').value.trim();
+  const assuntoValue = document.getElementById('docCartaAssunto').value.trim();
+  if(!clienteValue||!assuntoValue){ alert('Preencha o cliente e o assunto.'); return; }
   const btn=document.getElementById('docCartaGerarBtn');
   btn.disabled=true; btn.textContent='Gerando...';
   const hoje = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
-  const prompt = `Redija o CORPO de uma carta técnica profissional com as seguintes informações:\n- Data: ${hoje}\n- Destinatário / Cliente: ${cliente}\n- Assunto/Motivo: ${assunto}\n\nA carta deve ser formal, objetiva e profissional. Use linguagem técnica adequada para área de manutenção de elevadores TK Elevator. Inclua saudação, desenvolvimento e encerramento. Não inclua cabeçalho nem rodapé, apenas o corpo da carta.`;
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
-    const data=await res.json();
-    if(data.error){ alert('Erro API: '+data.error.message); btn.disabled=false; btn.textContent='Gerar Carta'; return; }
-    const texto=data.content?.map(b=>b.text||'').join('')||'';
-    document.getElementById('docCartaPreview').textContent=texto;
+    const response = await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-documentos', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        tipo: 'carta',
+        cliente: clienteValue,
+        assunto: assuntoValue
+      })
+    });
+    const data = await response.json();
+    const textoGerado = data.texto || data.resposta || '';
+    if(!textoGerado){ alert('Não foi possível gerar o documento. Verifique o fluxo n8n.'); btn.disabled=false; btn.textContent='Gerar Carta'; return; }
+    document.getElementById('docCartaPreview').textContent=textoGerado;
     document.getElementById('docCartaPreviewWrap').style.display='block';
     document.getElementById('docCartaPdfBtn').style.display='inline-block';
-    window._docCartaData={cliente,assunto,texto,data:hoje};
-  }catch(e){ alert('Erro de conexão.'); }
+    window._docCartaData={cliente:clienteValue,assunto:assuntoValue,texto:textoGerado,data:hoje};
+  }catch(e){ alert('Erro de conexão com o n8n.'); }
   btn.disabled=false; btn.textContent='Gerar Carta';
 }
 
 async function gerarAta(){
-  const apiKey = typeof getApiKey==='function' ? getApiKey() : '';
-  if(!apiKey){ alert('Configure a chave da API Claude primeiro.'); return; }
-  const cliente = document.getElementById('docAtaCliente').value.trim();
-  if(!cliente){ alert('Preencha o cliente.'); return; }
+  const clienteValue = document.getElementById('docAtaCliente').value.trim();
+  if(!clienteValue){ alert('Preencha o cliente.'); return; }
   const participantes = Array.from(document.querySelectorAll('#docAtaParticipantes .doc-part-row')).map(r=>{
     const nome=(r.querySelector('.doc-part-nome')||{}).value||'';
     const email=(r.querySelector('.doc-part-email')||{}).value||'';
@@ -8100,19 +8103,25 @@ async function gerarAta(){
   const btn=document.getElementById('docAtaGerarBtn');
   btn.disabled=true; btn.textContent='Gerando...';
   const hoje = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
-  const partStr = participantes.length ? participantes.join(', ') : 'Não informados';
-  const itensStr = itens.length ? itens.map((i,n)=>`${n+1}. ${i.desc}${i.resp?' — Responsável: '+i.resp:''}${i.prazo?' — Prazo: '+i.prazo:''}`).join('\n') : 'Nenhum item registrado';
-  const prompt = `Redija uma ATA DE REUNIÃO profissional com as seguintes informações:\n- Data: ${hoje}\n- Local/Cliente: ${cliente}\n- Participantes: ${partStr}\n- Itens discutidos:\n${itensStr}\n\nFormate como ata de reunião formal, com introdução, lista de presentes, pauta/deliberações e encerramento. Use linguagem profissional adequada para empresa TK Elevator.`;
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1500,messages:[{role:'user',content:prompt}]})});
-    const data=await res.json();
-    if(data.error){ alert('Erro API: '+data.error.message); btn.disabled=false; btn.textContent='Gerar Ata'; return; }
-    const texto=data.content?.map(b=>b.text||'').join('')||'';
-    document.getElementById('docAtaPreview').textContent=texto;
+    const response = await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-documentos', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        tipo: 'ata',
+        cliente: clienteValue,
+        participantes: participantes,
+        itens: itens
+      })
+    });
+    const data = await response.json();
+    const textoGerado = data.texto || data.resposta || '';
+    if(!textoGerado){ alert('Não foi possível gerar o documento. Verifique o fluxo n8n.'); btn.disabled=false; btn.textContent='Gerar Ata'; return; }
+    document.getElementById('docAtaPreview').textContent=textoGerado;
     document.getElementById('docAtaPreviewWrap').style.display='block';
     document.getElementById('docAtaPdfBtn').style.display='inline-block';
-    window._docAtaData={cliente,participantes,itens,texto,data:hoje};
-  }catch(e){ alert('Erro de conexão.'); }
+    window._docAtaData={cliente:clienteValue,participantes,itens,texto:textoGerado,data:hoje};
+  }catch(e){ alert('Erro de conexão com o n8n.'); }
   btn.disabled=false; btn.textContent='Gerar Ata';
 }
 
