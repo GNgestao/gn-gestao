@@ -7546,244 +7546,211 @@ async function gnSpeak(texto){
     if(window._hubWindowListeners){ window.removeEventListener('mouseup', window._hubWindowListeners.mouseup); window.removeEventListener('mousemove', window._hubWindowListeners.mousemove); }
     if(window._hubResizeHandler) window.removeEventListener('resize', window._hubResizeHandler);
 
-    canvas.style.filter = 'brightness(1.1) saturate(1.5) contrast(1.05)';
+    canvas.style.filter = 'none';
+    canvas.style.background = '#050510';
     const W0 = canvas.offsetWidth || 800, H0 = canvas.offsetHeight || 600;
-
-    // --- Helpers ---
-    function makeStars(count, size, opacity){
-      const pos = new Float32Array(count * 3);
-      for(let i = 0; i < count; i++){ pos[i*3]=(Math.random()-.5)*2800; pos[i*3+1]=(Math.random()-.5)*2800; pos[i*3+2]=(Math.random()-.5)*1400-400; }
-      const g = new THREE.BufferGeometry();
-      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-      return new THREE.Points(g, new THREE.PointsMaterial({color:0xffffff, size, transparent:true, opacity, sizeAttenuation:true}));
-    }
-
-    function makeHalo(hexColor, opacity){
-      const c = document.createElement('canvas'); c.width = c.height = 128;
-      const ct = c.getContext('2d');
-      const r=(hexColor>>16)&0xff, g=(hexColor>>8)&0xff, b=hexColor&0xff;
-      const grad = ct.createRadialGradient(64,64,0, 64,64,64);
-      grad.addColorStop(0,   `rgba(${r},${g},${b},0.9)`);
-      grad.addColorStop(0.35,`rgba(${r},${g},${b},0.35)`);
-      grad.addColorStop(1,   `rgba(${r},${g},${b},0)`);
-      ct.fillStyle = grad; ct.fillRect(0,0,128,128);
-      const tex = new THREE.CanvasTexture(c);
-      return new THREE.Sprite(new THREE.SpriteMaterial({map:tex, transparent:true, opacity, depthWrite:false, blending:THREE.AdditiveBlending}));
-    }
 
     // --- Scene ---
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x060212, 0.00095);
 
     const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
     renderer.setSize(W0, H0);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     window._hubRenderer = renderer;
 
-    const camera = new THREE.PerspectiveCamera(60, W0/H0, 0.1, 3000);
-    camera.position.set(0, 0, 620);
+    const camera = new THREE.PerspectiveCamera(55, W0/H0, 0.1, 4000);
+    camera.position.set(0, 0, 350);
 
-    // Lights
-    scene.add(new THREE.AmbientLight(0x4c1d95, 0.55));
-    const oLight = new THREE.PointLight(0xFF6200, 2.0, 1300); oLight.position.set(100, 100, 200); scene.add(oLight);
-    const pLight = new THREE.PointLight(0x7C3AED, 1.4, 950);  pLight.position.set(-100, -50, 150); scene.add(pLight);
+    // Lights — ambient dim + cyan point at origin for Jarvis glow
+    scene.add(new THREE.AmbientLight(0xffffff, 0.12));
+    const cyanLight = new THREE.PointLight(0x00ffff, 2.5, 320);
+    cyanLight.position.set(0, 0, 0);
+    scene.add(cyanLight);
 
-    // Stars (3 size layers, each pulses independently)
-    const stars = [makeStars(260, 1.2, 0.42), makeStars(110, 2.6, 0.28), makeStars(55, 4.2, 0.16)];
-    stars.forEach(s => scene.add(s));
+    // 1000 stars
+    (function(){
+      const pos = new Float32Array(1000*3);
+      for(let i=0;i<1000;i++){ pos[i*3]=(Math.random()-.5)*3200; pos[i*3+1]=(Math.random()-.5)*3200; pos[i*3+2]=(Math.random()-.5)*2200-600; }
+      const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+      scene.add(new THREE.Points(g, new THREE.PointsMaterial({color:0xffffff,size:0.75,transparent:true,opacity:0.65,sizeAttenuation:true})));
+    })();
 
-    // --- Center sphere (Jarvis, no rings) ---
-    const centerMat = new THREE.MeshStandardMaterial({color:0x12022a, emissive:0xFF6200, emissiveIntensity:0.4, metalness:0.7, roughness:0.2});
-    const centerMesh = new THREE.Mesh(new THREE.SphereGeometry(65, 48, 48), centerMat);
+    // Jarvis center sphere: radius 6, white + cyan emissive
+    const centerMat = new THREE.MeshStandardMaterial({color:0xffffff, emissive:0x00ffff, emissiveIntensity:0.8, metalness:0.1, roughness:0.3});
+    const centerMesh = new THREE.Mesh(new THREE.SphereGeometry(6, 32, 32), centerMat);
     scene.add(centerMesh);
-
-    // Center halos (layered glow)
-    const haloO = makeHalo(0xFF6200, 0.18); haloO.scale.setScalar(180); scene.add(haloO);
-    const haloP = makeHalo(0x7C3AED, 0.12); haloP.scale.setScalar(220); scene.add(haloP);
-
-    // Center orbiting micro-particles
-    const orbitParts = [];
-    for(let i = 0; i < 24; i++){
-      const radius = 82 + Math.random()*28;
-      const speed  = (0.005 + Math.random()*0.007) * (Math.random()<.5?1:-1);
-      const a1 = new THREE.Vector3(Math.random()-.5, Math.random()-.5, Math.random()-.5).normalize();
-      const a2 = new THREE.Vector3().crossVectors(a1, new THREE.Vector3(0,1,0)).normalize();
-      const a3 = new THREE.Vector3().crossVectors(a1, a2).normalize();
-      const col = Math.random()<.55 ? 0xFF6200 : 0xffffff;
-      const sz  = 1.6 + Math.random()*1.8;
-      const mat = new THREE.MeshBasicMaterial({color:col, transparent:true, opacity:.55+Math.random()*.35});
-      const mesh = new THREE.Mesh(new THREE.SphereGeometry(sz, 5, 5), mat);
-      scene.add(mesh);
-      orbitParts.push({mesh, a2, a3, radius, angle: Math.random()*Math.PI*2, speed});
-    }
 
     // --- Modules ---
     const MODS = [
-      {id:'preditiva',    label:'Manutenção\nPreditiva', icon:'🛗', phi:38,  theta:0,   action:()=>enterModule('preditiva'), roles:['superadmin','admin','viewer']},
-      {id:'reconhece',    label:'Reconhece+',            icon:'🏆', phi:62,  theta:60,  action:()=>enterReconhece(),         roles:['superadmin','admin','viewer']},
-      {id:'reparo',       label:'Reparo',                icon:'🔧', phi:62,  theta:120, action:()=>enterReparo(),            roles:['superadmin','admin','viewer']},
-      {id:'plano',        label:'Plano de\nAção',        icon:'📋', phi:38,  theta:180, action:()=>enterPlano(),             roles:['superadmin','admin','viewer']},
-      {id:'documentacao', label:'Documentação',          icon:'📁', phi:62,  theta:240, action:null,                         roles:['superadmin','admin']},
-      {id:'gestaoEquipe', label:'Gestão de\nEquipe',     icon:'👥', phi:62,  theta:300, action:null,                         roles:['superadmin','admin']},
+      {id:'preditiva',    label:'Manutenção\nPreditiva', theta:0,   baseY: 22, action:()=>enterModule('preditiva'), roles:['superadmin','admin','viewer']},
+      {id:'reconhece',    label:'Reconhece+',            theta:60,  baseY:-24, action:()=>enterReconhece(),         roles:['superadmin','admin','viewer']},
+      {id:'reparo',       label:'Reparo',                theta:120, baseY: 10, action:()=>enterReparo(),            roles:['superadmin','admin','viewer']},
+      {id:'plano',        label:'Plano de\nAção',        theta:180, baseY: 30, action:()=>enterPlano(),             roles:['superadmin','admin','viewer']},
+      {id:'documentacao', label:'Documentação',          theta:240, baseY:-16, action:null,                         roles:['superadmin','admin']},
+      {id:'gestaoEquipe', label:'Gestão de\nEquipe',     theta:300, baseY:  8, action:null,                         roles:['superadmin','admin']},
     ];
-    const R = 260, role = window._currentUser?.role || 'viewer';
-    const nodeMeshes = [], nodeHalos = [], curveObjs = [], nodeData = [];
-
-    // Labels overlay
-    let labelsEl = document.getElementById('hub3DLabels');
-    if(!labelsEl){ labelsEl = document.createElement('div'); labelsEl.id='hub3DLabels'; labelsEl.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden'; canvas.parentElement.appendChild(labelsEl); }
-    labelsEl.innerHTML = '';
+    const R = 100, role = window._currentUser?.role || 'viewer';
+    const nodeMeshes = [], nodeData = [];
 
     MODS.forEach((m, i) => {
-      const phiR = m.phi*Math.PI/180, thetaR = m.theta*Math.PI/180;
-      const x = R*Math.sin(phiR)*Math.cos(thetaR);
-      const y = R*Math.cos(phiR)*0.65;
-      const z = R*Math.sin(phiR)*Math.sin(thetaR);
+      const tR = m.theta*Math.PI/180;
+      const x = R*Math.cos(tR), y = m.baseY, z = R*Math.sin(tR);
       const accessible = m.roles.includes(role);
-
-      // Node sphere
-      const nMat = new THREE.MeshStandardMaterial({color:accessible?0x3b1d8a:0x111111, emissive:accessible?0x7C3AED:0x111111, emissiveIntensity:accessible?0.55:0.04, metalness:0.4, roughness:0.4});
-      const nMesh = new THREE.Mesh(new THREE.SphereGeometry(23, 32, 32), nMat);
+      const nMat = new THREE.MeshStandardMaterial({color:0xffffff, emissive:accessible?0x4488ff:0x223355, emissiveIntensity:accessible?0.65:0.15, metalness:0.1, roughness:0.4});
+      const nMesh = new THREE.Mesh(new THREE.SphereGeometry(4, 32, 32), nMat);
       nMesh.position.set(x, y, z);
       nMesh.userData = {moduleIndex:i, accessible};
       scene.add(nMesh); nodeMeshes.push(nMesh);
+      nodeData.push({...m, x, y, z, accessible, floatOff:Math.random()*Math.PI*2, floatSpd:0.003+Math.random()*0.002, pulsePhase:Math.random()*Math.PI*2});
+    });
 
-      // Node halo sprite
-      const nh = makeHalo(accessible?0x7C3AED:0x333333, accessible?0.25:0.06);
-      nh.position.set(x, y, z); nh.scale.setScalar(85); scene.add(nh); nodeHalos.push(nh);
+    // --- Lines: hub→module (6) + cross-connections between modules (8) ---
+    // lineSegs: {fromIdx (-1=center | 0-5=module), toIdx, line, mat, parts[], accessible, baseOpacity}
+    const lineSegs = [];
 
-      // CatmullRomCurve3 — slight lateral bend
-      const mid = new THREE.Vector3(x*.5, y*.5, z*.5);
-      const perp = new THREE.Vector3(-z, (Math.random()-.5)*55, x).normalize().multiplyScalar(16+Math.random()*20);
-      mid.add(perp);
-      const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(0,0,0), mid, new THREE.Vector3(x,y,z)]);
-
-      // Tube from curve
-      const tubeGeom = new THREE.TubeGeometry(curve, 28, accessible?0.65:0.25, 4, false);
-      const tubeMat  = new THREE.MeshBasicMaterial({color:accessible?0x8B5CF6:0x222222, transparent:true, opacity:accessible?0.28:0.07});
-      const tube = new THREE.Mesh(tubeGeom, tubeMat);
-      scene.add(tube); curveObjs.push({tube, tubeMat, accessible, curve});
-
-      // Curve flow particles
-      const curveParts = [];
-      const pCount = accessible ? 6 : 2;
-      for(let j = 0; j < pCount; j++){
-        const pMat  = new THREE.MeshBasicMaterial({color:accessible?0xffffff:0x444444, transparent:true, opacity:.8});
-        const pMesh = new THREE.Mesh(new THREE.SphereGeometry(1.9, 5, 5), pMat);
-        scene.add(pMesh);
-        curveParts.push({mesh:pMesh, t:j/pCount, spd:0.004+Math.random()*0.003, mat:pMat});
+    function makeSeg(fromIdx, toIdx){
+      const fPos = fromIdx===-1 ? new THREE.Vector3(0,0,0) : nodeMeshes[fromIdx].position.clone();
+      const tPos = nodeMeshes[toIdx].position.clone();
+      const geom = new THREE.BufferGeometry().setFromPoints([fPos, tPos]);
+      const accessible = (fromIdx===-1 || nodeData[fromIdx].accessible) && nodeData[toIdx].accessible;
+      const base = accessible ? 0.12 : 0.04;
+      const mat  = new THREE.LineBasicMaterial({color:0xffffff, transparent:true, opacity:base});
+      const line = new THREE.Line(geom, mat);
+      scene.add(line);
+      const parts = [];
+      for(let j=0;j<2;j++){
+        const pm = new THREE.Mesh(new THREE.SphereGeometry(0.55, 4, 4), new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0}));
+        scene.add(pm);
+        parts.push({mesh:pm, t:j*0.5+Math.random()*0.08, spd:0.006+Math.random()*0.005});
       }
+      lineSegs.push({fromIdx, toIdx, line, mat, parts, accessible, baseOpacity:base});
+    }
 
-      nodeData.push({...m, x, y, z, accessible, curveParts, floatOff:Math.random()*Math.PI*2, floatSpd:0.004+Math.random()*0.003});
+    // Hub → each module
+    MODS.forEach((m,i) => makeSeg(-1, i));
+    // Cross-connections forming a neural teia
+    [[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[0,3],[1,4]].forEach(([a,b]) => makeSeg(a, b));
 
-      // Label
-      const d = document.createElement('div'); d.dataset.nodeIndex = i;
-      d.style.cssText = 'position:absolute;transform:translate(-50%,-50%);text-align:center;pointer-events:none';
-      const lc = accessible?'rgba(196,181,253,.85)':'rgba(255,255,255,.2)';
-      d.innerHTML = `<div style="font-size:17px;margin-bottom:2px">${m.icon}</div><div style="font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;color:${lc};line-height:1.35">${m.label.replace('\n','<br>')}</div>${accessible?'':'<div style="font-size:9px;margin-top:1px">🔒</div>'}`;
+    // --- Labels overlay ---
+    let labelsEl = document.getElementById('hub3DLabels');
+    if(!labelsEl){ labelsEl=document.createElement('div'); labelsEl.id='hub3DLabels'; labelsEl.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden'; canvas.parentElement.appendChild(labelsEl); }
+    labelsEl.innerHTML = '';
+
+    // Center label
+    const clabel = document.createElement('div'); clabel.id='hub3DCenterLabel';
+    clabel.style.cssText='position:absolute;transform:translate(-50%,-50%);pointer-events:none;text-align:center';
+    clabel.innerHTML = `<div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#ffffff;letter-spacing:.06em">Jarvis</div>`;
+    labelsEl.appendChild(clabel);
+
+    // Module labels
+    MODS.forEach((m, i) => {
+      const d = document.createElement('div'); d.dataset.nodeIndex=i;
+      d.style.cssText='position:absolute;transform:translate(-50%,-50%);text-align:center;pointer-events:none';
+      const accessible = nodeData[i].accessible;
+      d.innerHTML=`<div style="font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;color:#ffffff;opacity:${accessible?.7:.28};line-height:1.4">${m.label.replace('\n','<br>')}</div>${accessible?'':'<div style="font-size:8px;color:rgba(255,255,255,.25)">🔒</div>'}`;
       labelsEl.appendChild(d);
     });
 
-    // --- Mouse orbit ---
-    let isDragging=false, prevX=0, prevY=0;
-    let rotX=0.12, rotY=0, tRotX=0.12, tRotY=0, zoom=620, tZoom=620;
+    // --- Mouse orbit + zoom ---
+    let isDragging=false, prevX=0, prevY=0, lastDrag=0;
+    let rotX=0.1, rotY=0, tRotX=0.1, tRotY=0, zoom=350, tZoom=350;
     const mouse=new THREE.Vector2(), raycaster=new THREE.Raycaster();
     let hoveredIdx=-1;
 
-    const onMouseUp   = ()=>isDragging=false;
-    const onMouseMove = e=>{ if(!isDragging)return; tRotY+=(e.clientX-prevX)*0.005; tRotX+=(e.clientY-prevY)*0.005; tRotX=Math.max(-Math.PI/3,Math.min(Math.PI/3,tRotX)); prevX=e.clientX; prevY=e.clientY; };
+    const onMouseUp   = ()=>{ isDragging=false; };
+    const onMouseMove = e=>{ if(!isDragging)return; tRotY+=(e.clientX-prevX)*0.005; tRotX+=(e.clientY-prevY)*0.005; tRotX=Math.max(-Math.PI/3,Math.min(Math.PI/3,tRotX)); prevX=e.clientX; prevY=e.clientY; lastDrag=Date.now(); };
     window.addEventListener('mouseup', onMouseUp); window.addEventListener('mousemove', onMouseMove);
     window._hubWindowListeners = {mouseup:onMouseUp, mousemove:onMouseMove};
-    canvas.addEventListener('mousedown', e=>{isDragging=true;prevX=e.clientX;prevY=e.clientY;});
-    canvas.addEventListener('wheel', e=>{e.preventDefault(); tZoom=Math.max(320,Math.min(1100,tZoom+e.deltaY*.5));},{passive:false});
+    canvas.addEventListener('mousedown', e=>{isDragging=true;prevX=e.clientX;prevY=e.clientY;lastDrag=Date.now();});
+    canvas.addEventListener('wheel', e=>{e.preventDefault(); tZoom=Math.max(200,Math.min(900,tZoom+e.deltaY*.3));},{passive:false});
 
-    function doRaycast(){ raycaster.setFromCamera(mouse, camera); const h=raycaster.intersectObjects(nodeMeshes); return(h.length>0&&h[0].object.userData.accessible)?h[0].object.userData.moduleIndex:-1; }
+    function doRaycast(){ raycaster.setFromCamera(mouse,camera); const h=raycaster.intersectObjects(nodeMeshes); return(h.length>0&&h[0].object.userData.accessible)?h[0].object.userData.moduleIndex:-1; }
 
     canvas.addEventListener('mousemove', e=>{
       const rect=canvas.getBoundingClientRect();
       mouse.x=((e.clientX-rect.left)/rect.width)*2-1; mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;
       const ni=doRaycast();
       if(ni!==hoveredIdx){
-        if(hoveredIdx>=0){ nodeMeshes[hoveredIdx].scale.setScalar(1); nodeHalos[hoveredIdx].material.opacity=nodeData[hoveredIdx].accessible?0.25:0.06; curveObjs[hoveredIdx].tubeMat.opacity=nodeData[hoveredIdx].accessible?0.28:0.07; }
+        if(hoveredIdx>=0){
+          nodeMeshes[hoveredIdx].scale.setScalar(1);
+          nodeMeshes[hoveredIdx].material.emissiveIntensity = nodeData[hoveredIdx].accessible?0.65:0.15;
+          lineSegs.forEach(s=>{ if(s.fromIdx===hoveredIdx||s.toIdx===hoveredIdx){ s.mat.opacity=s.baseOpacity; s.mat.color.setHex(0xffffff); } });
+        }
         hoveredIdx=ni;
-        if(ni>=0){ nodeMeshes[ni].scale.setScalar(1.3); nodeHalos[ni].material.opacity=0.6; curveObjs[ni].tubeMat.opacity=0.82; }
+        if(ni>=0){
+          nodeMeshes[ni].scale.setScalar(1.4);
+          nodeMeshes[ni].material.emissiveIntensity=1.3;
+          lineSegs.forEach(s=>{ if(s.fromIdx===ni||s.toIdx===ni){ s.mat.opacity=0.9; s.mat.color.setHex(0x00ffff); } });
+        }
       }
       canvas.style.cursor=ni>=0?'pointer':'default';
     });
+
     canvas.addEventListener('click', e=>{ const rect=canvas.getBoundingClientRect(); mouse.x=((e.clientX-rect.left)/rect.width)*2-1; mouse.y=-((e.clientY-rect.top)/rect.height)*2+1; const idx=doRaycast(); if(idx>=0){const nd=nodeData[idx];if(nd.accessible&&nd.action)nd.action();} });
     canvas.addEventListener('touchend', e=>{ e.preventDefault(); const rect=canvas.getBoundingClientRect(),t=e.changedTouches[0]; mouse.x=((t.clientX-rect.left)/rect.width)*2-1; mouse.y=-((t.clientY-rect.top)/rect.height)*2+1; const idx=doRaycast(); if(idx>=0){const nd=nodeData[idx];if(nd.accessible&&nd.action)nd.action();} });
 
     const onResize=()=>{ const W=canvas.offsetWidth,H=canvas.offsetHeight; renderer.setSize(W,H); camera.aspect=W/H; camera.updateProjectionMatrix(); };
-    window.addEventListener('resize', onResize); window._hubResizeHandler=onResize;
+    window.addEventListener('resize',onResize); window._hubResizeHandler=onResize;
 
-    function toScreen(pos){ const v=pos.clone().project(camera); const rect=canvas.getBoundingClientRect(); return{x:(v.x+1)/2*rect.width, y:(-v.y+1)/2*rect.height, vis:v.z<1}; }
+    function toScreen(pos){ const v=pos.clone().project(camera); const rect=canvas.getBoundingClientRect(); return{x:(v.x+1)/2*rect.width,y:(-v.y+1)/2*rect.height,vis:v.z<1}; }
 
     const labelDivs = labelsEl.querySelectorAll('[data-node-index]');
-    let tick = 0;
+    const clabelEl  = document.getElementById('hub3DCenterLabel');
+    let tick=0;
 
-    // --- Animate ---
     function animate(){
-      window._hubAnimFrame = requestAnimationFrame(animate);
-      tick += 0.016;
-      const speaking = !!window.gnSpeaking;
-      const spdMult  = speaking ? 3.2 : 1.0;
+      window._hubAnimFrame=requestAnimationFrame(animate);
+      tick+=0.016;
 
-      // Camera
-      rotX+=(tRotX-rotX)*.08; rotY+=(tRotY-rotY)*.08; zoom+=(tZoom-zoom)*.08;
+      // Auto-rotation when idle > 1.5s
+      if(!isDragging && Date.now()-lastDrag > 1500) tRotY+=0.001;
+
+      // Smooth camera (damping 0.05)
+      rotX+=(tRotX-rotX)*0.05; rotY+=(tRotY-rotY)*0.05; zoom+=(tZoom-zoom)*0.05;
       camera.position.set(zoom*Math.sin(rotY)*Math.cos(rotX), zoom*Math.sin(rotX), zoom*Math.cos(rotY)*Math.cos(rotX));
       camera.lookAt(0,0,0);
 
-      // Stars pulse (independent layers)
-      stars[0].material.opacity = 0.35 + Math.sin(tick*.65)*0.10;
-      stars[1].material.opacity = 0.20 + Math.sin(tick*.45+1.1)*0.09;
-      stars[2].material.opacity = 0.10 + Math.sin(tick*.28+2.4)*0.07;
+      // Jarvis center: scale pulse 0.9→1.1 + cyanLight pulse
+      const cp=(Math.sin(tick*1.8)+1)*.5;
+      centerMesh.scale.setScalar(0.9+cp*0.2);
+      centerMat.emissiveIntensity=0.6+cp*0.5;
+      cyanLight.intensity=2.0+cp*1.8;
 
-      // Center: scale pulse + emissive + halos
-      const pulse = (Math.sin(tick*1.65)+1)*.5;
-      centerMesh.scale.setScalar(0.95 + pulse*.10);
-      centerMat.emissiveIntensity = 0.28 + pulse*.38 + (speaking?.22:0);
-      haloO.scale.setScalar(150 + pulse*35 + (speaking?25:0));
-      haloO.material.opacity = 0.14 + pulse*.13;
-      haloP.scale.setScalar(200 + pulse*25);
-      haloP.material.opacity = 0.08 + pulse*.07;
-
-      // Orbit micro-particles
-      orbitParts.forEach(p=>{
-        p.angle += p.speed * (1 + (speaking?.8:0));
-        const c=Math.cos(p.angle), s=Math.sin(p.angle);
-        p.mesh.position.set(p.a2.x*p.radius*c+p.a3.x*p.radius*s, p.a2.y*p.radius*c+p.a3.y*p.radius*s, p.a2.z*p.radius*c+p.a3.z*p.radius*s);
+      // Nodes: float + individual emissive pulse
+      nodeData.forEach((nd,i)=>{
+        const fy=Math.sin(tick*nd.floatSpd*60+nd.floatOff)*4;
+        nodeMeshes[i].position.y=nd.y+fy;
+        if(hoveredIdx!==i && nd.accessible){
+          const np=(Math.sin(tick*1.1+nd.pulsePhase)+1)*.5;
+          nodeMeshes[i].material.emissiveIntensity=0.45+np*0.4;
+        }
       });
 
-      // Nodes + curves
-      nodeData.forEach((nd,i)=>{
-        const fy = Math.sin(tick*nd.floatSpd*60+nd.floatOff)*8;
-        nodeMeshes[i].position.y = nd.y+fy;
-        nodeHalos[i].position.y  = nd.y+fy;
-
-        // Line pulse when speaking
-        if(nd.accessible && hoveredIdx!==i)
-          curveObjs[i].tubeMat.opacity = 0.22 + (speaking?(Math.sin(tick*3.5+i)*.5+.5)*.3:0);
-
-        // Curve particles
-        nd.curveParts.forEach(p=>{
-          p.t += p.spd*spdMult; if(p.t>1) p.t=0;
-          const pt = nd.curveParts===curveObjs[i]?.curveParts ? curveObjs[i].curve.getPoint(p.t) : curveObjs[i].curve.getPoint(p.t);
-          p.mesh.position.copy(curveObjs[i].curve.getPoint(p.t));
-          p.mat.opacity = Math.sin(p.t*Math.PI)*(nd.accessible?.9:.18);
+      // Lines: update endpoints each frame + particles lerp
+      lineSegs.forEach(seg=>{
+        const from=seg.fromIdx===-1?centerMesh.position:nodeMeshes[seg.fromIdx].position;
+        const to=nodeMeshes[seg.toIdx].position;
+        const pa=seg.line.geometry.attributes.position;
+        pa.setXYZ(0,from.x,from.y,from.z); pa.setXYZ(1,to.x,to.y,to.z); pa.needsUpdate=true;
+        seg.parts.forEach(p=>{
+          p.t+=p.spd; if(p.t>1)p.t=0;
+          p.mesh.position.lerpVectors(from,to,p.t);
+          p.mesh.material.opacity=Math.sin(p.t*Math.PI)*(seg.accessible?.9:.25);
         });
       });
 
       // Labels
-      labelDivs.forEach((div,i)=>{ const s=toScreen(nodeMeshes[i].position); div.style.left=s.x+'px'; div.style.top=(s.y+28)+'px'; div.style.opacity=s.vis?'1':'0'; });
+      labelDivs.forEach((div,i)=>{ const s=toScreen(nodeMeshes[i].position); div.style.left=s.x+'px'; div.style.top=(s.y+7)+'px'; div.style.opacity=s.vis?'1':'0'; });
+      if(clabelEl){ const sc=toScreen(centerMesh.position); clabelEl.style.left=sc.x+'px'; clabelEl.style.top=(sc.y+11)+'px'; }
 
-      renderer.render(scene, camera);
+      renderer.render(scene,camera);
     }
     animate();
 
     // User display
     if(window._currentUser){
       const u=window._currentUser;
-      const n2=document.getElementById('hubUserName2'), b2=document.getElementById('hubRoleBadge2');
+      const n2=document.getElementById('hubUserName2'),b2=document.getElementById('hubRoleBadge2');
       if(n2) n2.textContent='Olá, '+(u.name||u.email);
       if(b2){ const r=u.role||'viewer'; b2.textContent=r==='superadmin'?'👑 SuperAdmin':r==='admin'?'🔧 Admin':'👁 Viewer'; b2.style.cssText=`font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:99px;background:${r==='superadmin'?'rgba(255,98,0,.2)':'rgba(196,181,253,.1)'};color:${r==='superadmin'?'#FF6200':'#c4b5fd'}`; }
       const corner=document.getElementById('hubUserCorner'),cr=document.getElementById('hubCornerRole'),cn=document.getElementById('hubCornerName');
@@ -7791,8 +7758,8 @@ async function gnSpeak(texto){
     }
   }
 
-  const orig = window.showApp;
-  window.showApp = function(){ if(orig) orig(); setTimeout(initHub, 200); };
+  const orig=window.showApp;
+  window.showApp=function(){ if(orig) orig(); setTimeout(initHub,200); };
 })();
 
 // Hub Jarvis Flutuante
