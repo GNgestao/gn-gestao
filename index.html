@@ -3137,6 +3137,11 @@ function enterPlano(){
   showPlanoScreen();
 }
 function backToHub(){
+  var telas = ['screenReconhece', 'screenReparo', 'screenPlano', 'screenGN', 'appScreen'];
+  telas.forEach(function(id){
+    var el = document.getElementById(id);
+    if(el){ el.style.cssText = ''; el.style.display = 'none'; }
+  });
   var as=document.getElementById('appScreen');
   var hs=document.getElementById('hubScreen');
   if(as) as.style.cssText='display:none!important';
