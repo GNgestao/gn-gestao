@@ -7114,6 +7114,11 @@ const gnAcoes = {
   'início': () => backToHub(),
   'voltar': () => backToHub(),
   'home': () => backToHub(),
+  'firebase': () => window.open('https://console.firebase.google.com', '_blank'),
+  'vps': () => window.open('https://hpanel.hostinger.com', '_blank'),
+  'tkmobile': () => window.open('https://tkmobile.tkelevatorbr.com.br', '_blank'),
+  'senior': () => window.open('https://platform.senior.com.br', '_blank'),
+  'anthropic': () => window.open('https://console.anthropic.com', '_blank'),
 };
 (function gnInitCanvas(){
   const canvas=document.getElementById('gnCanvas');
@@ -7590,8 +7595,13 @@ async function gnSpeak(texto){
       {id:'deepgram',     label:'Deepgram',              theta:150, baseY: -8, action:()=>window.open('https://console.deepgram.com','_blank'),                   roles:['superadmin']},
       {id:'plano',        label:'Plano de\nAção',        theta:180, baseY: 30, action:()=>enterPlano(),                                                          roles:['superadmin','admin','viewer']},
       {id:'documentacao', label:'Documentação',          theta:240, baseY:-16, action:null,                                                                      roles:['superadmin','admin']},
-      {id:'gestaoEquipe', label:'Gestão de\nEquipe',     theta:300, baseY:  8, action:null,                                                                      roles:['superadmin','admin']},
-      {id:'github',       label:'GitHub',                theta:210, baseY: 26, action:()=>window.open('https://github.com/GNgestao/gn-gestao','_blank'),          roles:['superadmin']},
+      {id:'gestaoEquipe', label:'Gestão de\nEquipe',     theta:300, baseY:  8, action:null,                                                                       roles:['superadmin','admin']},
+      {id:'github',       label:'GitHub',                theta:210, baseY: 26, action:()=>window.open('https://github.com/GNgestao/gn-gestao','_blank'),           roles:['superadmin']},
+      {id:'firebase',     label:'Firebase',              theta:255, baseY:-20, action:()=>window.open('https://console.firebase.google.com','_blank'),             roles:['superadmin']},
+      {id:'vps',          label:'VPS',                   theta:270, baseY: 14, action:()=>window.open('https://hpanel.hostinger.com','_blank'),                    roles:['superadmin']},
+      {id:'tkmobile',     label:'TKE Mobile',            theta:315, baseY:-25, action:()=>window.open('https://tkmobile.tkelevatorbr.com.br','_blank'),            roles:['superadmin']},
+      {id:'senior',       label:'Senior',                theta:330, baseY: 20, action:()=>window.open('https://platform.senior.com.br','_blank'),                  roles:['superadmin']},
+      {id:'anthropic',    label:'Anthropic',             theta:345, baseY: -5, action:()=>window.open('https://console.anthropic.com','_blank'),                   roles:['superadmin']},
     ];
     const R = 100, role = window._currentUser?.role || 'viewer';
     const nodeMeshes = [], nodeData = [];
