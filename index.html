@@ -7582,12 +7582,16 @@ async function gnSpeak(texto){
 
     // --- Modules ---
     const MODS = [
-      {id:'preditiva',    label:'Manutenção\nPreditiva', theta:0,   baseY: 22, action:()=>enterModule('preditiva'), roles:['superadmin','admin','viewer']},
-      {id:'reconhece',    label:'Reconhece+',            theta:60,  baseY:-24, action:()=>enterReconhece(),         roles:['superadmin','admin','viewer']},
-      {id:'reparo',       label:'Reparo',                theta:120, baseY: 10, action:()=>enterReparo(),            roles:['superadmin','admin','viewer']},
-      {id:'plano',        label:'Plano de\nAção',        theta:180, baseY: 30, action:()=>enterPlano(),             roles:['superadmin','admin','viewer']},
-      {id:'documentacao', label:'Documentação',          theta:240, baseY:-16, action:null,                         roles:['superadmin','admin']},
-      {id:'gestaoEquipe', label:'Gestão de\nEquipe',     theta:300, baseY:  8, action:null,                         roles:['superadmin','admin']},
+      {id:'preditiva',    label:'Manutenção\nPreditiva', theta:0,   baseY: 22, action:()=>enterModule('preditiva'),                                              roles:['superadmin','admin','viewer']},
+      {id:'n8n',          label:'n8n',                   theta:30,  baseY:-30, action:()=>window.open('https://n8n.srv1610251.hstgr.cloud','_blank'),             roles:['superadmin']},
+      {id:'reconhece',    label:'Reconhece+',            theta:60,  baseY:-24, action:()=>enterReconhece(),                                                      roles:['superadmin','admin','viewer']},
+      {id:'whatsapp',     label:'WhatsApp',              theta:90,  baseY: 18, action:()=>window.open('http://187.127.26.136:8081','_blank'),                     roles:['superadmin']},
+      {id:'reparo',       label:'Reparo',                theta:120, baseY: 10, action:()=>enterReparo(),                                                         roles:['superadmin','admin','viewer']},
+      {id:'deepgram',     label:'Deepgram',              theta:150, baseY: -8, action:()=>window.open('https://console.deepgram.com','_blank'),                   roles:['superadmin']},
+      {id:'plano',        label:'Plano de\nAção',        theta:180, baseY: 30, action:()=>enterPlano(),                                                          roles:['superadmin','admin','viewer']},
+      {id:'documentacao', label:'Documentação',          theta:240, baseY:-16, action:null,                                                                      roles:['superadmin','admin']},
+      {id:'gestaoEquipe', label:'Gestão de\nEquipe',     theta:300, baseY:  8, action:null,                                                                      roles:['superadmin','admin']},
+      {id:'github',       label:'GitHub',                theta:210, baseY: 26, action:()=>window.open('https://github.com/GNgestao/gn-gestao','_blank'),          roles:['superadmin']},
     ];
     const R = 100, role = window._currentUser?.role || 'viewer';
     const nodeMeshes = [], nodeData = [];
