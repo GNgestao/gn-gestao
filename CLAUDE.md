@@ -187,29 +187,33 @@ Sequência:
 - [x] Integrar busca web no n8n para Jarvis ter acesso à internet em tempo real
 - [x] Jarvis abrindo abas e controlando o app por voz (gnAcoes)
 - [x] 3 camadas de proteção contra travamentos do Jarvis
+- [x] Watchdog automático 45s + Restart API porta 5051 (systemd: jarvis-restart-api)
+- [x] Fluxo reiniciar-jarvis-tts no n8n
 - [x] Comando encerrar sessão com despedida e logoff
 - [x] Reload automático após logoff
 - [x] Monitoramento créditos Deepgram com alerta via WhatsApp
+- [x] Sistema neural 3D com Three.js no hub (15 nós: 6 módulos + 9 externos)
+- [x] Navegação por voz entre todos os módulos e sites externos
 - [ ] Campo de texto no módulo Jarvis para comandos sem voz
-- [ ] Agente Windows para abrir sites/Chrome via comando de voz
-- [ ] Integração TK Mobile — OS abertas e demandas operacionais
-- [ ] Fluxo Sênior para consulta de horas extras em tempo real via Jarvis
-- [ ] Módulo Gestão da Equipe
+- [ ] Integração TK Mobile com Jarvis (fluxo base: Fluxo 1 - TAC Mobile)
 - [ ] Módulo Documentação
+- [ ] Módulo Gestão de Equipe
+- [ ] Jarvis abrindo qualquer site por voz
+- [ ] Fluxo Sênior para consulta de horas extras em tempo real via Jarvis
 - [ ] Upgrade ElevenLabs para voz Adam (quando quiser qualidade premium)
 - [ ] Fluxo de monitoramento de prazos (tokens, credenciais) via Jarvis
-- [ ] Verificar possibilidade do Jarvis abrir aplicativos no Windows via comando de voz
-- [ ] Retirar mensagem de status quando Jarvis está falando
-- [ ] TTS streaming para reduzir tempo de resposta em textos longos
+- [ ] TTS streaming / melhorar tempo de retorno do Jarvis ao falar
 - [ ] Memória permanente de fatos e perfil do Gabriel (separada das conversas)
 - [ ] Aumentar limite de memória de 20 para 50 mensagens no contexto do Claude
 
 ## PENDÊNCIAS PÓS 25/05
+- [ ] Sistema neural com clusters/quadrantes (Trabalho, Pessoal, Agenda, Serviços)
+- [ ] Jarvis móvel no centro do sistema neural
 - [ ] Tela de login futurista
 - [ ] Rebrand: remover menções Zona Vip
 - [ ] Segurança: senha mestra antes do login
 - [ ] Rotacionar API keys e tokens expostos
-- [ ] Sistema neural 3D com Three.js
+- [ ] PWA — transformar GN Gestão em app instalável
 - [ ] Integração Gmail, Google Calendar, Outlook
 - [ ] Captação de serviços extras de engenharia
 - [ ] Módulo Perito Judicial
