@@ -6,6 +6,7 @@
 <title>GN Gestão Zona Vip</title>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -7537,201 +7538,286 @@ async function gnSpeak(texto){
   function initHub(){
     const canvas = document.getElementById('hubCanvas');
     if(!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let W, H, animFrame;
+    if(!window.THREE){ console.warn('Three.js not loaded'); return; }
 
-    const modules = [
-      {id:'preditiva', label:'Manutenção\nPreditiva', icon:'🛗', angle:270, action:()=>enterModule('preditiva'), roles:['superadmin','admin','viewer']},
-      {id:'reconhece', label:'Reconhece+', icon:'🏆', angle:330, action:()=>enterReconhece(), roles:['superadmin','admin','viewer']},
-      {id:'reparo', label:'Reparo', icon:'🔧', angle:30, action:()=>enterReparo(), roles:['superadmin','admin','viewer']},
-      {id:'plano', label:'Plano de\nAção', icon:'📋', angle:90, action:()=>enterPlano(), roles:['superadmin','admin','viewer']},
-      {id:'documentacao', label:'Documentação', icon:'📁', angle:150, action:null, roles:['superadmin','admin']},
-      {id:'gestaoEquipe', label:'Gestão de\nEquipe', icon:'👥', angle:210, action:null, roles:['superadmin','admin']},
+    // Cleanup previous instance
+    if(window._hubAnimFrame){ cancelAnimationFrame(window._hubAnimFrame); window._hubAnimFrame = null; }
+    if(window._hubRenderer){ window._hubRenderer.dispose(); window._hubRenderer = null; }
+    if(window._hubWindowListeners){
+      window.removeEventListener('mouseup',  window._hubWindowListeners.mouseup);
+      window.removeEventListener('mousemove', window._hubWindowListeners.mousemove);
+    }
+    if(window._hubResizeHandler) window.removeEventListener('resize', window._hubResizeHandler);
+
+    canvas.style.filter = 'brightness(1.08) saturate(1.4)';
+
+    const W0 = canvas.offsetWidth || 800, H0 = canvas.offsetHeight || 600;
+
+    // Scene + renderer
+    const scene    = new THREE.Scene();
+    const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+    renderer.setSize(W0, H0);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    window._hubRenderer = renderer;
+
+    // Camera
+    const camera = new THREE.PerspectiveCamera(60, W0/H0, 0.1, 3000);
+    camera.position.set(0, 0, 620);
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0x4c1d95, 0.6));
+    const oLight = new THREE.PointLight(0xFF6200, 1.8, 1200);
+    oLight.position.set(120, 120, 220);
+    scene.add(oLight);
+    const pLight = new THREE.PointLight(0x7C3AED, 1.2, 900);
+    pLight.position.set(-120, -60, 160);
+    scene.add(pLight);
+
+    // Stars
+    const starPos = new Float32Array(400 * 3);
+    for(let i = 0; i < 400; i++){
+      starPos[i*3]   = (Math.random() - 0.5) * 2400;
+      starPos[i*3+1] = (Math.random() - 0.5) * 2400;
+      starPos[i*3+2] = (Math.random() - 0.5) * 1200 - 300;
+    }
+    const starGeom = new THREE.BufferGeometry();
+    starGeom.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+    scene.add(new THREE.Points(starGeom, new THREE.PointsMaterial({color:0xffffff, size:1.8, transparent:true, opacity:0.55})));
+
+    // Center sphere (Jarvis)
+    const centerMat = new THREE.MeshStandardMaterial({color:0x1a0535, emissive:0xFF6200, emissiveIntensity:0.3, metalness:0.6, roughness:0.3});
+    const centerMesh = new THREE.Mesh(new THREE.SphereGeometry(62, 32, 32), centerMat);
+    scene.add(centerMesh);
+
+    // Orbital rings
+    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(88, 2.2, 8, 64), new THREE.MeshStandardMaterial({color:0x7C3AED, emissive:0x7C3AED, emissiveIntensity:0.5, transparent:true, opacity:0.7}));
+    ring1.rotation.x = Math.PI / 6;
+    scene.add(ring1);
+    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(105, 1.6, 8, 64), new THREE.MeshStandardMaterial({color:0xFF6200, emissive:0xFF6200, emissiveIntensity:0.4, transparent:true, opacity:0.45}));
+    ring2.rotation.x = Math.PI / 3;
+    ring2.rotation.z = Math.PI / 4;
+    scene.add(ring2);
+
+    // Module definitions — phi/theta place them in 3-D orbit
+    const MODS = [
+      {id:'preditiva',    label:'Manutenção\nPreditiva', icon:'🛗', phi:38,  theta:0,   action:()=>enterModule('preditiva'), roles:['superadmin','admin','viewer']},
+      {id:'reconhece',    label:'Reconhece+',            icon:'🏆', phi:62,  theta:60,  action:()=>enterReconhece(),         roles:['superadmin','admin','viewer']},
+      {id:'reparo',       label:'Reparo',                icon:'🔧', phi:62,  theta:120, action:()=>enterReparo(),            roles:['superadmin','admin','viewer']},
+      {id:'plano',        label:'Plano de\nAção',        icon:'📋', phi:38,  theta:180, action:()=>enterPlano(),             roles:['superadmin','admin','viewer']},
+      {id:'documentacao', label:'Documentação',          icon:'📁', phi:62,  theta:240, action:null,                         roles:['superadmin','admin']},
+      {id:'gestaoEquipe', label:'Gestão de\nEquipe',     icon:'👥', phi:62,  theta:300, action:null,                         roles:['superadmin','admin']},
     ];
 
-    let nodes = [];
-    let centerNode = null;
-    let particles = [];
-    let hoveredNode = null;
+    const R = 260;
+    const role = window._currentUser?.role || 'viewer';
+    const nodeMeshes = [], lineMeshes = [], nodeData = [];
 
-    function buildNodes(){
-      W = canvas.width = canvas.offsetWidth;
-      H = canvas.height = canvas.offsetHeight;
-      const cx = W/2, cy = H/2;
-      const radius = Math.min(W,H) * 0.32;
+    // Labels overlay
+    let labelsEl = document.getElementById('hub3DLabels');
+    if(!labelsEl){
+      labelsEl = document.createElement('div');
+      labelsEl.id = 'hub3DLabels';
+      labelsEl.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden';
+      canvas.parentElement.appendChild(labelsEl);
+    }
+    labelsEl.innerHTML = '';
 
-      centerNode = {x:cx, y:cy, r:52, label:'GN\nGestão', isCenter:true, pulse:0, pulseDir:1};
+    MODS.forEach((m, i) => {
+      const phiR   = m.phi   * Math.PI / 180;
+      const thetaR = m.theta * Math.PI / 180;
+      const x = R * Math.sin(phiR) * Math.cos(thetaR);
+      const y = R * Math.cos(phiR) * 0.65;
+      const z = R * Math.sin(phiR) * Math.sin(thetaR);
+      const accessible = m.roles.includes(role);
 
-      nodes = modules.map(m=>{
-        const rad = (m.angle-90)*Math.PI/180;
-        return {
-          ...m,
-          x: cx + Math.cos(rad)*radius + (Math.random()-.5)*8,
-          y: cy + Math.sin(rad)*radius + (Math.random()-.5)*8,
-          ox: cx + Math.cos(rad)*radius,
-          oy: cy + Math.sin(rad)*radius,
-          r: 38,
-          t: Math.random()*Math.PI*2,
-          speed: .004 + Math.random()*.003,
-          floatAmp: 6+Math.random()*6,
-          pulse:0, pulseDir:1,
-          hovered:false
-        };
+      const mat = new THREE.MeshStandardMaterial({
+        color: accessible ? 0x2d1b69 : 0x111111,
+        emissive: accessible ? 0x7C3AED : 0x111111,
+        emissiveIntensity: accessible ? 0.22 : 0.04,
+        metalness: 0.3, roughness: 0.5,
       });
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(26, 32, 32), mat);
+      mesh.position.set(x, y, z);
+      mesh.userData = {moduleIndex: i, accessible};
+      scene.add(mesh);
+      nodeMeshes.push(mesh);
 
-      for(let i=0;i<30;i++) particles.push({
-        x:Math.random()*W, y:Math.random()*H,
-        vx:(Math.random()-.5)*.4, vy:(Math.random()-.5)*.4,
-        r:Math.random()*1.5+.3, alpha:Math.random()*.3+.1
-      });
+      // Line
+      const linePts = [new THREE.Vector3(0,0,0), new THREE.Vector3(x,y,z)];
+      const lineGeom = new THREE.BufferGeometry().setFromPoints(linePts);
+      const lineMat  = new THREE.LineBasicMaterial({color: accessible ? 0xFF6200 : 0x333333, transparent:true, opacity: accessible ? 0.35 : 0.1});
+      const line = new THREE.Line(lineGeom, lineMat);
+      scene.add(line);
+      lineMeshes.push({line, mat: lineMat, accessible});
+
+      nodeData.push({...m, x, y, z, accessible, floatOff: Math.random()*Math.PI*2, floatSpd: 0.004+Math.random()*0.003});
+
+      // Label div
+      const d = document.createElement('div');
+      d.dataset.nodeIndex = i;
+      d.style.cssText = 'position:absolute;transform:translate(-50%,-50%);text-align:center;pointer-events:none';
+      const lblColor = accessible ? 'rgba(196,181,253,.85)' : 'rgba(255,255,255,.18)';
+      d.innerHTML = `<div style="font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;color:${lblColor};line-height:1.35">${m.label.replace('\n','<br>')}</div>${accessible ? '' : '<div style="font-size:9px;margin-top:1px">🔒</div>'}`;
+      labelsEl.appendChild(d);
+    });
+
+    // Particles flowing along lines
+    const particles = [];
+    nodeData.forEach((nd, ndIdx) => {
+      for(let j = 0; j < 5; j++){
+        const pMat  = new THREE.MeshBasicMaterial({color: nd.accessible ? 0xFF6200 : 0x444444, transparent:true, opacity:0.7});
+        const pMesh = new THREE.Mesh(new THREE.SphereGeometry(2.2, 6, 6), pMat);
+        scene.add(pMesh);
+        particles.push({mesh: pMesh, t: (j/5) + Math.random()*0.05, spd: 0.003+Math.random()*0.004, ndIdx});
+      }
+    });
+
+    // Mouse orbit state
+    let isDragging = false, prevX = 0, prevY = 0;
+    let rotX = 0.12, rotY = 0, tRotX = 0.12, tRotY = 0;
+    let zoom = 620, tZoom = 620;
+    const mouse = new THREE.Vector2();
+    const raycaster = new THREE.Raycaster();
+    let hoveredIdx = -1;
+
+    const onMouseUp   = () => isDragging = false;
+    const onMouseMove = e => {
+      if(!isDragging) return;
+      tRotY += (e.clientX - prevX) * 0.005;
+      tRotX += (e.clientY - prevY) * 0.005;
+      tRotX  = Math.max(-Math.PI/3, Math.min(Math.PI/3, tRotX));
+      prevX = e.clientX; prevY = e.clientY;
+    };
+    window.addEventListener('mouseup',   onMouseUp);
+    window.addEventListener('mousemove', onMouseMove);
+    window._hubWindowListeners = {mouseup: onMouseUp, mousemove: onMouseMove};
+
+    canvas.addEventListener('mousedown', e => { isDragging=true; prevX=e.clientX; prevY=e.clientY; });
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      tZoom = Math.max(320, Math.min(1100, tZoom + e.deltaY * 0.5));
+    }, {passive:false});
+
+    // Hover + click raycasting
+    canvas.addEventListener('mousemove', e => {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+      mouse.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects(nodeMeshes);
+      const newIdx = (hits.length > 0 && hits[0].object.userData.accessible) ? hits[0].object.userData.moduleIndex : -1;
+      if(newIdx !== hoveredIdx){
+        if(hoveredIdx >= 0){ nodeMeshes[hoveredIdx].material.emissiveIntensity = nodeData[hoveredIdx].accessible ? 0.22 : 0.04; lineMeshes[hoveredIdx].mat.opacity = nodeData[hoveredIdx].accessible ? 0.35 : 0.1; }
+        hoveredIdx = newIdx;
+        if(newIdx >= 0){ nodeMeshes[newIdx].material.emissiveIntensity = 0.75; lineMeshes[newIdx].mat.opacity = 0.85; }
+      }
+      canvas.style.cursor = newIdx >= 0 ? 'pointer' : 'default';
+    });
+
+    canvas.addEventListener('click', e => {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+      mouse.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects(nodeMeshes);
+      if(hits.length > 0){ const nd = nodeData[hits[0].object.userData.moduleIndex]; if(nd.accessible && nd.action) nd.action(); }
+    });
+
+    canvas.addEventListener('touchend', e => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const t = e.changedTouches[0];
+      mouse.x =  ((t.clientX - rect.left) / rect.width)  * 2 - 1;
+      mouse.y = -((t.clientY - rect.top)  / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects(nodeMeshes);
+      if(hits.length > 0){ const nd = nodeData[hits[0].object.userData.moduleIndex]; if(nd.accessible && nd.action) nd.action(); }
+    });
+
+    // Resize
+    const onResize = () => {
+      const W = canvas.offsetWidth, H = canvas.offsetHeight;
+      renderer.setSize(W, H);
+      camera.aspect = W / H;
+      camera.updateProjectionMatrix();
+    };
+    window.addEventListener('resize', onResize);
+    window._hubResizeHandler = onResize;
+
+    // Project 3D → screen
+    function toScreen(pos){
+      const v = pos.clone().project(camera);
+      const rect = canvas.getBoundingClientRect();
+      return { x: (v.x+1)/2*rect.width, y: (-v.y+1)/2*rect.height, vis: v.z < 1 };
     }
 
-    function draw(){
-      W = canvas.width = canvas.offsetWidth;
-      H = canvas.height = canvas.offsetHeight;
-      ctx.clearRect(0,0,W,H);
+    const labelDivs = labelsEl.querySelectorAll('[data-node-index]');
+    let tick = 0;
 
-      const role = window._currentUser?.role || 'viewer';
-      const cx=W/2, cy=H/2;
+    function animate(){
+      window._hubAnimFrame = requestAnimationFrame(animate);
+      tick += 0.016;
 
-      // Particles
-      particles.forEach(p=>{
-        p.x+=p.vx; p.y+=p.vy;
-        if(p.x<0)p.x=W; if(p.x>W)p.x=0;
-        if(p.y<0)p.y=H; if(p.y>H)p.y=0;
-        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-        ctx.fillStyle=`rgba(124,58,237,${p.alpha})`; ctx.fill();
-      });
-
-      // Float nodes
-      nodes.forEach(n=>{
-        n.t += n.speed;
-        n.x = n.ox + Math.sin(n.t)*n.floatAmp;
-        n.y = n.oy + Math.cos(n.t*1.3)*n.floatAmp*.6;
-        n.pulse += .04*n.pulseDir;
-        if(n.pulse>1||n.pulse<0) n.pulseDir*=-1;
-      });
+      // Smooth camera orbit
+      rotX += (tRotX - rotX) * 0.08;
+      rotY += (tRotY - rotY) * 0.08;
+      zoom += (tZoom  - zoom)  * 0.08;
+      camera.position.set(
+        zoom * Math.sin(rotY) * Math.cos(rotX),
+        zoom * Math.sin(rotX),
+        zoom * Math.cos(rotY) * Math.cos(rotX)
+      );
+      camera.lookAt(0, 0, 0);
 
       // Center pulse
-      centerNode.pulse += .03*centerNode.pulseDir;
-      if(centerNode.pulse>1||centerNode.pulse<0) centerNode.pulseDir*=-1;
+      centerMat.emissiveIntensity = 0.18 + (Math.sin(tick * 1.5) + 1) * 0.5 * 0.32;
 
-      // Lines from center to nodes
-      nodes.forEach(n=>{
-        const accessible = n.roles.includes(role);
-        const alpha = accessible ? .35+n.pulse*.15 : .1;
-        const grad = ctx.createLinearGradient(cx,cy,n.x,n.y);
-        grad.addColorStop(0,'rgba(255,98,0,'+alpha+')');
-        grad.addColorStop(1,'rgba(124,58,237,'+(alpha*.6)+')');
-        ctx.beginPath();
-        ctx.strokeStyle = grad;
-        ctx.lineWidth = accessible ? 1.5 : .5;
-        ctx.setLineDash(accessible?[]:[4,6]);
-        ctx.moveTo(cx,cy); ctx.lineTo(n.x,n.y); ctx.stroke();
-        ctx.setLineDash([]);
+      // Rings
+      ring1.rotation.y += 0.006;
+      ring2.rotation.z += 0.004;
+      ring2.rotation.x += 0.002;
+
+      // Node float + update line endpoints
+      nodeData.forEach((nd, i) => {
+        const fy = Math.sin(tick * nd.floatSpd * 60 + nd.floatOff) * 8;
+        nodeMeshes[i].position.y = nd.y + fy;
+        const pos = lineMeshes[i].line.geometry.attributes.position;
+        pos.setXYZ(1, nodeMeshes[i].position.x, nodeMeshes[i].position.y, nodeMeshes[i].position.z);
+        pos.needsUpdate = true;
       });
 
-      // Module nodes
-      nodes.forEach(n=>{
-        const accessible = n.roles.includes(role);
-        const glow = accessible ? (.2+n.pulse*.25) : .05;
-        ctx.save();
-        if(accessible){ ctx.shadowBlur=n.hovered?40:20; ctx.shadowColor=n.id==='gn'?`rgba(255,98,0,${glow})`:`rgba(124,58,237,${glow})`; }
-        ctx.beginPath(); ctx.arc(n.x,n.y,n.hovered&&accessible?n.r+4:n.r,0,Math.PI*2);
-        const ng=ctx.createRadialGradient(n.x-8,n.y-8,3,n.x,n.y,n.r);
-        if(n.id==='gn'){
-          ng.addColorStop(0,accessible?'#7C3AED':'#1a0535');
-          ng.addColorStop(1,accessible?'#321d65':'#0d0620');
-        } else {
-          ng.addColorStop(0,accessible?'#2d1b69':'#111');
-          ng.addColorStop(1,accessible?'#1a0535':'#0d0620');
-        }
-        ctx.fillStyle=ng; ctx.fill();
-        const borderColor = !accessible?'rgba(255,255,255,.08)':n.id==='gn'?`rgba(255,98,0,${.5+n.pulse*.3})`:`rgba(124,58,237,${.4+n.pulse*.2})`;
-        ctx.strokeStyle=borderColor; ctx.lineWidth=n.hovered&&accessible?2:1.5; ctx.stroke();
-        ctx.restore();
-
-        ctx.fillStyle=accessible?'rgba(255,255,255,.9)':'rgba(255,255,255,.2)';
-        ctx.font=`500 ${n.id==='gn'?18:16}px DM Sans,sans-serif`; ctx.textAlign='center';
-        ctx.fillText(n.icon,n.x,n.y+5);
-
-        const lines=n.label.split('\n');
-        ctx.font='500 9px DM Sans,sans-serif';
-        ctx.fillStyle=accessible?(n.id==='gn'?'rgba(255,98,0,.9)':'rgba(196,181,253,.8)'):'rgba(255,255,255,.15)';
-        lines.forEach((l,i)=>ctx.fillText(l,n.x,n.y+n.r+14+(i*12)));
-
-        if(!accessible||(!n.action&&n.id!=='gn')){
-          ctx.fillStyle='rgba(255,255,255,.12)'; ctx.font='10px sans-serif'; ctx.textAlign='center';
-          ctx.fillText('🔒',n.x,n.y-n.r-6);
-        }
+      // Particles
+      particles.forEach(p => {
+        p.t += p.spd;
+        if(p.t > 1) p.t = 0;
+        const nm = nodeMeshes[p.ndIdx];
+        p.mesh.position.set(nm.position.x*p.t, nm.position.y*p.t, nm.position.z*p.t);
+        p.mesh.material.opacity = Math.sin(p.t * Math.PI) * (nodeData[p.ndIdx].accessible ? 0.8 : 0.15);
       });
 
-      animFrame = requestAnimationFrame(draw);
+      // Label positions
+      labelDivs.forEach((div, i) => {
+        const s = toScreen(nodeMeshes[i].position);
+        div.style.left = s.x + 'px';
+        div.style.top  = (s.y + 32) + 'px';
+        div.style.opacity = s.vis ? '1' : '0';
+      });
+
+      renderer.render(scene, camera);
     }
+    animate();
 
-    function getHitNode(mx,my){
-      const role = window._currentUser?.role||'viewer';
-      for(let n of nodes){
-        const dx=mx-n.x,dy=my-n.y;
-        if(Math.sqrt(dx*dx+dy*dy)<n.r+8 && n.roles.includes(role)) return n;
-      }
-      return null;
-    }
-
-    canvas.addEventListener('mousemove',function(e){
-      const r=canvas.getBoundingClientRect();
-      const mx=e.clientX-r.left,my=e.clientY-r.top;
-      const hit=getHitNode(mx,my);
-      nodes.forEach(n=>n.hovered=false);
-      if(hit){ hit.hovered=true; canvas.style.cursor='pointer'; }
-      else canvas.style.cursor='default';
-      hoveredNode=hit;
-    });
-
-    canvas.addEventListener('click',function(e){
-      const r=canvas.getBoundingClientRect();
-      const mx=e.clientX-r.left,my=e.clientY-r.top;
-      const hit=getHitNode(mx,my);
-      if(hit && hit.action) hit.action();
-    });
-
-    canvas.addEventListener('touchend',function(e){
-      e.preventDefault();
-      const r=canvas.getBoundingClientRect();
-      const t=e.changedTouches[0];
-      const mx=t.clientX-r.left,my=t.clientY-r.top;
-      const hit=getHitNode(mx,my);
-      if(hit && hit.action) hit.action();
-    });
-
-    buildNodes();
-    draw();
-
-    // Update user display
+    // User display
     if(window._currentUser){
-      const u=window._currentUser;
-      const n2=document.getElementById('hubUserName2');
-      const b2=document.getElementById('hubRoleBadge2');
-      if(n2) n2.textContent='Olá, '+(u.name||u.email);
-      if(b2){
-        const role=u.role||'viewer';
-        b2.textContent=role==='superadmin'?'👑 SuperAdmin':role==='admin'?'🔧 Admin':'👁 Viewer';
-        b2.style.cssText=`font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:99px;background:${role==='superadmin'?'rgba(255,98,0,.2)':'rgba(196,181,253,.1)'};color:${role==='superadmin'?'#FF6200':'#c4b5fd'}`;
-      }
-      // Corner user info
-      const corner=document.getElementById('hubUserCorner');
-      const cr=document.getElementById('hubCornerRole');
-      const cn=document.getElementById('hubCornerName');
-      if(corner&&cr&&cn){
-        const role=u.role||'viewer';
-        cr.textContent=role==='superadmin'?'👑':role==='admin'?'🔧':'👁';
-        cn.textContent=u.name||u.email;
-        corner.style.display='flex';
-      }
+      const u = window._currentUser;
+      const n2 = document.getElementById('hubUserName2'), b2 = document.getElementById('hubRoleBadge2');
+      if(n2) n2.textContent = 'Olá, '+(u.name||u.email);
+      if(b2){ const r = u.role||'viewer'; b2.textContent = r==='superadmin'?'👑 SuperAdmin':r==='admin'?'🔧 Admin':'👁 Viewer'; b2.style.cssText=`font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:99px;background:${r==='superadmin'?'rgba(255,98,0,.2)':'rgba(196,181,253,.1)'};color:${r==='superadmin'?'#FF6200':'#c4b5fd'}`; }
+      const corner = document.getElementById('hubUserCorner'), cr = document.getElementById('hubCornerRole'), cn = document.getElementById('hubCornerName');
+      if(corner&&cr&&cn){ const r=u.role||'viewer'; cr.textContent=r==='superadmin'?'👑':r==='admin'?'🔧':'👁'; cn.textContent=u.name||u.email; corner.style.display='flex'; }
     }
   }
 
-  // Wrap showApp to trigger hub init
   const orig = window.showApp;
   window.showApp = function(){
     if(orig) orig();
