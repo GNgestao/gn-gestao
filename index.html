@@ -3214,6 +3214,7 @@ function forgotPassword(){
 function doLogout(){
   window._fb.signOut(window._fb.auth);
   document.getElementById('userDropdown').style.display='none';
+  setTimeout(function(){ window.location.reload(); }, 1500);
 }
 
 function translateAuthError(code){
