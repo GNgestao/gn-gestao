@@ -7642,7 +7642,7 @@ async function gnSpeak(texto){
       {id:'reparo',       label:'Reparo',                theta:120, baseY: 10, action:()=>enterReparo(),                                                         roles:['superadmin','admin','viewer']},
       {id:'deepgram',     label:'Deepgram',              theta:150, baseY: -8, action:()=>window.open('https://console.deepgram.com','_blank'),                   roles:['superadmin']},
       {id:'plano',        label:'Plano de\nAção',        theta:180, baseY: 30, action:()=>enterPlano(),                                                          roles:['superadmin','admin','viewer']},
-      {id:'documentacao', label:'Documentação',          theta:240, baseY:-16, action:null,                                                                      roles:['superadmin','admin']},
+      {id:'documentacao', label:'Documentação',          theta:240, baseY:-16, action:()=>enterDocumentacao(),                                                       roles:['superadmin','admin']},
       {id:'gestaoEquipe', label:'Gestão de\nEquipe',     theta:300, baseY:  8, action:null,                                                                       roles:['superadmin','admin']},
       {id:'github',       label:'GitHub',                theta:210, baseY: 26, action:()=>window.open('https://github.com/GNgestao/gn-gestao','_blank'),           roles:['superadmin']},
       {id:'firebase',     label:'Firebase',              theta:255, baseY:-20, action:()=>window.open('https://console.firebase.google.com','_blank'),             roles:['superadmin']},
@@ -8075,14 +8075,16 @@ async function gerarCarta(){
         assunto: assuntoValue
       })
     });
+    console.log('Status:', response.status);
     const data = await response.json();
+    console.log('Resposta:', data);
     const textoGerado = data.texto || data.resposta || '';
-    if(!textoGerado){ alert('Não foi possível gerar o documento. Verifique o fluxo n8n.'); btn.disabled=false; btn.textContent='Gerar Carta'; return; }
+    if(!textoGerado){ alert('Resposta vazia do servidor. Verifique o fluxo n8n.'); btn.disabled=false; btn.textContent='Gerar Carta'; return; }
     document.getElementById('docCartaPreview').textContent=textoGerado;
     document.getElementById('docCartaPreviewWrap').style.display='block';
     document.getElementById('docCartaPdfBtn').style.display='inline-block';
     window._docCartaData={cliente:clienteValue,assunto:assuntoValue,texto:textoGerado,data:hoje};
-  }catch(e){ alert('Erro de conexão com o n8n.'); }
+  }catch(err){ console.error('Erro ao gerar documento:', err); alert('Erro: ' + err.message); }
   btn.disabled=false; btn.textContent='Gerar Carta';
 }
 
@@ -8114,14 +8116,16 @@ async function gerarAta(){
         itens: itens
       })
     });
+    console.log('Status:', response.status);
     const data = await response.json();
+    console.log('Resposta:', data);
     const textoGerado = data.texto || data.resposta || '';
-    if(!textoGerado){ alert('Não foi possível gerar o documento. Verifique o fluxo n8n.'); btn.disabled=false; btn.textContent='Gerar Ata'; return; }
+    if(!textoGerado){ alert('Resposta vazia do servidor. Verifique o fluxo n8n.'); btn.disabled=false; btn.textContent='Gerar Ata'; return; }
     document.getElementById('docAtaPreview').textContent=textoGerado;
     document.getElementById('docAtaPreviewWrap').style.display='block';
     document.getElementById('docAtaPdfBtn').style.display='inline-block';
     window._docAtaData={cliente:clienteValue,participantes,itens,texto:textoGerado,data:hoje};
-  }catch(e){ alert('Erro de conexão com o n8n.'); }
+  }catch(err){ console.error('Erro ao gerar documento:', err); alert('Erro: ' + err.message); }
   btn.disabled=false; btn.textContent='Gerar Ata';
 }
 
