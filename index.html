@@ -8066,6 +8066,7 @@ async function gerarCarta(){
   btn.disabled=true; btn.textContent='Gerando...';
   const hoje = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
   try{
+    console.log('Cliente:', clienteValue, 'Assunto:', assuntoValue);
     const response = await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-documentos', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
