@@ -7398,6 +7398,7 @@ async function gnExecutar(comando){
 }
 
 async function gnSpeak(texto){
+  if(gnSpeaking) return Promise.resolve();
   document.getElementById('gnCore').classList.add('speaking');
   gnSpeaking = true;
   gnSetStatus('Jarvis respondendo...','speaking');
