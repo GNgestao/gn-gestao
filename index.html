@@ -8134,25 +8134,32 @@ function salvarDocPDF(tipo){
   const d = tipo==='carta' ? window._docCartaData : window._docAtaData;
   if(!d) return;
   const titulo = tipo==='carta' ? 'Carta Técnica' : 'Ata de Reunião';
+  const refLine = tipo==='carta' && d.assunto ? '<div class="tke-doc-ref">Ref.: '+d.assunto.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>' : '';
+  const saudacao = tipo==='carta' ? '<p class="tke-doc-saudacao">Prezado Cliente,</p>' : '';
   const html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>'+titulo+' — TK Elevator</title><style>'
     +'*{box-sizing:border-box;margin:0;padding:0}'
     +'body{font-family:Arial,sans-serif;padding:2cm;color:#111;font-size:11pt;background:#fff}'
-    +'.tke-doc-header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #5B21B6;padding-bottom:.75rem;margin-bottom:1.5rem}'
-    +'.tke-doc-logo{font-family:Arial Black,Arial,sans-serif;font-size:22pt;font-weight:900;color:#321d65;letter-spacing:.05em}'
-    +'.tke-doc-logo span{color:#FF6200}'
-    +'.tke-doc-meta{font-size:9pt;color:#555;text-align:right;line-height:1.5}'
-    +'.tke-doc-tipo{font-size:14pt;font-weight:700;color:#5B21B6;margin-bottom:.25rem}'
-    +'.tke-doc-body{line-height:1.8;font-size:11pt;white-space:pre-wrap}'
+    +'.tke-doc-header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:.75rem;margin-bottom:0}'
+    +'.tke-doc-logo img{height:52px;width:auto;display:block}'
+    +'.tke-doc-meta{font-size:9pt;color:#555;text-align:right;line-height:1.7}'
+    +'.tke-doc-tipo{font-size:13pt;font-weight:700;color:#5B21B6;margin-bottom:.2rem}'
+    +'.tke-doc-divider{border:none;border-top:3px solid #7B2FBE;margin:.75rem 0 1.25rem 0}'
+    +'.tke-doc-ref{text-align:center;font-style:italic;font-size:10.5pt;color:#333;margin-bottom:1.2rem}'
+    +'.tke-doc-saudacao{font-size:11pt;margin-bottom:.75rem}'
+    +'.tke-doc-body{line-height:1.8;font-size:11pt;white-space:pre-wrap;text-align:justify}'
     +'.tke-doc-footer{margin-top:3rem;padding-top:.75rem;border-top:1px solid #ccc;display:flex;justify-content:space-between;font-size:8pt;color:#888}'
     +'@page{size:A4;margin:1.5cm}'
     +'@media print{body{padding:0}}'
     +'</style></head><body>'
     +'<div class="tke-doc-header">'
-    +'<div class="tke-doc-logo">TK<span>E</span></div>'
+    +'<div class="tke-doc-logo"><img src="https://gngestao.github.io/gn-gestao/tke_logotipo.png" alt="TK Elevator"></div>'
     +'<div class="tke-doc-meta"><div class="tke-doc-tipo">'+titulo+'</div><div>'+d.data+'</div><div>'+d.cliente+'</div></div>'
     +'</div>'
+    +'<hr class="tke-doc-divider">'
+    +refLine
+    +saudacao
     +'<div class="tke-doc-body">'+d.texto.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>'
-    +'<div class="tke-doc-footer"><span>TK Elevator — GN Gestão</span><span>Documento gerado em '+d.data+'</span></div>'
+    +'<div class="tke-doc-footer"><span>TK Elevator</span><span>Documento gerado em '+d.data+'</span></div>'
     +'</body></html>';
   const w=window.open('','_blank','width=800,height=900');
   if(w){ w.document.write(html); w.document.close(); setTimeout(function(){ w.print(); },600); }
