@@ -7086,7 +7086,11 @@ let gnAudioChunks = [];
 let gnSilenceTimer = null;
 let gnStream = null;
 let gnSessionHistory = [];
+let gnLastActivity = Date.now();
+let gnWatchdogTimer = null;
 const gnAcoes = {
+  'reiniciar jarvis': () => { fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-reiniciar', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({acao:'reiniciar_tts'})}); },
+  'reiniciar': () => { fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-reiniciar', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({acao:'reiniciar_tts'})}); },
   'encerrar sessão': () => { gnSpeak('Até logo, Chefe. Foi um prazer servi-lo.').then(() => { if(typeof doLogout === 'function') doLogout(); else if(typeof signOut === 'function') signOut(); }); },
   'encerrar': () => { gnSpeak('Até logo, Chefe. Foi um prazer servi-lo.').then(() => { if(typeof doLogout === 'function') doLogout(); else if(typeof signOut === 'function') signOut(); }); },
   'desligar': () => { gnSpeak('Até logo, Chefe. Foi um prazer servi-lo.').then(() => { if(typeof doLogout === 'function') doLogout(); else if(typeof signOut === 'function') signOut(); }); },
@@ -7166,6 +7170,24 @@ function gnStartContinuous(){
   document.getElementById('gnMicBtn').textContent = '🔴';
   gnSetStatus("Diga 'Jarvis' para ativar",'');
   gnListen();
+  if(gnWatchdogTimer) clearTimeout(gnWatchdogTimer);
+  gnWatchdog();
+}
+
+function gnWatchdog(){
+  if(!gnContinuousMode) return;
+  const diff = Date.now() - gnLastActivity;
+  if(diff > 45000 && !gnSpeaking){
+    console.log('Watchdog: reiniciando loop travado...');
+    gnListening = false;
+    gnSpeaking = false;
+    gnExecutando = false;
+    if(gnStream){ gnStream.getTracks().forEach(t=>t.stop()); gnStream=null; }
+    if(gnMediaRecorder){ try{ gnMediaRecorder.stop(); }catch(e){} gnMediaRecorder=null; }
+    gnLastActivity = Date.now();
+    setTimeout(gnListen, 500);
+  }
+  gnWatchdogTimer = setTimeout(gnWatchdog, 5000);
 }
 
 function gnStopContinuous(){
@@ -7186,6 +7208,7 @@ function gnStopContinuous(){
 }
 
 async function gnListen(){
+  gnLastActivity = Date.now();
   if(!gnContinuousMode || gnListening || gnSpeaking) return;
   gnListening = true;
   console.log('Loop iniciado - aguardando voz...');
@@ -7264,6 +7287,7 @@ async function gnListen(){
 
 
 async function gnTranscrever(blob){
+  gnLastActivity = Date.now();
   try {
     const res = await fetch('https://api.deepgram.com/v1/listen?language=pt-BR&model=nova-2&punctuate=true&utterances=true', {
       method: 'POST',
@@ -7738,6 +7762,15 @@ async function gnSpeak(texto){
       chat.style.left = cx + 'px';
       chat.style.top  = cy + 'px';
     }
+
+    document.getElementById('hubJarvisCore').addEventListener('dblclick', function(){
+      gnListening = false;
+      gnSpeaking = false;
+      gnExecutando = false;
+      if(gnStream){ gnStream.getTracks().forEach(t=>t.stop()); gnStream=null; }
+      if(gnMediaRecorder){ try{ gnMediaRecorder.stop(); }catch(e){} gnMediaRecorder=null; }
+      setTimeout(gnStartContinuous, 500);
+    });
 
     document.getElementById('hubJarvisCore').addEventListener('click', function(){
       if(chat.style.display === 'none'){
