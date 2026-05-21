@@ -7077,6 +7077,20 @@ let gnAudioChunks = [];
 let gnSilenceTimer = null;
 let gnStream = null;
 let gnSessionHistory = [];
+const gnAcoes = {
+  'reconhece': () => enterReconhece(),
+  'reconhece+': () => enterReconhece(),
+  'desempenho': () => enterReconhece(),
+  'reparo': () => enterReparo(),
+  'manutenção': () => enterReparo(),
+  'plano': () => enterPlano(),
+  'plano de ação': () => enterPlano(),
+  'manutenção preditiva': () => { if(typeof enterApp === 'function') enterApp(); },
+  'documentação': () => { if(typeof enterDocumentacao === 'function') enterDocumentacao(); },
+  'hub': () => backToHub(),
+  'voltar': () => backToHub(),
+  'início': () => backToHub(),
+};
 (function gnInitCanvas(){
   const canvas=document.getElementById('gnCanvas');
   if(!canvas)return;
@@ -7317,6 +7331,15 @@ async function gnExecutar(comando){
     { gatilhos: ['boa tarde'], resposta: 'Boa tarde, Chefe. Em que posso ser útil?' }
   ];
   const lowerComando = comando.toLowerCase();
+  const acaoEncontrada = Object.entries(gnAcoes).find(([chave]) => lowerComando.includes(chave));
+  if(acaoEncontrada){
+    acaoEncontrada[1]();
+    const respostaAcao = `Abrindo ${acaoEncontrada[0]}, Chefe.`;
+    gnCurrentResposta = respostaAcao;
+    await gnSpeak(respostaAcao);
+    gnExecutando = false;
+    return;
+  }
   const respostaFixa = respostasFixas.find(r => r.gatilhos.some(g => lowerComando.includes(g)));
   if(respostaFixa){
     gnCurrentResposta = respostaFixa.resposta;
