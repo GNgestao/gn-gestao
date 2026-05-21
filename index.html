@@ -814,6 +814,52 @@ tr:hover td{background:rgba(91,33,182,.05)}
 #globalJarvisChatInput::placeholder{color:rgba(196,181,253,.35)}
 #globalJarvisSendBtn{width:100%;background:rgba(255,98,0,.2);border:1px solid rgba(255,98,0,.4);color:#FF6200;border-radius:8px;padding:.45rem;font-size:.82rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s}
 #globalJarvisSendBtn:hover{background:rgba(255,98,0,.35)}
+
+/* ── DOCUMENTAÇÃO ── */
+#screenDocumentacao{display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto;isolation:isolate}
+.doc-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;background:rgba(50,29,101,.85);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2;backdrop-filter:blur(8px)}
+.doc-title{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;color:var(--white)}
+.doc-title span{color:#FF6200}
+.doc-body{padding:2rem 1.5rem;max-width:860px;margin:0 auto}
+.doc-action-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem}
+.doc-action-btn{background:rgba(124,58,237,.12);border:1.5px solid rgba(124,58,237,.3);border-radius:18px;padding:2rem 1.5rem;cursor:pointer;text-align:center;transition:all .25s;color:var(--white);font-family:'DM Sans',sans-serif}
+.doc-action-btn:hover{background:rgba(124,58,237,.22);border-color:#7C3AED;transform:translateY(-4px)}
+.doc-action-btn .doc-btn-icon{font-size:2.5rem;margin-bottom:.75rem}
+.doc-action-btn .doc-btn-label{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;margin-bottom:.25rem}
+.doc-action-btn .doc-btn-desc{font-size:.78rem;color:var(--muted)}
+.doc-list-title{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+.doc-empty{text-align:center;padding:2.5rem;color:var(--muted);font-size:.88rem;background:rgba(50,29,101,.3);border-radius:12px;border:1px dashed rgba(124,58,237,.2)}
+
+/* Modais documentação */
+.doc-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10100;align-items:center;justify-content:center;padding:1rem}
+.doc-modal-overlay.open{display:flex}
+.doc-modal{background:#1a0535;border:1px solid rgba(124,58,237,.4);border-radius:20px;padding:2rem;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;position:relative}
+.doc-modal h3{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:1.5rem;color:var(--white)}
+.doc-modal h3 span{color:#FF6200}
+.doc-field{margin-bottom:1rem}
+.doc-field label{display:block;font-size:.78rem;font-family:'DM Sans',sans-serif;color:var(--muted);margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.06em}
+.doc-field input,.doc-field textarea,.doc-field select{width:100%;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.25);border-radius:8px;padding:.55rem .75rem;color:var(--white);font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;transition:border .2s}
+.doc-field input:focus,.doc-field textarea:focus{border-color:#7C3AED}
+.doc-field textarea{resize:vertical;min-height:80px}
+.doc-part-row{display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem}
+.doc-part-row input{flex:1}
+.doc-part-row .doc-rm-btn{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:#EF4444;border-radius:6px;padding:.35rem .6rem;cursor:pointer;font-size:.8rem;white-space:nowrap;flex-shrink:0}
+.doc-add-btn{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:#22C55E;border-radius:8px;padding:.35rem .8rem;cursor:pointer;font-size:.78rem;font-family:'DM Sans',sans-serif;margin-top:.25rem}
+.doc-modal-actions{display:flex;gap:.75rem;margin-top:1.5rem;flex-wrap:wrap}
+.doc-btn-gerar{flex:1;background:linear-gradient(135deg,#5B21B6,#FF6200);border:none;border-radius:10px;padding:.7rem 1.5rem;color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;transition:opacity .2s}
+.doc-btn-gerar:hover{opacity:.85}
+.doc-btn-gerar:disabled{opacity:.45;cursor:not-allowed}
+.doc-btn-cancel{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:.7rem 1.2rem;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.88rem;cursor:pointer}
+.doc-modal-close{position:absolute;top:1rem;right:1rem;background:transparent;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;line-height:1}
+.doc-preview-box{background:rgba(0,0,0,.25);border:1px solid rgba(124,58,237,.2);border-radius:10px;padding:1.25rem;font-family:'DM Sans',sans-serif;font-size:.85rem;color:rgba(245,240,255,.85);line-height:1.7;white-space:pre-wrap;max-height:300px;overflow-y:auto;margin-top:1rem}
+.doc-preview-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem}
+.doc-btn-pdf{background:rgba(255,98,0,.15);border:1.5px solid rgba(255,98,0,.4);color:#FF6200;border-radius:10px;padding:.6rem 1.2rem;font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;transition:background .2s}
+.doc-btn-pdf:hover{background:rgba(255,98,0,.28)}
+@media(max-width:520px){.doc-action-grid{grid-template-columns:1fr}.doc-modal{padding:1.25rem}}
+@media print{
+  body > *:not(#docPrintFrame){display:none!important}
+  #docPrintFrame{display:block!important;position:fixed;inset:0;z-index:99999}
+}
 </style>
 </head>
 <body>
@@ -7090,12 +7136,13 @@ let gnStream = null;
 let gnSessionHistory = [];
 let gnLastActivity = Date.now();
 let gnWatchdogTimer = null;
+let gnModoVoz = false;
 const gnAcoes = {
   'reiniciar jarvis': () => { fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-reiniciar', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({acao:'reiniciar_tts'})}); },
   'reiniciar': () => { fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-reiniciar', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({acao:'reiniciar_tts'})}); },
-  'encerrar sessão': () => { gnSpeak('Até logo, Chefe. Foi um prazer servi-lo.').then(() => { if(typeof doLogout === 'function') doLogout(); else if(typeof signOut === 'function') signOut(); }); },
-  'encerrar': () => { gnSpeak('Até logo, Chefe. Foi um prazer servi-lo.').then(() => { if(typeof doLogout === 'function') doLogout(); else if(typeof signOut === 'function') signOut(); }); },
-  'desligar': () => { gnSpeak('Até logo, Chefe. Foi um prazer servi-lo.').then(() => { if(typeof doLogout === 'function') doLogout(); else if(typeof signOut === 'function') signOut(); }); },
+  'encerrar sessão': () => { if(gnModoVoz){ gnSpeak('Até logo, Chefe. Foi um prazer servi-lo.').then(() => { if(typeof doLogout === 'function') doLogout(); else if(typeof signOut === 'function') signOut(); }); } else { if(typeof doLogout === 'function') doLogout(); else if(typeof signOut === 'function') signOut(); } },
+  'encerrar': () => { if(gnModoVoz){ gnSpeak('Até logo, Chefe. Foi um prazer servi-lo.').then(() => { if(typeof doLogout === 'function') doLogout(); else if(typeof signOut === 'function') signOut(); }); } else { if(typeof doLogout === 'function') doLogout(); else if(typeof signOut === 'function') signOut(); } },
+  'desligar': () => { if(gnModoVoz){ gnSpeak('Até logo, Chefe. Foi um prazer servi-lo.').then(() => { if(typeof doLogout === 'function') doLogout(); else if(typeof signOut === 'function') signOut(); }); } else { if(typeof doLogout === 'function') doLogout(); else if(typeof signOut === 'function') signOut(); } },
   'manutenção preditiva': () => enterModule('preditiva'),
   'preditiva': () => enterModule('preditiva'),
   'plano de ação': () => enterPlano(),
@@ -7296,6 +7343,7 @@ async function gnListen(){
 async function gnTranscrever(blob){
   gnLastActivity = Date.now();
   try {
+    gnModoVoz = true;
     const res = await fetch('https://api.deepgram.com/v1/listen?language=pt-BR&model=nova-2&punctuate=true&utterances=true', {
       method: 'POST',
       headers: {
@@ -7385,14 +7433,14 @@ async function gnExecutar(comando){
     acaoEncontrada[1]();
     const respostaAcao = `Abrindo ${acaoEncontrada[0]}, Chefe.`;
     gnCurrentResposta = respostaAcao;
-    await gnSpeak(respostaAcao);
+    if(gnModoVoz){ await gnSpeak(respostaAcao); } else { var hc=document.getElementById('hubJarvisChatResp'); if(hc){hc.style.display='block';hc.textContent=respostaAcao;} }
     gnExecutando = false;
     return;
   }
   const respostaFixa = respostasFixas.find(r => r.gatilhos.some(g => lowerComando.includes(g)));
   if(respostaFixa){
     gnCurrentResposta = respostaFixa.resposta;
-    await gnSpeak(respostaFixa.resposta);
+    if(gnModoVoz){ await gnSpeak(respostaFixa.resposta); } else { var hc=document.getElementById('hubJarvisChatResp'); if(hc){hc.style.display='block';hc.textContent=respostaFixa.resposta;} }
     gnExecutando = false;
     return;
   }
@@ -7414,7 +7462,7 @@ async function gnExecutar(comando){
       setTimeout(function(){ if(typeof gnReiniciar==='function') gnReiniciar(); }, 500);
     } else {
       gnCurrentResposta = resposta;
-      await gnSpeak(resposta);
+      if(gnModoVoz){ await gnSpeak(resposta); } else { var hc=document.getElementById('hubJarvisChatResp'); if(hc){hc.style.display='block';hc.textContent=resposta;} }
     }
   }catch(err){
     console.error('Erro ao processar comando:', err);
@@ -7835,6 +7883,7 @@ async function gnSpeak(texto){
     if(!texto) return;
     input.value = '';
     resp.textContent = '...';
+    gnModoVoz = false;
     gnCommandSource = 'text';
     gnSessionHistory.push({role:'user',content:texto});
     gnTextTargetEl = resp;
@@ -7850,6 +7899,250 @@ async function gnSpeak(texto){
     setTimeout(initHubJarvis, 350);
   };
 })();
+</script>
+
+<!-- ══ TELA DOCUMENTAÇÃO ══ -->
+<div id="screenDocumentacao" style="display:none">
+  <div class="doc-header">
+    <div style="display:flex;align-items:center;gap:1rem">
+      <button onclick="backFromDocumentacao()" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer">⬅ Base</button>
+      <div class="doc-title">📄 <span>Documentação</span></div>
+    </div>
+  </div>
+  <div class="doc-body">
+    <div class="doc-action-grid">
+      <div class="doc-action-btn" onclick="openDocCartaModal()">
+        <div class="doc-btn-icon">✉️</div>
+        <div class="doc-btn-label">Nova Carta Técnica</div>
+        <div class="doc-btn-desc">Redija cartas profissionais com IA</div>
+      </div>
+      <div class="doc-action-btn" onclick="openDocAtaModal()">
+        <div class="doc-btn-icon">📋</div>
+        <div class="doc-btn-label">Nova Ata de Reunião</div>
+        <div class="doc-btn-desc">Registre reuniões com responsáveis e prazos</div>
+      </div>
+    </div>
+    <div class="doc-list-title">Documentos Gerados</div>
+    <div id="docListContainer">
+      <div class="doc-empty">Nenhum documento gerado ainda.<br>Use os botões acima para criar.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Carta Técnica -->
+<div id="docCartaModal" class="doc-modal-overlay">
+  <div class="doc-modal">
+    <button class="doc-modal-close" onclick="closeDocCartaModal()">×</button>
+    <h3>✉️ Nova <span>Carta Técnica</span></h3>
+    <div class="doc-field">
+      <label>Cliente / Destinatário</label>
+      <input id="docCartaCliente" type="text" placeholder="Ex: Condomínio Edifício Centro">
+    </div>
+    <div class="doc-field">
+      <label>Assunto / Motivo da Carta</label>
+      <textarea id="docCartaAssunto" placeholder="Descreva o assunto da carta, contexto e pontos que devem ser abordados..." rows="4"></textarea>
+    </div>
+    <div id="docCartaPreviewWrap" style="display:none">
+      <div class="doc-preview-label">Prévia gerada pela IA</div>
+      <div id="docCartaPreview" class="doc-preview-box"></div>
+    </div>
+    <div class="doc-modal-actions">
+      <button class="doc-btn-gerar" id="docCartaGerarBtn" onclick="gerarCarta()">Gerar Carta</button>
+      <button id="docCartaPdfBtn" class="doc-btn-pdf" style="display:none" onclick="salvarDocPDF('carta')">Salvar PDF</button>
+      <button class="doc-btn-cancel" onclick="closeDocCartaModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ata de Reunião -->
+<div id="docAtaModal" class="doc-modal-overlay">
+  <div class="doc-modal">
+    <button class="doc-modal-close" onclick="closeDocAtaModal()">×</button>
+    <h3>📋 Nova <span>Ata de Reunião</span></h3>
+    <div class="doc-field">
+      <label>Cliente / Local</label>
+      <input id="docAtaCliente" type="text" placeholder="Ex: Condomínio Solar das Flores">
+    </div>
+    <div class="doc-field">
+      <label>Participantes</label>
+      <div id="docAtaParticipantes">
+        <div class="doc-part-row">
+          <input type="text" placeholder="Nome" class="doc-part-nome">
+          <input type="text" placeholder="E-mail" class="doc-part-email">
+          <button class="doc-rm-btn" onclick="docRemoveRow(this)">✕</button>
+        </div>
+      </div>
+      <button class="doc-add-btn" onclick="docAddParticipante()">＋ Participante</button>
+    </div>
+    <div class="doc-field">
+      <label>Itens Discutidos</label>
+      <div id="docAtaItens">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:.4rem;margin-bottom:.5rem">
+          <input type="text" placeholder="Descrição do item" class="doc-item-desc">
+          <input type="text" placeholder="Responsável" class="doc-item-resp">
+          <input type="date" class="doc-item-prazo">
+          <button class="doc-rm-btn" onclick="docRemoveRow(this)">✕</button>
+        </div>
+      </div>
+      <button class="doc-add-btn" onclick="docAddItem()">＋ Item</button>
+    </div>
+    <div id="docAtaPreviewWrap" style="display:none">
+      <div class="doc-preview-label">Prévia gerada pela IA</div>
+      <div id="docAtaPreview" class="doc-preview-box"></div>
+    </div>
+    <div class="doc-modal-actions">
+      <button class="doc-btn-gerar" id="docAtaGerarBtn" onclick="gerarAta()">Gerar Ata</button>
+      <button id="docAtaPdfBtn" class="doc-btn-pdf" style="display:none" onclick="salvarDocPDF('ata')">Salvar PDF</button>
+      <button class="doc-btn-cancel" onclick="closeDocAtaModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DOCUMENTAÇÃO ──
+
+function enterDocumentacao(){
+  ['hubScreen','appScreen','screenReconhece','screenPlano','screenReparo','screenGN'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el){ el.style.cssText=(id==='hubScreen'||id==='appScreen')?'display:none!important':''; el.style.display='none'; }
+  });
+  var sc=document.getElementById('screenDocumentacao');
+  if(sc) sc.style.display='block';
+}
+
+function backFromDocumentacao(){
+  var sc=document.getElementById('screenDocumentacao');
+  if(sc) sc.style.display='none';
+  var hs=document.getElementById('hubScreen');
+  if(hs) hs.style.cssText='display:flex!important';
+}
+
+function openDocCartaModal(){
+  document.getElementById('docCartaCliente').value='';
+  document.getElementById('docCartaAssunto').value='';
+  document.getElementById('docCartaPreviewWrap').style.display='none';
+  document.getElementById('docCartaPreview').textContent='';
+  document.getElementById('docCartaPdfBtn').style.display='none';
+  document.getElementById('docCartaGerarBtn').textContent='Gerar Carta';
+  document.getElementById('docCartaModal').classList.add('open');
+}
+function closeDocCartaModal(){ document.getElementById('docCartaModal').classList.remove('open'); }
+
+function openDocAtaModal(){
+  document.getElementById('docAtaCliente').value='';
+  document.getElementById('docAtaParticipantes').innerHTML='<div class="doc-part-row"><input type="text" placeholder="Nome" class="doc-part-nome"><input type="text" placeholder="E-mail" class="doc-part-email"><button class="doc-rm-btn" onclick="docRemoveRow(this)">✕</button></div>';
+  document.getElementById('docAtaItens').innerHTML='<div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:.4rem;margin-bottom:.5rem"><input type="text" placeholder="Descrição do item" class="doc-item-desc"><input type="text" placeholder="Responsável" class="doc-item-resp"><input type="date" class="doc-item-prazo"><button class="doc-rm-btn" onclick="docRemoveRow(this)">✕</button></div>';
+  document.getElementById('docAtaPreviewWrap').style.display='none';
+  document.getElementById('docAtaPreview').textContent='';
+  document.getElementById('docAtaPdfBtn').style.display='none';
+  document.getElementById('docAtaGerarBtn').textContent='Gerar Ata';
+  document.getElementById('docAtaModal').classList.add('open');
+}
+function closeDocAtaModal(){ document.getElementById('docAtaModal').classList.remove('open'); }
+
+function docRemoveRow(btn){ var row=btn.closest('.doc-part-row')||btn.parentElement; if(row) row.remove(); }
+
+function docAddParticipante(){
+  var c=document.getElementById('docAtaParticipantes');
+  var row=document.createElement('div');
+  row.className='doc-part-row';
+  row.innerHTML='<input type="text" placeholder="Nome" class="doc-part-nome"><input type="text" placeholder="E-mail" class="doc-part-email"><button class="doc-rm-btn" onclick="docRemoveRow(this)">✕</button>';
+  c.appendChild(row);
+}
+
+function docAddItem(){
+  var c=document.getElementById('docAtaItens');
+  var row=document.createElement('div');
+  row.style.cssText='display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:.4rem;margin-bottom:.5rem';
+  row.innerHTML='<input type="text" placeholder="Descrição do item" class="doc-item-desc"><input type="text" placeholder="Responsável" class="doc-item-resp"><input type="date" class="doc-item-prazo"><button class="doc-rm-btn" onclick="docRemoveRow(this)">✕</button>';
+  c.appendChild(row);
+}
+
+async function gerarCarta(){
+  const apiKey = typeof getApiKey==='function' ? getApiKey() : '';
+  if(!apiKey){ alert('Configure a chave da API Claude primeiro (botão 🔑 API na tela de Manutenção Preditiva).'); return; }
+  const cliente = document.getElementById('docCartaCliente').value.trim();
+  const assunto = document.getElementById('docCartaAssunto').value.trim();
+  if(!cliente||!assunto){ alert('Preencha o cliente e o assunto.'); return; }
+  const btn=document.getElementById('docCartaGerarBtn');
+  btn.disabled=true; btn.textContent='Gerando...';
+  const hoje = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  const prompt = `Redija o CORPO de uma carta técnica profissional com as seguintes informações:\n- Data: ${hoje}\n- Destinatário / Cliente: ${cliente}\n- Assunto/Motivo: ${assunto}\n\nA carta deve ser formal, objetiva e profissional. Use linguagem técnica adequada para área de manutenção de elevadores TK Elevator. Inclua saudação, desenvolvimento e encerramento. Não inclua cabeçalho nem rodapé, apenas o corpo da carta.`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    if(data.error){ alert('Erro API: '+data.error.message); btn.disabled=false; btn.textContent='Gerar Carta'; return; }
+    const texto=data.content?.map(b=>b.text||'').join('')||'';
+    document.getElementById('docCartaPreview').textContent=texto;
+    document.getElementById('docCartaPreviewWrap').style.display='block';
+    document.getElementById('docCartaPdfBtn').style.display='inline-block';
+    window._docCartaData={cliente,assunto,texto,data:hoje};
+  }catch(e){ alert('Erro de conexão.'); }
+  btn.disabled=false; btn.textContent='Gerar Carta';
+}
+
+async function gerarAta(){
+  const apiKey = typeof getApiKey==='function' ? getApiKey() : '';
+  if(!apiKey){ alert('Configure a chave da API Claude primeiro.'); return; }
+  const cliente = document.getElementById('docAtaCliente').value.trim();
+  if(!cliente){ alert('Preencha o cliente.'); return; }
+  const participantes = Array.from(document.querySelectorAll('#docAtaParticipantes .doc-part-row')).map(r=>{
+    const nome=(r.querySelector('.doc-part-nome')||{}).value||'';
+    const email=(r.querySelector('.doc-part-email')||{}).value||'';
+    return nome ? (email?nome+' ('+email+')':nome) : null;
+  }).filter(Boolean);
+  const itens = Array.from(document.querySelectorAll('#docAtaItens [style*="grid"]')).map(r=>{
+    const desc=(r.querySelector('.doc-item-desc')||{}).value||'';
+    const resp=(r.querySelector('.doc-item-resp')||{}).value||'';
+    const prazo=(r.querySelector('.doc-item-prazo')||{}).value||'';
+    return desc ? {desc,resp,prazo} : null;
+  }).filter(Boolean);
+  const btn=document.getElementById('docAtaGerarBtn');
+  btn.disabled=true; btn.textContent='Gerando...';
+  const hoje = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  const partStr = participantes.length ? participantes.join(', ') : 'Não informados';
+  const itensStr = itens.length ? itens.map((i,n)=>`${n+1}. ${i.desc}${i.resp?' — Responsável: '+i.resp:''}${i.prazo?' — Prazo: '+i.prazo:''}`).join('\n') : 'Nenhum item registrado';
+  const prompt = `Redija uma ATA DE REUNIÃO profissional com as seguintes informações:\n- Data: ${hoje}\n- Local/Cliente: ${cliente}\n- Participantes: ${partStr}\n- Itens discutidos:\n${itensStr}\n\nFormate como ata de reunião formal, com introdução, lista de presentes, pauta/deliberações e encerramento. Use linguagem profissional adequada para empresa TK Elevator.`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1500,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    if(data.error){ alert('Erro API: '+data.error.message); btn.disabled=false; btn.textContent='Gerar Ata'; return; }
+    const texto=data.content?.map(b=>b.text||'').join('')||'';
+    document.getElementById('docAtaPreview').textContent=texto;
+    document.getElementById('docAtaPreviewWrap').style.display='block';
+    document.getElementById('docAtaPdfBtn').style.display='inline-block';
+    window._docAtaData={cliente,participantes,itens,texto,data:hoje};
+  }catch(e){ alert('Erro de conexão.'); }
+  btn.disabled=false; btn.textContent='Gerar Ata';
+}
+
+function salvarDocPDF(tipo){
+  const d = tipo==='carta' ? window._docCartaData : window._docAtaData;
+  if(!d) return;
+  const titulo = tipo==='carta' ? 'Carta Técnica' : 'Ata de Reunião';
+  const html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>'+titulo+' — TK Elevator</title><style>'
+    +'*{box-sizing:border-box;margin:0;padding:0}'
+    +'body{font-family:Arial,sans-serif;padding:2cm;color:#111;font-size:11pt;background:#fff}'
+    +'.tke-doc-header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #5B21B6;padding-bottom:.75rem;margin-bottom:1.5rem}'
+    +'.tke-doc-logo{font-family:Arial Black,Arial,sans-serif;font-size:22pt;font-weight:900;color:#321d65;letter-spacing:.05em}'
+    +'.tke-doc-logo span{color:#FF6200}'
+    +'.tke-doc-meta{font-size:9pt;color:#555;text-align:right;line-height:1.5}'
+    +'.tke-doc-tipo{font-size:14pt;font-weight:700;color:#5B21B6;margin-bottom:.25rem}'
+    +'.tke-doc-body{line-height:1.8;font-size:11pt;white-space:pre-wrap}'
+    +'.tke-doc-footer{margin-top:3rem;padding-top:.75rem;border-top:1px solid #ccc;display:flex;justify-content:space-between;font-size:8pt;color:#888}'
+    +'@page{size:A4;margin:1.5cm}'
+    +'@media print{body{padding:0}}'
+    +'</style></head><body>'
+    +'<div class="tke-doc-header">'
+    +'<div class="tke-doc-logo">TK<span>E</span></div>'
+    +'<div class="tke-doc-meta"><div class="tke-doc-tipo">'+titulo+'</div><div>'+d.data+'</div><div>'+d.cliente+'</div></div>'
+    +'</div>'
+    +'<div class="tke-doc-body">'+d.texto.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>'
+    +'<div class="tke-doc-footer"><span>TK Elevator — GN Gestão</span><span>Documento gerado em '+d.data+'</span></div>'
+    +'</body></html>';
+  const w=window.open('','_blank','width=800,height=900');
+  if(w){ w.document.write(html); w.document.close(); setTimeout(function(){ w.print(); },600); }
+}
 </script>
 
 <!-- Jarvis Flutuante Global (abas de módulo) -->
@@ -7938,6 +8231,7 @@ async function gnSpeak(texto){
     if(!texto) return;
     input.value = '';
     resp.textContent = '...';
+    gnModoVoz = false;
     gnCommandSource = 'text';
     gnSessionHistory.push({role:'user',content:texto});
     gnTextTargetEl = resp;
@@ -7951,7 +8245,7 @@ async function gnSpeak(texto){
   function hideGJ(){ const el=document.getElementById('globalJarvis'); if(el) el.style.display='none'; const c=document.getElementById('globalJarvisChat'); if(c) c.style.display='none'; }
 
   // Wrap enter functions → show global Jarvis
-  ['enterModule','enterReconhece','enterReparo','enterPlano'].forEach(function(name){
+  ['enterModule','enterReconhece','enterReparo','enterPlano','enterDocumentacao'].forEach(function(name){
     const orig = window[name];
     window[name] = function(){ if(orig) orig.apply(this,arguments); setTimeout(showGJ,150); };
   });
