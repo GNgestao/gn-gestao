@@ -8100,9 +8100,9 @@ function backFromDocumentacao(){
 
 function openDocCartaModal(dados){
   document.getElementById('docCartaCliente').value = (dados&&dados.cliente)||'';
-  document.getElementById('docCartaEndereco').value = (dados&&dados.endereco)||'';
-  document.getElementById('docCartaTitulo').value = (dados&&dados.titulo)||'';
-  document.getElementById('docCartaDetalhes').value = (dados&&dados.detalhes)||'';
+  document.getElementById('docCartaEndereco').value = dados ? _titleCaseStr(dados.endereco||'') : '';
+  document.getElementById('docCartaTitulo').value = dados ? _capitalizar(dados.titulo||'') : '';
+  document.getElementById('docCartaDetalhes').value = dados ? _capitalizar(dados.detalhes||'') : '';
   document.getElementById('docCartaPreviewWrap').style.display='none';
   document.getElementById('docCartaPreview').innerHTML='';
   document.getElementById('docCartaPdfBtn').style.display='none';
@@ -8174,9 +8174,18 @@ async function gerarCarta(){
   btn.disabled=false; btn.textContent='Gerar Carta';
 }
 
+function _capitalizar(s){
+  return (s||'').charAt(0).toUpperCase() + (s||'').slice(1).replace(/(\.\s+)(\w)/g, (_, sep, c) => sep + c.toUpperCase());
+}
+function _titleCaseStr(s){
+  return (s||'').replace(/\b\w/g, c => c.toUpperCase());
+}
+
 function _buildCartaHTML(d, preview){
   const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const clienteUp = esc(d.cliente).toUpperCase();
+  const enderecoTC = esc(_titleCaseStr(d.endereco));
+  const tituloFmt = esc(_capitalizar(d.titulo));
   const styles = preview
     ? 'background:#fff;color:#111;padding:1.5rem 2rem;font-family:Arial,sans-serif;font-size:.88rem;line-height:1.7;border-radius:8px'
     : 'font-family:Arial,sans-serif;font-size:11pt;color:#111;padding:0;line-height:1.8';
@@ -8188,9 +8197,9 @@ function _buildCartaHTML(d, preview){
     +'<div>Recife, '+esc(d.data)+'</div>'
     +'<div style="margin-top:.6rem">AO</div>'
     +'<div style="font-weight:700;margin-top:.15rem">'+clienteUp+'</div>'
-    +(d.endereco?'<div style="color:#444">'+esc(d.endereco)+'</div>':'')
+    +(d.endereco?'<div style="color:#444">'+enderecoTC+'</div>':'')
     +'</div>'
-    +'<div style="text-align:center;font-style:italic;margin-bottom:1rem;font-size:.88rem">Ref.: '+esc(d.titulo)+'</div>'
+    +'<div style="text-align:center;font-style:italic;margin-bottom:1rem;font-size:.88rem">Ref.: '+tituloFmt+'</div>'
     +'<div style="margin-bottom:.75rem;font-size:.88rem">Prezado Cliente,</div>'
     +'<div style="text-align:justify;white-space:pre-wrap;font-size:.88rem;text-indent:2em">'+esc(d.texto)+'</div>'
     +'<div style="margin-top:3.5rem;display:flex;justify-content:flex-start;align-items:flex-start">'
