@@ -7,7 +7,7 @@ Sistema de gestão operacional pessoal e profissional de Gabriel Nascimento, ges
 - VPS: Hostinger, IP 187.127.26.136, Ubuntu 24.04
 - n8n: https://n8n.srv1610251.hstgr.cloud (container n8n-n8n-1)
 - App: https://gngestao.github.io/gn-gestao/
-- GitHub: github.com/GNgestao/gn-gestao (arquivo principal: index.html, 7500+ linhas)
+- GitHub: github.com/GNgestao/gn-gestao (arquivo principal: index.html, 8400+ linhas)
 - Evolution API (WhatsApp): http://187.127.26.136:8081, instância gn-whatsapp, apikey gn-evolution-2026, número 5581982381146
 - SSH: ssh root@187.127.26.136
 - GitHub token (sem expiração): ghp_*** (ver com Gabriel)
@@ -29,10 +29,10 @@ Single-page HTML/CSS/JS puro. Tema escuro roxo/laranja, fontes Syne + DM Sans.
 - Plano de Ação 5W1H — planos de ação
 - Reparo — serviços subcontratados com calendário (localStorage)
 - Jarvis — assistente de voz inteligente (só superadmin)
+- Documentação — Carta Técnica ✅ concluída; Ata de Reunião 🔜 pendente
 
 ### Módulos futuros:
 - Gestão da Equipe
-- Documentação
 
 ### Hub:
 Rede neural animada. GN no centro, módulos ao redor flutuando. Fundo estrelado global.
@@ -181,40 +181,39 @@ Sequência:
 - WhatsApp pessoal: 5581997818685
 - Email: gabrielnascimento1995@gmail.com
 
-## PENDÊNCIAS ABERTAS
-- [x] Busca web no n8n para o Jarvis responder perguntas atuais (notícias, dados em tempo real)
-- [x] Systemd para iniciar Kokoro TTS e jarvis-proxy automaticamente no reboot da VPS
-- [x] Integrar busca web no n8n para Jarvis ter acesso à internet em tempo real
-- [x] Jarvis abrindo abas e controlando o app por voz (gnAcoes)
-- [x] 3 camadas de proteção contra travamentos do Jarvis
-- [x] Watchdog automático 45s + Restart API porta 5051 (systemd: jarvis-restart-api)
-- [x] Fluxo reiniciar-jarvis-tts no n8n
-- [x] Comando encerrar sessão com despedida e logoff
-- [x] Reload automático após logoff
-- [x] Monitoramento créditos Deepgram com alerta via WhatsApp
-- [x] Sistema neural 3D com Three.js no hub (15 nós: 6 módulos + 9 externos)
-- [x] Navegação por voz entre todos os módulos e sites externos
-- [ ] Campo de texto no módulo Jarvis para comandos sem voz
+## MÓDULO DOCUMENTAÇÃO — STATUS ATUAL ✅
+
+### Carta Técnica — CONCLUÍDA
+- Fluxo Jarvis por voz funcionando: coleta título → cliente → endereço → detalhes (uma pergunta por vez)
+- Layout da carta: logo TKE (tke_logotipo.png) no canto superior direito, bloco AO à esquerda, Ref. centralizada em itálico, "Prezado Cliente,", corpo justificado, assinatura "Gabriel Nascimento / Supervisor de Serviços — TK Elevator"
+- Capitalização automática dos campos de voz (title case no endereço, capitalize no título)
+- Rodapé: apenas "TK Elevator" — sem "GN Gestão", sem "Documento gerado em..."
+- Gatilhos de voz: "gerar carta", "nova carta", "fazer carta", "escrever carta", "elaborar carta", "montar carta"
+- Botão ■ de stop + comando de voz ("para", "silêncio", "stop", "cala boca") + ESC/ESPAÇO para interromper fala
+- TTS corrigido: AudioContext (ArrayBuffer) em vez de <audio> — eliminou ERR_REQUEST_RANGE_NOT_SATISFIABLE
+- n8n fluxo gn-documentos: modelo claude-sonnet-4-5, campos titulo/cliente/endereco/detalhes
+- Arquivo tke_logotipo.png adicionado ao repositório
+
+### Ata de Reunião — PENDENTE (próxima sessão)
+- Fluxo Jarvis por voz para coletar: título, local/cliente, participantes, itens discutidos
+- Layout da ata com tabela de participantes e itens com responsável/prazo
+
+## PENDÊNCIAS GERAIS
+- [ ] Hub 3D: remover Jarvis duplicado (sol laranja), nós como quadradinhos brancos fixos, Jarvis único no centro
 - [ ] Integração TK Mobile com Jarvis (fluxo base: Fluxo 1 - TAC Mobile)
-- [ ] Módulo Documentação
-- [ ] Módulo Gestão de Equipe
 - [ ] Jarvis abrindo qualquer site por voz
+- [ ] Módulo Gestão de Equipe
+- [ ] Lista de clientes para o Jarvis memorizar endereços
+- [ ] Campo de texto no módulo Jarvis para comandos sem voz
+- [ ] Ata de Reunião por voz (próxima sessão)
 - [ ] Fluxo Sênior para consulta de horas extras em tempo real via Jarvis
-- [ ] Upgrade ElevenLabs para voz Adam (quando quiser qualidade premium)
-- [ ] Fluxo de monitoramento de prazos (tokens, credenciais) via Jarvis
 - [ ] TTS streaming / melhorar tempo de retorno do Jarvis ao falar
 - [ ] Memória permanente de fatos e perfil do Gabriel (separada das conversas)
 - [ ] Aumentar limite de memória de 20 para 50 mensagens no contexto do Claude
-
-## PENDÊNCIAS PÓS 25/05
-- [ ] Sistema neural com clusters/quadrantes (Trabalho, Pessoal, Agenda, Serviços)
-- [ ] Jarvis móvel no centro do sistema neural
 - [ ] Tela de login futurista
 - [ ] Rebrand: remover menções Zona Vip
 - [ ] Segurança: senha mestra antes do login
 - [ ] Rotacionar API keys e tokens expostos
 - [ ] PWA — transformar GN Gestão em app instalável
 - [ ] Integração Gmail, Google Calendar, Outlook
-- [ ] Captação de serviços extras de engenharia
-- [ ] Módulo Perito Judicial
-- [ ] Gestão de ARTs e Laudos
+- [ ] Módulo Perito Judicial / Gestão de ARTs e Laudos
