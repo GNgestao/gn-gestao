@@ -7581,34 +7581,28 @@ async function gnSpeak(texto){
 
       const res = await resPromise;
       if(!res.ok) throw new Error('TTS erro: '+res.status);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audio.type = 'audio/wav';
-      let _gnSpeakRetried = false;
-      await new Promise((resolve) => {
-        audio.onended = function(){ URL.revokeObjectURL(url); resolve(); };
-        audio.onerror = function(){
-          URL.revokeObjectURL(url);
-          if(_gnSpeakRetried){ resolve(); return; }
-          _gnSpeakRetried = true;
-          fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts', {
-            method:'POST', headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({texto: chunks[i]})
-          }).then(r=>r.blob()).then(function(b2){
-            const u2=URL.createObjectURL(b2);
-            const a2=new Audio(u2);
-            a2.onended=function(){ URL.revokeObjectURL(u2); resolve(); };
-            a2.onerror=function(){ URL.revokeObjectURL(u2); resolve(); };
-            a2.play().catch(function(){ URL.revokeObjectURL(u2); resolve(); });
-          }).catch(function(){ resolve(); });
-        };
-        audio.play().catch(function(err){
-          if(err.name==='NotAllowedError'){
-            var hubChat=document.getElementById('hubJarvisChatResp');
-            if(hubChat){hubChat.style.display='block';hubChat.textContent=gnCurrentResposta||'';}
-            URL.revokeObjectURL(url); resolve();
-          } else { URL.revokeObjectURL(url); resolve(); }
+      const arrayBuffer = await res.arrayBuffer();
+      if(!window._gnAudioCtx || window._gnAudioCtx.state === 'closed'){
+        window._gnAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      const _ctx = window._gnAudioCtx;
+      if(_ctx.state === 'suspended'){ try{ await _ctx.resume(); }catch(e){} }
+      const bufCopy = arrayBuffer.slice(0);
+      await new Promise(function(resolve){
+        _ctx.decodeAudioData(arrayBuffer, function(audioBuffer){
+          const source = _ctx.createBufferSource();
+          source.buffer = audioBuffer;
+          source.connect(_ctx.destination);
+          source.onended = resolve;
+          source.start(0);
+        }, function(decErr){
+          console.warn('gnSpeak decodeAudioData falhou, fallback blob:', decErr);
+          const blob = new Blob([bufCopy], {type:'audio/wav'});
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audio.onended = function(){ URL.revokeObjectURL(url); resolve(); };
+          audio.onerror = function(){ URL.revokeObjectURL(url); resolve(); };
+          audio.play().catch(function(){ URL.revokeObjectURL(url); resolve(); });
         });
       });
     }
