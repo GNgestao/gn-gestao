@@ -7156,14 +7156,6 @@ const gnAcoes = {
   'manutenção': () => enterReparo(),
   'plano': () => enterPlano(),
   'documentação': () => { if(typeof enterDocumentacao === 'function') enterDocumentacao(); },
-  'gerar carta': () => gnIniciarFluxoCarta(),
-  'nova carta técnica': () => gnIniciarFluxoCarta(),
-  'nova carta': () => gnIniciarFluxoCarta(),
-  'criar carta': () => gnIniciarFluxoCarta(),
-  'fazer carta': () => gnIniciarFluxoCarta(),
-  'escrever carta': () => gnIniciarFluxoCarta(),
-  'elaborar carta': () => gnIniciarFluxoCarta(),
-  'montar carta': () => gnIniciarFluxoCarta(),
   'tela principal': () => backToHub(),
   'menu principal': () => backToHub(),
   'central': () => backToHub(),
@@ -7371,6 +7363,13 @@ async function gnTranscrever(blob){
       return;
     }
 
+    // Fluxo de carta ativo — rotear fala diretamente para gnExecutar sem checar wake word
+    if(_cartaStep > 0){
+      console.log('Carta step', _cartaStep, '- resposta:', texto);
+      gnExecutar(texto);
+      return;
+    }
+
     const temWake = texto.includes('jarvis') || texto.includes('charles') || texto.includes('chaves') || texto.includes('jarves') || texto.includes('jarvi');
     if(gnConversationMode){
       const comando = temWake ? texto.replace(/.*jarvis[,\s]*/i,'').trim() : texto;
@@ -7412,21 +7411,11 @@ function gnReiniciar(){
   }, 300);
 }
 
-function gnIniciarFluxoCarta(){
-  _cartaStep = 1;
-  _cartaData = {};
-  const pergunta = 'Qual será o título ou assunto da carta, senhor?';
-  gnCurrentResposta = pergunta;
-  const el=document.getElementById('globalJarvisChatResp')||document.getElementById('hubJarvisChatResp');
-  if(el){ el.style.display='block'; el.textContent=pergunta; }
-  if(gnModoVoz){ gnSpeak(pergunta).catch(()=>{}); }
-}
-
 async function gnExecutar(comando){
   if(gnSpeaking) return;
   if(gnExecutando) return;
 
-  // Fluxo multi-passo de geração de carta
+  // Fluxo multi-passo de geração de carta — resposta do usuário
   if(_cartaStep > 0){
     gnExecutando = true;
     const resposta_usuario = comando.trim();
@@ -7460,11 +7449,22 @@ async function gnExecutar(comando){
     const elPerg=document.getElementById('globalJarvisChatResp')||document.getElementById('hubJarvisChatResp');
     if(elPerg){ elPerg.style.display='block'; elPerg.textContent=proximaPergunta; }
     if(gnModoVoz){ try{ await gnSpeak(proximaPergunta); }catch(e){} }
-    if(gnCommandSource === 'text'){
-      gnCommandSource = 'voice';
-      if(gnTextTargetEl){ gnTextTargetEl.textContent = proximaPergunta; gnTextTargetEl = null; }
-      gnSetStatus("Diga 'Jarvis' para ativar",'');
-    }
+    gnExecutando = false;
+    return;
+  }
+
+  // Detecta comando de criação de carta — inicia fluxo com await correto
+  const cmdCarta = comando.toLowerCase();
+  const triggersCarta = ['gerar carta','nova carta técnica','nova carta','criar carta','fazer carta','escrever carta','elaborar carta','montar carta'];
+  if(triggersCarta.some(t => cmdCarta.includes(t))){
+    gnExecutando = true;
+    _cartaStep = 1;
+    _cartaData = {};
+    const q1 = 'Qual será o título da carta, senhor?';
+    gnCurrentResposta = q1;
+    const elC = document.getElementById('globalJarvisChatResp')||document.getElementById('hubJarvisChatResp');
+    if(elC){ elC.style.display='block'; elC.textContent=q1; }
+    if(gnModoVoz){ try{ await gnSpeak(q1); }catch(e){} }
     gnExecutando = false;
     return;
   }
