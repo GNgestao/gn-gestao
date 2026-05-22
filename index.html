@@ -7514,6 +7514,11 @@ async function gnExecutar(comando){
   }
   try{
     console.log('gnExecutar - comando enviado:', comando);
+    if(gnModoVoz){
+      const frasesVerificando = ['Entendido, chefe. Estou verificando.','Certo, verificando.','Um momento, chefe.','Verificando isso agora, senhor.'];
+      const fraseVerificando = frasesVerificando[Math.floor(Math.random()*frasesVerificando.length)];
+      await gnSpeak(fraseVerificando);
+    }
     const res = await fetch(GN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comando:comando,historico:gnSessionHistory.slice(-10)})});
     const data = await res.json();
     const resposta = (data.resposta||data.response||'').replace(/\*+/g,'').replace(/#+/g,'').replace(/_{2,}/g,'').trim() || 'Não consegui processar o comando.';
@@ -7689,7 +7694,7 @@ async function gnSpeak(texto){
     setTimeout(()=>{
       console.log('Reiniciando loop - modo conversa:', gnConversationMode);
       if(gnContinuousMode) gnListen();
-    }, 2000);
+    }, 800);
   }
 }
 </script>
