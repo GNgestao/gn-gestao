@@ -7095,6 +7095,7 @@ function applyRecImport(){
 
 <script>
 const GN_WEBHOOK='https://n8n.srv1610251.hstgr.cloud/webhook/gn-assistente';
+const GN_TTS_WEBHOOK='https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts';
 const GN_ELEVEN_KEY='sk_1f1a4e934da9f834cd787c333d65795e2679ad779654af5d';
 const GN_VOICE_ID='ZYCQDYoXnl78dNdU6JeG';
 const GN_TECNICOS = {
@@ -7607,68 +7608,33 @@ async function gnSpeak(texto){
   gnListening = false;
   gnIniciarMonitorParada();
   try{
-    const rawChunks = texto.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
-    const chunks = [];
-    let buffer = '';
-    for(let i = 0; i < rawChunks.length; i++){
-      const part = rawChunks[i].trim();
-      buffer = buffer ? buffer + ' ' + part : part;
-      const wordCount = buffer.split(/\s+/).filter(w => w.length > 0).length;
-      if(wordCount >= 3 || i === rawChunks.length - 1){
-        chunks.push(buffer);
-        buffer = '';
-      }
-    }
-    if(buffer) chunks.push(buffer);
-    if(chunks.length === 0) chunks.push(texto);
-
-    // Pipeline: aproveita prefetch — enquanto toca, já busca o próximo
-    let prefetchPromise = null;
-    for(let i = 0; i < chunks.length; i++){
-      if(window._gnSpeakAborted) break;
-      const resPromise = prefetchPromise || fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({texto: chunks[i]})
-      });
-      prefetchPromise = i + 1 < chunks.length ? fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({texto: chunks[i+1]})
-      }) : null;
-
-      const res = await resPromise;
-      if(window._gnSpeakAborted) break;
-      console.log('TTS status:', res.status, res.headers.get('content-type'));
-      if(!res.ok) throw new Error('TTS erro: '+res.status);
-      const arrayBuffer = await res.arrayBuffer();
-      if(window._gnSpeakAborted) break;
-      console.log('Audio buffer size:', arrayBuffer.byteLength);
-      if(arrayBuffer.byteLength < 100){ console.error('Buffer muito pequeno, TTS falhou'); continue; }
+    const resp = await fetch(GN_TTS_WEBHOOK, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({texto})
+    });
+    console.log('TTS status:', resp.status, resp.headers.get('content-type'));
+    const arrayBuffer = await resp.arrayBuffer();
+    console.log('TTS buffer size:', arrayBuffer.byteLength);
+    if(arrayBuffer.byteLength >= 100){
       if(!window._gnAudioCtx || window._gnAudioCtx.state === 'closed'){
-        window._gnAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        window._gnAudioCtx = new AudioContext();
       }
-      const _ctx = window._gnAudioCtx;
-      if(_ctx.state === 'suspended'){ try{ await _ctx.resume(); }catch(e){} }
-      const bufCopy = arrayBuffer.slice(0);
-      await new Promise(function(resolve){
-        if(window._gnSpeakAborted){ resolve(); return; }
-        _ctx.decodeAudioData(bufCopy, function(audioBuffer){
-          if(window._gnSpeakAborted){ resolve(); return; }
-          const source = _ctx.createBufferSource();
+      if(window._gnAudioCtx.state === 'suspended'){
+        await window._gnAudioCtx.resume();
+      }
+      const bufferCopy = arrayBuffer.slice(0);
+      await new Promise((resolve) => {
+        window._gnAudioCtx.decodeAudioData(bufferCopy, (decoded) => {
+          const source = window._gnAudioCtx.createBufferSource();
+          source.buffer = decoded;
+          source.connect(window._gnAudioCtx.destination);
           window._gnCurrentSource = source;
-          source.buffer = audioBuffer;
-          source.connect(_ctx.destination);
-          source.onended = function(){ window._gnCurrentSource=null; resolve(); };
+          source.onended = () => { window._gnCurrentSource = null; resolve(); };
           source.start(0);
-        }, function(decErr){
-          console.warn('gnSpeak decodeAudioData falhou, fallback blob:', decErr);
-          const blob = new Blob([arrayBuffer], {type:'audio/wav; codecs=1'});
-          const url = URL.createObjectURL(blob);
-          const audio = new Audio(url);
-          window._gnFallbackAudio = audio;
-          window._gnResolveAudio = resolve;
-          audio.onended = function(){ URL.revokeObjectURL(url); window._gnFallbackAudio=null; window._gnResolveAudio=null; resolve(); };
-          audio.onerror = function(){ URL.revokeObjectURL(url); window._gnFallbackAudio=null; window._gnResolveAudio=null; resolve(); };
-          audio.play().catch(function(){ URL.revokeObjectURL(url); window._gnFallbackAudio=null; window._gnResolveAudio=null; resolve(); });
+        }, (err) => {
+          console.error('decodeAudioData erro:', err);
+          resolve();
         });
       });
     }
