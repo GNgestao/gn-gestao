@@ -7160,6 +7160,10 @@ const gnAcoes = {
   'nova carta técnica': () => gnIniciarFluxoCarta(),
   'nova carta': () => gnIniciarFluxoCarta(),
   'criar carta': () => gnIniciarFluxoCarta(),
+  'fazer carta': () => gnIniciarFluxoCarta(),
+  'escrever carta': () => gnIniciarFluxoCarta(),
+  'elaborar carta': () => gnIniciarFluxoCarta(),
+  'montar carta': () => gnIniciarFluxoCarta(),
   'tela principal': () => backToHub(),
   'menu principal': () => backToHub(),
   'central': () => backToHub(),
@@ -7413,7 +7417,9 @@ function gnIniciarFluxoCarta(){
   _cartaData = {};
   const pergunta = 'Qual será o título ou assunto da carta, senhor?';
   gnCurrentResposta = pergunta;
-  if(gnModoVoz){ gnSpeak(pergunta); } else { const el=document.getElementById('globalJarvisChatResp')||document.getElementById('hubJarvisChatResp'); if(el){el.style.display='block';el.textContent=pergunta;} }
+  const el=document.getElementById('globalJarvisChatResp')||document.getElementById('hubJarvisChatResp');
+  if(el){ el.style.display='block'; el.textContent=pergunta; }
+  if(gnModoVoz){ gnSpeak(pergunta).catch(()=>{}); }
 }
 
 async function gnExecutar(comando){
@@ -7442,14 +7448,18 @@ async function gnExecutar(comando){
       _cartaStep = 0;
       const confirmacao = 'Perfeito, Senhor. Abrindo o formulário da carta para geração.';
       gnCurrentResposta = confirmacao;
-      if(gnModoVoz){ await gnSpeak(confirmacao); } else { const el=document.getElementById('globalJarvisChatResp')||document.getElementById('hubJarvisChatResp'); if(el){el.style.display='block';el.textContent=confirmacao;} }
+      const elConf=document.getElementById('globalJarvisChatResp')||document.getElementById('hubJarvisChatResp');
+      if(elConf){ elConf.style.display='block'; elConf.textContent=confirmacao; }
+      if(gnModoVoz){ try{ await gnSpeak(confirmacao); }catch(e){} }
       if(typeof enterDocumentacao === 'function') enterDocumentacao();
       setTimeout(function(){ if(typeof openDocCartaModal==='function') openDocCartaModal({titulo:_cartaData.titulo, cliente:_cartaData.cliente, endereco:_cartaData.endereco, detalhes:_cartaData.detalhes, autoGerar:true}); }, 400);
       gnExecutando = false;
       return;
     }
     gnCurrentResposta = proximaPergunta;
-    if(gnModoVoz){ await gnSpeak(proximaPergunta); } else { const el=document.getElementById('globalJarvisChatResp')||document.getElementById('hubJarvisChatResp'); if(el){el.style.display='block';el.textContent=proximaPergunta;} }
+    const elPerg=document.getElementById('globalJarvisChatResp')||document.getElementById('hubJarvisChatResp');
+    if(elPerg){ elPerg.style.display='block'; elPerg.textContent=proximaPergunta; }
+    if(gnModoVoz){ try{ await gnSpeak(proximaPergunta); }catch(e){} }
     if(gnCommandSource === 'text'){
       gnCommandSource = 'voice';
       if(gnTextTargetEl){ gnTextTargetEl.textContent = proximaPergunta; gnTextTargetEl = null; }
@@ -7575,15 +7585,30 @@ async function gnSpeak(texto){
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       audio.type = 'audio/wav';
-      await new Promise((resolve, reject) => {
+      let _gnSpeakRetried = false;
+      await new Promise((resolve) => {
         audio.onended = function(){ URL.revokeObjectURL(url); resolve(); };
-        audio.onerror = function(e){ URL.revokeObjectURL(url); reject(e); };
+        audio.onerror = function(){
+          URL.revokeObjectURL(url);
+          if(_gnSpeakRetried){ resolve(); return; }
+          _gnSpeakRetried = true;
+          fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({texto: chunks[i]})
+          }).then(r=>r.blob()).then(function(b2){
+            const u2=URL.createObjectURL(b2);
+            const a2=new Audio(u2);
+            a2.onended=function(){ URL.revokeObjectURL(u2); resolve(); };
+            a2.onerror=function(){ URL.revokeObjectURL(u2); resolve(); };
+            a2.play().catch(function(){ URL.revokeObjectURL(u2); resolve(); });
+          }).catch(function(){ resolve(); });
+        };
         audio.play().catch(function(err){
           if(err.name==='NotAllowedError'){
             var hubChat=document.getElementById('hubJarvisChatResp');
             if(hubChat){hubChat.style.display='block';hubChat.textContent=gnCurrentResposta||'';}
             URL.revokeObjectURL(url); resolve();
-          } else { reject(err); }
+          } else { URL.revokeObjectURL(url); resolve(); }
         });
       });
     }
@@ -8162,15 +8187,9 @@ function _buildCartaHTML(d, preview){
     ? 'background:#fff;color:#111;padding:1.5rem 2rem;font-family:Arial,sans-serif;font-size:.88rem;line-height:1.7;border-radius:8px'
     : 'font-family:Arial,sans-serif;font-size:11pt;color:#111;padding:0;line-height:1.8';
   return '<div style="'+styles+'">'
-    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem">'
-    +'<div></div>'
-    +'<div style="text-align:right">'
-    +'<img src="https://gngestao.github.io/gn-gestao/tke_logotipo.png" alt="TK Elevator" style="height:48px;width:auto;display:block;margin-left:auto;margin-bottom:.35rem">'
-    +'<div style="font-size:.82rem;font-weight:700;color:#5B21B6">Carta Técnica</div>'
-    +'<div style="font-size:.78rem;color:#555">'+esc(d.data)+'</div>'
+    +'<div style="display:flex;justify-content:flex-end;align-items:flex-start;margin-bottom:1.5rem">'
+    +'<img src="https://gngestao.github.io/gn-gestao/tke_logotipo.png" alt="TK Elevator" style="height:48px;width:auto;display:block">'
     +'</div>'
-    +'</div>'
-    +'<hr style="border:none;border-top:2px solid #7B2FBE;margin:.5rem 0 1rem 0">'
     +'<div style="margin-bottom:1.2rem;font-size:.88rem">'
     +'<div>Recife, '+esc(d.data)+'</div>'
     +'<div style="margin-top:.6rem">AO</div>'
@@ -8188,7 +8207,7 @@ function _buildCartaHTML(d, preview){
     +'</div>'
     +'</div>'
     +'</div>'
-    +'<div style="margin-top:2rem;padding-top:.5rem;border-top:1px solid #ccc;font-size:.75rem;color:#888">TK Elevator</div>'
+    +'<div style="margin-top:2rem;font-size:.75rem;color:#888">TK Elevator</div>'
     +'</div>';
 }
 
