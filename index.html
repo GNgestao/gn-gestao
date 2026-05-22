@@ -793,6 +793,9 @@ tr:hover td{background:rgba(91,33,182,.05)}
 #gnMicBtn:hover{background:rgba(255,98,0,.2);transform:scale(1.05)}
 #gnMicBtn.listening{background:rgba(255,98,0,.25);border-color:#FF6200;animation:gnMicPulse 1s ease-in-out infinite}
 @keyframes gnMicPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,98,0,.4)}50%{box-shadow:0 0 0 14px rgba(255,98,0,0)}}
+#gnStopBtn{position:absolute;bottom:6px;right:6px;width:32px;height:32px;border-radius:50%;background:rgba(220,38,38,.88);border:2px solid #ef4444;color:#fff;font-size:.75rem;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:15;transition:all .2s;box-shadow:0 0 16px rgba(220,38,38,.45)}
+#gnStopBtn.visible{display:flex}
+#gnStopBtn:hover{background:#ef4444;transform:scale(1.13);box-shadow:0 0 28px rgba(220,38,38,.7)}
 #gnNodes{margin-top:1.5rem;display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;max-width:500px}
 .gn-node-pill{background:rgba(50,29,101,.5);border:1px solid rgba(124,58,237,.25);border-radius:99px;padding:.35rem .9rem;display:flex;align-items:center;gap:.4rem;font-family:'DM Sans',sans-serif;font-size:.72rem;color:rgba(196,181,253,.8);transition:all .2s}
 .gn-node-pill.active{border-color:#FF6200;background:rgba(255,98,0,.12);color:#FF6200;box-shadow:0 0 10px rgba(255,98,0,.15)}
@@ -7063,6 +7066,7 @@ function applyRecImport(){
         <div id="gnLabel">Jarvis</div>
         <div id="gnSublabel">Online</div>
       </div>
+      <button id="gnStopBtn" onclick="event.stopPropagation();gnPararFala()" title="Parar Jarvis (ESC)">■</button>
     </div>
     <div id="gnWave">
       <div class="gn-bar"></div>
@@ -7540,14 +7544,63 @@ async function gnExecutar(comando){
   }
 }
 
+function gnPararFala(){
+  if(!gnSpeaking) return;
+  window._gnSpeakAborted = true;
+  if(window._gnCurrentSource){ try{ window._gnCurrentSource.stop(); }catch(e){} window._gnCurrentSource=null; }
+  if(window._gnFallbackAudio){ try{ window._gnFallbackAudio.pause(); window._gnFallbackAudio.src=''; }catch(e){} window._gnFallbackAudio=null; }
+  if(window._gnResolveAudio){ window._gnResolveAudio(); window._gnResolveAudio=null; }
+  if(window._gnStopRecognition){ try{ window._gnStopRecognition.abort(); }catch(e){} window._gnStopRecognition=null; }
+}
+
+function gnIniciarMonitorParada(){
+  if(window._gnStopRecognition){ try{ window._gnStopRecognition.abort(); }catch(e){} window._gnStopRecognition=null; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) return;
+  try{
+    const rec = new SR();
+    window._gnStopRecognition = rec;
+    rec.lang = 'pt-BR';
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.onresult = function(e){
+      const t = Array.from(e.results).map(r=>r[0].transcript).join(' ').toLowerCase();
+      if(['para','pare','stop','cala boca','silêncio','silencio','chega','basta'].some(w=>t.includes(w))){
+        gnPararFala();
+      }
+    };
+    rec.onerror = function(){ window._gnStopRecognition=null; };
+    rec.onend = function(){
+      if(gnSpeaking && !window._gnSpeakAborted && window._gnStopRecognition===rec){
+        try{ rec.start(); }catch(e){ window._gnStopRecognition=null; }
+      }
+    };
+    rec.start();
+  }catch(e){ window._gnStopRecognition=null; }
+}
+
+document.addEventListener('keydown', function(e){
+  if(!gnSpeaking) return;
+  const tag = (e.target && e.target.tagName) || '';
+  if(tag==='INPUT'||tag==='TEXTAREA') return;
+  if(e.key==='Escape'||(e.key===' '&&!e.ctrlKey&&!e.altKey&&!e.metaKey)){
+    e.preventDefault();
+    gnPararFala();
+  }
+});
+
 async function gnSpeak(texto){
   if(gnSpeaking) return Promise.resolve();
   document.getElementById('gnCore').classList.add('speaking');
   gnSpeaking = true;
+  window._gnSpeakAborted = false;
+  const stopBtn = document.getElementById('gnStopBtn');
+  if(stopBtn) stopBtn.classList.add('visible');
   gnSetStatus('Jarvis respondendo...','speaking');
   gnSetBars('speaking');
   if(gnRecognition){ try{ gnRecognition.abort(); }catch(e){} gnRecognition=null; }
   gnListening = false;
+  gnIniciarMonitorParada();
   try{
     const rawChunks = texto.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
     const chunks = [];
@@ -7567,21 +7620,21 @@ async function gnSpeak(texto){
     // Pipeline: aproveita prefetch — enquanto toca, já busca o próximo
     let prefetchPromise = null;
     for(let i = 0; i < chunks.length; i++){
-      // Usa o prefetch anterior ou faz novo fetch
+      if(window._gnSpeakAborted) break;
       const resPromise = prefetchPromise || fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body:JSON.stringify({texto: chunks[i]})
       });
-
-      // Inicia prefetch do próximo chunk imediatamente
       prefetchPromise = i + 1 < chunks.length ? fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body:JSON.stringify({texto: chunks[i+1]})
       }) : null;
 
       const res = await resPromise;
+      if(window._gnSpeakAborted) break;
       if(!res.ok) throw new Error('TTS erro: '+res.status);
       const arrayBuffer = await res.arrayBuffer();
+      if(window._gnSpeakAborted) break;
       if(!window._gnAudioCtx || window._gnAudioCtx.state === 'closed'){
         window._gnAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
@@ -7589,28 +7642,36 @@ async function gnSpeak(texto){
       if(_ctx.state === 'suspended'){ try{ await _ctx.resume(); }catch(e){} }
       const bufCopy = arrayBuffer.slice(0);
       await new Promise(function(resolve){
+        if(window._gnSpeakAborted){ resolve(); return; }
         _ctx.decodeAudioData(arrayBuffer, function(audioBuffer){
+          if(window._gnSpeakAborted){ resolve(); return; }
           const source = _ctx.createBufferSource();
+          window._gnCurrentSource = source;
           source.buffer = audioBuffer;
           source.connect(_ctx.destination);
-          source.onended = resolve;
+          source.onended = function(){ window._gnCurrentSource=null; resolve(); };
           source.start(0);
         }, function(decErr){
           console.warn('gnSpeak decodeAudioData falhou, fallback blob:', decErr);
           const blob = new Blob([bufCopy], {type:'audio/wav'});
           const url = URL.createObjectURL(blob);
           const audio = new Audio(url);
-          audio.onended = function(){ URL.revokeObjectURL(url); resolve(); };
-          audio.onerror = function(){ URL.revokeObjectURL(url); resolve(); };
-          audio.play().catch(function(){ URL.revokeObjectURL(url); resolve(); });
+          window._gnFallbackAudio = audio;
+          window._gnResolveAudio = resolve;
+          audio.onended = function(){ URL.revokeObjectURL(url); window._gnFallbackAudio=null; window._gnResolveAudio=null; resolve(); };
+          audio.onerror = function(){ URL.revokeObjectURL(url); window._gnFallbackAudio=null; window._gnResolveAudio=null; resolve(); };
+          audio.play().catch(function(){ URL.revokeObjectURL(url); window._gnFallbackAudio=null; window._gnResolveAudio=null; resolve(); });
         });
       });
     }
   }catch(err){
     console.error('gnSpeak erro:', err);
-    // Sem fallback de voz — apenas reinicia o loop silenciosamente
   }finally{
+    if(window._gnStopRecognition){ try{ window._gnStopRecognition.abort(); }catch(e){} window._gnStopRecognition=null; }
+    window._gnCurrentSource=null; window._gnFallbackAudio=null; window._gnResolveAudio=null;
     document.getElementById('gnCore').classList.remove('speaking');
+    const stopBtnFin = document.getElementById('gnStopBtn');
+    if(stopBtnFin) stopBtnFin.classList.remove('visible');
     gnConversationMode = true;
     gnSetStatus('Pode continuar falando...','listening');
     if(gnConversationTimer) clearTimeout(gnConversationTimer);
