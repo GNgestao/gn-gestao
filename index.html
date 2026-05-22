@@ -7237,8 +7237,9 @@ function gnStartContinuous(){
 
 function gnWatchdog(){
   if(!gnContinuousMode) return;
+  if(gnSpeaking){ gnWatchdogTimer = setTimeout(gnWatchdog, 5000); return; }
   const diff = Date.now() - gnLastActivity;
-  if(diff > 45000 && !gnSpeaking){
+  if(diff > 45000){
     console.log('Watchdog: reiniciando loop travado...');
     gnListening = false;
     gnSpeaking = false;
@@ -7551,6 +7552,7 @@ async function gnExecutar(comando){
 }
 
 function gnPararFala(){
+  console.log('gnPararFala chamado');
   if(!gnSpeaking) return;
   window._gnSpeakAborted = true;
   if(window._gnCurrentSource){ try{ window._gnCurrentSource.stop(); }catch(e){} window._gnCurrentSource=null; }
@@ -7632,6 +7634,7 @@ async function gnSpeak(texto){
           window._gnCurrentSource = source;
           source.onended = () => { window._gnCurrentSource = null; resolve(); };
           source.start(0);
+          if(window._gnAudioCtx.state === 'suspended') window._gnAudioCtx.resume();
         }, (err) => {
           console.error('decodeAudioData erro:', err);
           resolve();
