@@ -8766,7 +8766,8 @@ async function enviarCartaAssinatura(){
       })
     });
     if(!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
+    const raw = await res.json();
+    const data = Array.isArray(raw) ? raw[0] : raw;
     console.log('Resposta assinatura:', JSON.stringify(data));
     console.log('gabrielLink:', data.gabrielLink);
     if(data.gabrielLink){
@@ -8813,7 +8814,8 @@ async function enviarAtaAssinatura(){
       body: JSON.stringify({ tipo: 'ata', html: htmlConteudo, signatarios })
     });
     if(!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
+    const raw = await res.json();
+    const data = Array.isArray(raw) ? raw[0] : raw;
     console.log('Resposta assinatura:', JSON.stringify(data));
     console.log('gabrielLink:', data.gabrielLink);
     if(data.gabrielLink){
