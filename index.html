@@ -858,6 +858,9 @@ tr:hover td{background:rgba(91,33,182,.05)}
 .doc-preview-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem}
 .doc-btn-pdf{background:rgba(255,98,0,.15);border:1.5px solid rgba(255,98,0,.4);color:#FF6200;border-radius:10px;padding:.6rem 1.2rem;font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;transition:background .2s}
 .doc-btn-pdf:hover{background:rgba(255,98,0,.28)}
+.doc-btn-assinar{background:rgba(91,33,182,.2);border:1.5px solid rgba(91,33,182,.5);color:#c4b5fd;border-radius:10px;padding:.6rem 1.2rem;font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;transition:background .2s}
+.doc-btn-assinar:hover{background:rgba(91,33,182,.35)}
+.doc-btn-assinar:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:520px){.doc-action-grid{grid-template-columns:1fr}.doc-modal{padding:1.25rem}}
 @media print{
   body > *:not(#docPrintFrame){display:none!important}
@@ -7674,6 +7677,26 @@ async function gnExecutar(comando){
     return;
   }
 
+  const triggersAssinatura = ['enviar para assinatura','enviar ata para assinatura','enviar carta para assinatura','assinar documento','enviar para assinar'];
+  if(triggersAssinatura.some(function(t){ return comando.toLowerCase().includes(t); })){
+    gnExecutando = true;
+    const cartaAberta = (function(){ var el=document.getElementById('docCartaPreviewWrap'); return el && el.style.display !== 'none' && el.innerHTML.trim() !== ''; })();
+    const ataAberta   = (function(){ var el=document.getElementById('docAtaPreviewWrap');   return el && el.style.display !== 'none' && el.innerHTML.trim() !== ''; })();
+    if(cartaAberta && typeof enviarCartaAssinatura === 'function'){
+      await enviarCartaAssinatura();
+    } else if(ataAberta && typeof enviarAtaAssinatura === 'function'){
+      await enviarAtaAssinatura();
+    } else {
+      const msgAss = 'Funcionalidade de assinatura eletrônica em desenvolvimento, chefe. Em breve estará disponível.';
+      gnCurrentResposta = msgAss;
+      const elAss = document.getElementById('globalJarvisChatResp')||document.getElementById('hubJarvisChatResp');
+      if(elAss){ elAss.style.display='block'; elAss.textContent=msgAss; }
+      if(gnModoVoz){ try{ await gnSpeak(msgAss); }catch(e){} }
+    }
+    gnExecutando = false;
+    return;
+  }
+
   gnExecutando = true;
   gnListening = false;
   if(gnRecognition){ try{ gnRecognition.abort(); }catch(e){} gnRecognition=null; }
@@ -7689,7 +7712,6 @@ async function gnExecutar(comando){
   else if(cmd.includes('reparo')||cmd.includes('servi')) gnActivateNode('reparo');
   else if(cmd.includes('plano')) gnActivateNode('plano');
   const respostasFixas = [
-    { gatilhos: ['enviar para assinatura','enviar ata para assinatura','enviar carta para assinatura','assinar documento','enviar para assinar'], resposta: 'Funcionalidade de assinatura eletrônica em desenvolvimento, chefe. Em breve estará disponível.' },
     { gatilhos: ['está aí', 'esta ai', 'você está aí', 'voce esta ai'], resposta: 'Para o senhor, sempre.' },
     { gatilhos: ['acorda', 'acordar', 'está acordado', 'esta acordado', 'está acordada', 'esta acordada'], resposta: 'Estou acordado, Chefe. Pronto para atender suas necessidades.' },
     { gatilhos: ['cheguei', 'voltei', 'estou de volta', 'estou aqui', 'eu voltei', 'eu cheguei'], resposta: 'Bem-vindo de volta, Senhor. Como posso ajudá-lo?' },
@@ -8266,6 +8288,7 @@ async function gnSpeak(texto){
     <div class="doc-modal-actions">
       <button class="doc-btn-gerar" id="docCartaGerarBtn" onclick="gerarCarta()">Gerar Carta</button>
       <button id="docCartaPdfBtn" class="doc-btn-pdf" style="display:none" onclick="salvarDocPDF('carta')">Salvar PDF</button>
+      <button id="docCartaAssinarBtn" class="doc-btn-assinar" style="display:none" onclick="enviarCartaAssinatura()">✍️ Enviar para Assinatura</button>
       <button class="doc-btn-cancel" onclick="closeDocCartaModal()">Cancelar</button>
     </div>
   </div>
@@ -8320,6 +8343,7 @@ async function gnSpeak(texto){
     <div class="doc-modal-actions">
       <button class="doc-btn-gerar" id="docAtaGerarBtn" onclick="gerarAta()">Gerar Ata</button>
       <button id="docAtaPdfBtn" class="doc-btn-pdf" style="display:none" onclick="salvarDocPDF('ata')">Salvar PDF</button>
+      <button id="docAtaAssinarBtn" class="doc-btn-assinar" style="display:none" onclick="enviarAtaAssinatura()">✍️ Enviar para Assinatura</button>
       <button class="doc-btn-cancel" onclick="closeDocAtaModal()">Cancelar</button>
     </div>
   </div>
@@ -8356,6 +8380,7 @@ function openDocCartaModal(dados){
   document.getElementById('docCartaPreviewWrap').style.display='none';
   document.getElementById('docCartaPreview').innerHTML='';
   document.getElementById('docCartaPdfBtn').style.display='none';
+  document.getElementById('docCartaAssinarBtn').style.display='none';
   document.getElementById('docCartaGerarBtn').textContent='Gerar Carta';
   document.getElementById('docCartaModal').classList.add('open');
   if(dados&&dados.autoGerar) setTimeout(gerarCarta, 300);
@@ -8396,6 +8421,7 @@ function openDocAtaModal(dados){
   document.getElementById('docAtaPreviewWrap').style.display='none';
   document.getElementById('docAtaPreview').innerHTML='';
   document.getElementById('docAtaPdfBtn').style.display='none';
+  document.getElementById('docAtaAssinarBtn').style.display='none';
   document.getElementById('docAtaGerarBtn').textContent='Gerar Ata';
   document.getElementById('docAtaModal').classList.add('open');
   if(dados&&dados.autoGerar) setTimeout(gerarAta, 300);
@@ -8449,6 +8475,7 @@ async function gerarCarta(){
     document.getElementById('docCartaPreview').innerHTML = _buildCartaHTML(window._docCartaData, true);
     document.getElementById('docCartaPreviewWrap').style.display='block';
     document.getElementById('docCartaPdfBtn').style.display='inline-block';
+    document.getElementById('docCartaAssinarBtn').style.display='inline-block';
   }catch(err){ console.error('Erro ao gerar documento:', err); alert('Erro: ' + err.message); }
   btn.disabled=false; btn.textContent='Gerar Carta';
 }
@@ -8694,6 +8721,80 @@ function gerarAta(){
   document.getElementById('docAtaPreview').innerHTML = _buildAtaHTML(window._docAtaData, true);
   document.getElementById('docAtaPreviewWrap').style.display='block';
   document.getElementById('docAtaPdfBtn').style.display='inline-block';
+  document.getElementById('docAtaAssinarBtn').style.display='inline-block';
+}
+
+const GN_ASSINATURA_WEBHOOK = 'https://n8n.srv1610251.hstgr.cloud/webhook/gn-assinatura';
+
+async function enviarCartaAssinatura(){
+  const htmlConteudo = document.getElementById('docCartaPreview').innerHTML;
+  if(!htmlConteudo){ alert('Gere a carta antes de enviar para assinatura.'); return; }
+  const btn = document.getElementById('docCartaAssinarBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Enviando...'; }
+  const cartaCliente = document.getElementById('docCartaCliente').value.trim();
+  const msg1 = 'Enviando carta para assinatura, chefe.';
+  if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
+    try{ await gnSpeak(msg1); }catch(e){}
+  try{
+    const res = await fetch(GN_ASSINATURA_WEBHOOK, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        tipo: 'carta',
+        html: htmlConteudo,
+        destinatario: { nome: cartaCliente, email: '' },
+        signatarios: [{ nome: 'Gabriel Nascimento', email: 'gabriel.nascimento@tkelevator.com', action: 'sign' }]
+      })
+    });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const msg2 = 'Carta enviada para assinatura com sucesso, senhor.';
+    if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
+      try{ await gnSpeak(msg2); }catch(e){}
+    else alert(msg2);
+  } catch(err){
+    console.error('enviarCartaAssinatura erro:', err);
+    const msgErr = 'Erro ao enviar para assinatura, chefe. Verifique o fluxo n8n.';
+    if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
+      try{ await gnSpeak(msgErr); }catch(e){}
+    else alert('Erro ao enviar para assinatura.');
+  }
+  if(btn){ btn.disabled = false; btn.textContent = '✍️ Enviar para Assinatura'; }
+}
+
+async function enviarAtaAssinatura(){
+  const htmlConteudo = document.getElementById('docAtaPreview').innerHTML;
+  if(!htmlConteudo){ alert('Gere a ata antes de enviar para assinatura.'); return; }
+  const btn = document.getElementById('docAtaAssinarBtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Enviando...'; }
+  const partsGlobal = (typeof _ataParticipantes !== 'undefined' && _ataParticipantes.length)
+    ? _ataParticipantes
+    : Array.from(document.querySelectorAll('#docAtaParticipantes .doc-part-row')).map(function(r){
+        return { nome: (r.querySelector('.doc-part-nome')||{}).value||'', email: (r.querySelector('.doc-part-email')||{}).value||'' };
+      }).filter(function(p){ return p.nome; });
+  const signatarios = partsGlobal.map(function(p){ return { nome: p.nome, email: p.email, action: 'sign' }; })
+    .concat([{ nome: 'Gabriel Nascimento', email: 'gabriel.nascimento@tkelevator.com', action: 'sign' }]);
+  const msg1 = 'Enviando ata para assinatura, chefe.';
+  if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
+    try{ await gnSpeak(msg1); }catch(e){}
+  try{
+    const res = await fetch(GN_ASSINATURA_WEBHOOK, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ tipo: 'ata', html: htmlConteudo, signatarios })
+    });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const msg2 = 'Ata enviada para assinatura com sucesso, senhor.';
+    if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
+      try{ await gnSpeak(msg2); }catch(e){}
+    else alert(msg2);
+  } catch(err){
+    console.error('enviarAtaAssinatura erro:', err);
+    const msgErr = 'Erro ao enviar para assinatura, chefe. Verifique o fluxo n8n.';
+    if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
+      try{ await gnSpeak(msgErr); }catch(e){}
+    else alert('Erro ao enviar para assinatura.');
+  }
+  if(btn){ btn.disabled = false; btn.textContent = '✍️ Enviar para Assinatura'; }
 }
 
 function salvarDocPDF(tipo){
