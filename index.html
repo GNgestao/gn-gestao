@@ -7240,9 +7240,25 @@ function gnStartContinuous(){
   gnWatchdog();
 }
 
+let _gnSpeakingStart = 0;
 function gnWatchdog(){
   if(!gnContinuousMode) return;
-  if(gnSpeaking){ gnWatchdogTimer = setTimeout(gnWatchdog, 5000); return; }
+  if(gnSpeaking){
+    if(!_gnSpeakingStart) _gnSpeakingStart = Date.now();
+    if(Date.now() - _gnSpeakingStart > 30000){
+      console.warn('Watchdog: gnSpeaking travado por 30s — forçando reset');
+      gnPararFala();
+      gnSpeaking = false;
+      gnExecutando = false;
+      _gnSpeakingStart = 0;
+      gnLastActivity = Date.now();
+      setTimeout(gnListen, 600);
+    } else {
+      gnWatchdogTimer = setTimeout(gnWatchdog, 5000);
+    }
+    return;
+  }
+  _gnSpeakingStart = 0;
   const diff = Date.now() - gnLastActivity;
   if(diff > 45000){
     console.log('Watchdog: reiniciando loop travado...');
@@ -7428,8 +7444,20 @@ function gnReiniciar(){
 }
 
 async function gnExecutar(comando){
-  if(gnSpeaking){ if(_ataStep>0) console.log('[ATA] gnExecutar BLOQUEADO por gnSpeaking=true, step='+_ataStep+' cmd="'+comando+'"'); return; }
-  if(gnExecutando){ if(_ataStep>0) console.log('[ATA] gnExecutar BLOQUEADO por gnExecutando=true, step='+_ataStep+' cmd="'+comando+'"'); return; }
+  if(gnSpeaking){
+    if(_ataStep>0){
+      console.log('[ATA] gnExecutar BLOQUEADO por gnSpeaking=true, step='+_ataStep+' cmd="'+comando+'"');
+      setTimeout(function(){ if(!gnSpeaking && !gnListening) gnReiniciar(); }, 1200);
+    }
+    return;
+  }
+  if(gnExecutando){
+    if(_ataStep>0){
+      console.log('[ATA] gnExecutar BLOQUEADO por gnExecutando=true, step='+_ataStep+' cmd="'+comando+'"');
+      setTimeout(function(){ if(!gnSpeaking && !gnListening) gnReiniciar(); }, 1200);
+    }
+    return;
+  }
 
   // Fluxo multi-passo de geração de carta — resposta do usuário
   if(_cartaStep > 0){
@@ -7537,6 +7565,7 @@ async function gnExecutar(comando){
       proxPergAta = 'Tem mais algum item?';
       console.log('[ATA] step 8→9 prazo="'+prazoConv+'" itens='+JSON.stringify(_ataItens));
     } else if(_ataStep === 9){
+      console.log('[ATA] step 9 avaliando resp="'+resp_ata+'" _ataSimNao='+_ataSimNao(resp_ata)+' gnSpeaking='+gnSpeaking+' gnExecutando='+gnExecutando);
       if(_ataSimNao(resp_ata)){
         _ataStep = 6;
         proxPergAta = 'Qual o próximo item discutido?';
@@ -7544,26 +7573,33 @@ async function gnExecutar(comando){
       } else {
         _ataStep = 10;
         proxPergAta = 'Posso concluir a ata?';
-        console.log('[ATA] step 9→10 (fim itens, total='+_ataItens.length+')');
+        console.log('[ATA] step 9→10 (fim itens, total='+_ataItens.length+') — vai perguntar "Posso concluir a ata?"');
       }
     } else if(_ataStep === 10){
+      console.log('[ATA] step 10 avaliando resp="'+resp_ata+'" _ataSimNao='+_ataSimNao(resp_ata)+' gnSpeaking='+gnSpeaking+' gnExecutando='+gnExecutando+' gnModoVoz='+gnModoVoz);
       if(_ataSimNao(resp_ata)){
         _ataStep = 0;
+        const _ataSnap = {titulo:_ataTitulo, local:_ataLocal, participantes:_ataParticipantes.slice(), itens:_ataItens.slice()};
+        console.log('[ATA] step 10 — confirmado, snap criado ANTES do speak:', JSON.stringify(_ataSnap));
         const confirmAtaMsg = 'Perfeito, senhor. Abrindo o formulário da ata.';
         gnCurrentResposta = confirmAtaMsg;
         const elAtaConf = document.getElementById('globalJarvisChatResp')||document.getElementById('hubJarvisChatResp');
         if(elAtaConf){ elAtaConf.style.display='block'; elAtaConf.textContent=confirmAtaMsg; }
-        if(gnModoVoz){ try{ await gnSpeak(confirmAtaMsg); }catch(e){} }
-        const _ataSnap = {titulo:_ataTitulo, local:_ataLocal, participantes:_ataParticipantes.slice(), itens:_ataItens.slice()};
-        console.log('[ATA] step 10 — confirmado, abrindo modal:', JSON.stringify(_ataSnap));
+        if(gnModoVoz){ try{ await gnSpeak(confirmAtaMsg); }catch(e){ console.error('[ATA] gnSpeak erro no step 10:', e); } }
+        console.log('[ATA] step 10 — pós-speak, chamando enterDocumentacao e openDocAtaModal...');
         if(typeof enterDocumentacao === 'function') enterDocumentacao();
-        setTimeout(function(){ if(typeof openDocAtaModal==='function') openDocAtaModal(Object.assign({autoGerar:true}, _ataSnap)); }, 400);
+        setTimeout(function(){
+          console.log('[ATA] step 10 — abrindo modal agora, snap='+JSON.stringify(_ataSnap));
+          if(typeof openDocAtaModal==='function') openDocAtaModal(Object.assign({autoGerar:true}, _ataSnap));
+          else console.error('[ATA] openDocAtaModal não encontrada!');
+        }, 400);
         gnExecutando = false;
+        console.log('[ATA] step 10 — gnExecutando resetado para false, return');
         return;
       } else {
         _ataStep = 0;
         proxPergAta = 'Tudo bem. O que deseja ajustar?';
-        console.log('[ATA] step 10 — cancelado');
+        console.log('[ATA] step 10 — cancelado, _ataStep resetado para 0');
       }
     }
     if(proxPergAta){
@@ -7758,20 +7794,23 @@ async function gnSpeak(texto){
         await window._gnAudioCtx.resume();
       }
       const bufferCopy = arrayBuffer.slice(0);
-      await new Promise((resolve) => {
-        window._gnAudioCtx.decodeAudioData(bufferCopy, (decoded) => {
-          const source = window._gnAudioCtx.createBufferSource();
-          source.buffer = decoded;
-          source.connect(window._gnAudioCtx.destination);
-          window._gnCurrentSource = source;
-          source.onended = () => { window._gnCurrentSource = null; resolve(); };
-          source.start(0);
-          if(window._gnAudioCtx.state === 'suspended') window._gnAudioCtx.resume();
-        }, (err) => {
-          console.error('decodeAudioData erro:', err);
-          resolve();
-        });
-      });
+      await Promise.race([
+        new Promise((resolve) => {
+          window._gnAudioCtx.decodeAudioData(bufferCopy, (decoded) => {
+            const source = window._gnAudioCtx.createBufferSource();
+            source.buffer = decoded;
+            source.connect(window._gnAudioCtx.destination);
+            window._gnCurrentSource = source;
+            source.onended = () => { window._gnCurrentSource = null; resolve(); };
+            source.start(0);
+            if(window._gnAudioCtx.state === 'suspended') window._gnAudioCtx.resume();
+          }, (err) => {
+            console.error('decodeAudioData erro:', err);
+            resolve();
+          });
+        }),
+        new Promise(resolve => setTimeout(resolve, 15000))
+      ]);
     }
   }catch(err){
     console.error('gnSpeak erro:', err);
@@ -7791,12 +7830,13 @@ async function gnSpeak(texto){
       gnReiniciar();
     }, 300000);
     gnSpeaking = false;
+    _gnSpeakingStart = 0;
     gnCommandSource = 'voice';
     gnListening = false;
     if(gnStream){ gnStream.getTracks().forEach(t=>t.stop()); gnStream=null; }
     gnSetBars('');
     setTimeout(()=>{
-      console.log('Reiniciando loop - modo conversa:', gnConversationMode);
+      console.log('Reiniciando loop - modo conversa:', gnConversationMode, '_ataStep='+_ataStep);
       if(gnContinuousMode) gnListen();
     }, 800);
   }
