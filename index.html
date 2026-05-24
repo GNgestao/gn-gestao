@@ -7671,6 +7671,7 @@ async function gnExecutar(comando){
   else if(cmd.includes('reparo')||cmd.includes('servi')) gnActivateNode('reparo');
   else if(cmd.includes('plano')) gnActivateNode('plano');
   const respostasFixas = [
+    { gatilhos: ['enviar para assinatura','enviar ata para assinatura','enviar carta para assinatura','assinar documento','enviar para assinar'], resposta: 'Funcionalidade de assinatura eletrônica em desenvolvimento, chefe. Em breve estará disponível.' },
     { gatilhos: ['está aí', 'esta ai', 'você está aí', 'voce esta ai'], resposta: 'Para o senhor, sempre.' },
     { gatilhos: ['acorda', 'acordar', 'está acordado', 'esta acordado', 'está acordada', 'esta acordada'], resposta: 'Estou acordado, Chefe. Pronto para atender suas necessidades.' },
     { gatilhos: ['cheguei', 'voltei', 'estou de volta', 'estou aqui', 'eu voltei', 'eu cheguei'], resposta: 'Bem-vindo de volta, Senhor. Como posso ajudá-lo?' },
@@ -8319,6 +8320,7 @@ function enterDocumentacao(){
 }
 
 function backFromDocumentacao(){
+  console.log('backFromDocumentacao chamada');
   var sc=document.getElementById('screenDocumentacao');
   if(sc) sc.style.display='none';
   ['screenReconhece','screenPlano','screenReparo','screenGN','appScreen'].forEach(function(id){
