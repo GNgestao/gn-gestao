@@ -7526,7 +7526,7 @@ async function gnExecutar(comando){
           const frasesVerificando = ['Entendido, chefe. Estou verificando.','Certo, verificando.','Um momento, chefe.','Verificando isso agora, senhor.'];
           await gnSpeak(frasesVerificando[Math.floor(Math.random()*frasesVerificando.length)]);
           resolve();
-        }, 2000);
+        }, 4000);
       });
     }
     const res = await fetch(GN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comando:comando,historico:gnSessionHistory.slice(-10)})});
