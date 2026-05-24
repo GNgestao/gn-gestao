@@ -7476,7 +7476,8 @@ async function gnExecutar(comando){
     const resp_ata = _converterNumerosExtenso(comando.trim());
     const _ataSimNao = function(t){ return /^(sim|s\b|pode|ok|claro|isso|vai|afirmativo|exato|perfeito|com certeza)/i.test(t.trim().toLowerCase()); };
     // "Repita" global — não avança step, repete última pergunta
-    if(/^(repita|repita novamente|n[aã]o entendi|pode repetir|o que voc[êe] disse|repete)/i.test(resp_ata.toLowerCase()) && _ataUltimaPergunta){
+    const _ataRepetirTermos = ['repita','poderia repetir','pode repetir','repete','não entendi','nao entendi','não ouvi','nao ouvi','não escutei','nao escutei','o que foi','como','hein'];
+    if(_ataUltimaPergunta && _ataRepetirTermos.some(function(tr){ return resp_ata.toLowerCase().includes(tr); })){
       console.log('[ATA] REPITA detectado step='+_ataStep+', repetindo: "'+_ataUltimaPergunta+'"');
       if(gnModoVoz){ try{ await gnSpeak(_ataUltimaPergunta); }catch(e){} }
       gnExecutando = false;
@@ -7506,14 +7507,18 @@ async function gnExecutar(comando){
       proxPergAta = 'Tem mais algum participante?';
       console.log('[ATA] step 4→5 email="'+emailConv+'" participantes='+JSON.stringify(_ataParticipantes));
     } else if(_ataStep === 5){
-      if(_ataSimNao(resp_ata)){
-        _ataStep = 3;
-        proxPergAta = 'Qual o nome do próximo participante?';
-        console.log('[ATA] step 5→3 (mais participantes)');
-      } else {
+      // Negativo explícito → sem mais participantes
+      const _ataNeg5 = /\b(n[aã]o|nenhum|s[oó]|somente|acabou|encerrar|finalizar)\b/i.test(resp_ata.toLowerCase());
+      if(_ataNeg5){
         _ataStep = 6;
         proxPergAta = 'Qual o primeiro item discutido?';
-        console.log('[ATA] step 5→6 (fim participantes, total='+_ataParticipantes.length+')');
+        console.log('[ATA] step 5→6 (negativo, sem mais participantes, total='+_ataParticipantes.length+')');
+      } else {
+        // Sem negativo → tratar como nome do próximo participante (pode ser "sim" ou nome direto)
+        _ataParticipanteAtual = _capitalizar(resp_ata.trim());
+        _ataStep = 4;
+        proxPergAta = 'Qual o e-mail de '+_ataParticipanteAtual+'?';
+        console.log('[ATA] step 5→4 nome="'+_ataParticipanteAtual+'"');
       }
     } else if(_ataStep === 6){
       _ataItemAtual = _capitalizar(resp_ata.trim());
@@ -8430,8 +8435,9 @@ function _ataConverterEmail(s){
 
 function _ataConverterData(s){
   if(!s) return s;
-  var orig = s;
-  var t = s.toLowerCase().trim();
+  // Limpar pontuação final antes de processar
+  var orig = s.trim().replace(/[.,;!?]+$/, '');
+  var t = orig.toLowerCase();
   var meses = {janeiro:'01',fevereiro:'02','março':'03',marco:'03',abril:'04',maio:'05',junho:'06',julho:'07',agosto:'08',setembro:'09',outubro:'10',novembro:'11',dezembro:'12'};
   var numerais = [
     ['trinta e um','31'],['trinta','30'],
@@ -8445,14 +8451,13 @@ function _ataConverterData(s){
     ['quatro','4'],['três','3'],['tres','3'],['dois','2'],['um','1'],
     ['primeiro','1'],['primeira','1']
   ];
-  // Calcula número por extenso em português
   var _ptN = function(str){
     var u={zero:0,um:1,uma:1,dois:2,duas:2,'três':3,tres:3,quatro:4,cinco:5,seis:6,sete:7,oito:8,nove:9,dez:10,onze:11,doze:12,treze:13,quatorze:14,catorze:14,quinze:15,dezesseis:16,dezessete:17,dezoito:18,dezenove:19,vinte:20,trinta:30,quarenta:40,cinquenta:50,sessenta:60,setenta:70,oitenta:80,noventa:90,cem:100,cento:100,duzentos:200,duzentas:200,trezentos:300,trezentas:300,quatrocentos:400,quatrocentas:400,quinhentos:500,quinhentas:500,seiscentos:600,seiscentas:600,setecentos:700,setecentas:700,oitocentos:800,oitocentas:800,novecentos:900,novecentas:900};
     var tk=str.trim().split(/\s+/),tot=0,seg=0;
     tk.forEach(function(w){w=w.toLowerCase();if(!w||w==='e')return;if(w==='mil'){tot+=(seg||1)*1000;seg=0;}else if(w in u)seg+=u[w];});
     return tot+seg;
   };
-  // 1. Extrair ano: procura padrão "X mil ..." ou 4 dígitos
+  // 1. Extrair ano: padrão "X mil ..." ou 4 dígitos
   var ano = null;
   var yrM = t.match(/(?:\S+\s+){0,3}mil(?:\s+\S+){0,5}/i);
   if(yrM){ var yv=_ptN(yrM[0]); if(yv>=1900&&yv<=2100){ ano=String(yv); t=t.replace(yrM[0],' ').replace(/\s+/g,' ').trim(); } }
@@ -8463,11 +8468,13 @@ function _ataConverterData(s){
   // 3. Encontrar mês por nome
   var mes=null;
   for(var m in meses){ if(t.indexOf(m)!==-1){ mes=meses[m]; t=t.replace(m,' ').replace(/\s+/g,' ').trim(); break; } }
-  // 4. Encontrar dia por extenso
+  // 4. Encontrar dia: por extenso primeiro, depois como dígito
   var dia=null;
   for(var i=0;i<numerais.length;i++){ if(t.indexOf(numerais[i][0])!==-1){ dia=String(numerais[i][1]).padStart(2,'0'); t=t.replace(numerais[i][0],' ').replace(/\s+/g,' ').trim(); break; } }
-  // 5. Se mês não encontrado por nome, buscar como número no texto restante
+  if(!dia){ var dm=t.match(/\b(\d{1,2})\b/); if(dm&&parseInt(dm[1])>=1&&parseInt(dm[1])<=31){ dia=String(parseInt(dm[1])).padStart(2,'0'); t=t.replace(dm[0],' ').replace(/\s+/g,' ').trim(); } }
+  // 5. Mês não encontrado por nome — buscar como número no restante
   if(!mes&&t){ for(var i=0;i<numerais.length;i++){ var n=parseInt(numerais[i][1]); if(n>=1&&n<=12&&t.indexOf(numerais[i][0])!==-1){ mes=String(n).padStart(2,'0'); break; } } }
+  if(!mes&&t){ var mm=t.match(/\b(\d{1,2})\b/); if(mm&&parseInt(mm[1])>=1&&parseInt(mm[1])<=12) mes=String(parseInt(mm[1])).padStart(2,'0'); }
   if(dia&&mes) return dia+'/'+mes+'/'+ano;
   // 6. Fallback: padrão numérico direto
   var nm=orig.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
