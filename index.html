@@ -7148,6 +7148,7 @@ let _ataStep = 0;
 let _ataTitulo = '', _ataLocal = '';
 let _ataParticipantes = [], _ataItens = [];
 let _ataParticipanteAtual = '', _ataItemAtual = '', _ataResponsavelAtual = '';
+let _ataUltimaPergunta = '';
 const gnAcoes = {
   'reiniciar jarvis': () => { fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-reiniciar', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({acao:'reiniciar_tts'})}); },
   'reiniciar': () => { fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-reiniciar', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({acao:'reiniciar_tts'})}); },
@@ -7472,8 +7473,15 @@ async function gnExecutar(comando){
   if(_ataStep > 0){
     console.log('[ATA] gnExecutar recebeu step='+_ataStep+' gnSpeaking='+gnSpeaking+' gnExecutando='+gnExecutando+' resp="'+comando.trim()+'"');
     gnExecutando = true;
-    const resp_ata = comando.trim();
+    const resp_ata = _converterNumerosExtenso(comando.trim());
     const _ataSimNao = function(t){ return /^(sim|s\b|pode|ok|claro|isso|vai|afirmativo|exato|perfeito|com certeza)/i.test(t.trim().toLowerCase()); };
+    // "Repita" global — não avança step, repete última pergunta
+    if(/^(repita|repita novamente|n[aã]o entendi|pode repetir|o que voc[êe] disse|repete)/i.test(resp_ata.toLowerCase()) && _ataUltimaPergunta){
+      console.log('[ATA] REPITA detectado step='+_ataStep+', repetindo: "'+_ataUltimaPergunta+'"');
+      if(gnModoVoz){ try{ await gnSpeak(_ataUltimaPergunta); }catch(e){} }
+      gnExecutando = false;
+      return;
+    }
     let proxPergAta = '';
     if(_ataStep === 1){
       _ataTitulo = _capitalizar(resp_ata);
@@ -7486,10 +7494,11 @@ async function gnExecutar(comando){
       proxPergAta = 'Qual o nome do primeiro participante?';
       console.log('[ATA] step 2→3 local="'+_ataLocal+'"');
     } else if(_ataStep === 3){
+      // Sempre sobrescreve e avança para step 4 — independente do índice do participante
       _ataParticipanteAtual = _capitalizar(resp_ata.trim());
       _ataStep = 4;
       proxPergAta = 'Qual o e-mail de '+_ataParticipanteAtual+'?';
-      console.log('[ATA] step 3→4 participante="'+_ataParticipanteAtual+'"');
+      console.log('[ATA] step 3→4 participante="'+_ataParticipanteAtual+'" (participantes até agora: '+_ataParticipantes.length+')');
     } else if(_ataStep === 4){
       var emailConv = _ataConverterEmail(resp_ata);
       _ataParticipantes.push({nome:_ataParticipanteAtual, email:emailConv});
@@ -7553,6 +7562,7 @@ async function gnExecutar(comando){
       }
     }
     if(proxPergAta){
+      _ataUltimaPergunta = proxPergAta;
       gnCurrentResposta = proxPergAta;
       const elAtaPerg = document.getElementById('globalJarvisChatResp')||document.getElementById('hubJarvisChatResp');
       if(elAtaPerg){ elAtaPerg.style.display='block'; elAtaPerg.textContent=proxPergAta; }
@@ -7587,7 +7597,9 @@ async function gnExecutar(comando){
     _ataTitulo = ''; _ataLocal = '';
     _ataParticipantes = []; _ataItens = [];
     _ataParticipanteAtual = ''; _ataItemAtual = ''; _ataResponsavelAtual = '';
+    _ataUltimaPergunta = '';
     const qAta1 = 'Qual o título da reunião, senhor?';
+    _ataUltimaPergunta = qAta1;
     gnCurrentResposta = qAta1;
     const elAta1 = document.getElementById('globalJarvisChatResp')||document.getElementById('hubJarvisChatResp');
     if(elAta1){ elAta1.style.display='block'; elAta1.textContent=qAta1; }
@@ -8418,6 +8430,7 @@ function _ataConverterEmail(s){
 
 function _ataConverterData(s){
   if(!s) return s;
+  var orig = s;
   var t = s.toLowerCase().trim();
   var meses = {janeiro:'01',fevereiro:'02','março':'03',marco:'03',abril:'04',maio:'05',junho:'06',julho:'07',agosto:'08',setembro:'09',outubro:'10',novembro:'11',dezembro:'12'};
   var numerais = [
@@ -8429,15 +8442,59 @@ function _ataConverterData(s){
     ['quinze','15'],['quatorze','14'],['catorze','14'],['treze','13'],
     ['doze','12'],['onze','11'],['dez','10'],
     ['nove','9'],['oito','8'],['sete','7'],['seis','6'],['cinco','5'],
-    ['quatro','4'],['três','3'],['tres','3'],['dois','2'],['um','1']
+    ['quatro','4'],['três','3'],['tres','3'],['dois','2'],['um','1'],
+    ['primeiro','1'],['primeira','1']
   ];
-  var dia = null, mes = null;
-  for(var i=0;i<numerais.length;i++){ if(t.indexOf(numerais[i][0])!==-1){ dia=String(numerais[i][1]).padStart(2,'0'); break; } }
-  for(var m in meses){ if(t.indexOf(m)!==-1){ mes=meses[m]; break; } }
-  if(dia&&mes){ return dia+'/'+mes+'/'+new Date().getFullYear(); }
-  var nm=t.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
-  if(nm){ return nm[1].padStart(2,'0')+'/'+nm[2].padStart(2,'0')+'/'+(nm[3]?(nm[3].length===2?'20'+nm[3]:nm[3]):new Date().getFullYear()); }
-  return s;
+  // Calcula número por extenso em português
+  var _ptN = function(str){
+    var u={zero:0,um:1,uma:1,dois:2,duas:2,'três':3,tres:3,quatro:4,cinco:5,seis:6,sete:7,oito:8,nove:9,dez:10,onze:11,doze:12,treze:13,quatorze:14,catorze:14,quinze:15,dezesseis:16,dezessete:17,dezoito:18,dezenove:19,vinte:20,trinta:30,quarenta:40,cinquenta:50,sessenta:60,setenta:70,oitenta:80,noventa:90,cem:100,cento:100,duzentos:200,duzentas:200,trezentos:300,trezentas:300,quatrocentos:400,quatrocentas:400,quinhentos:500,quinhentas:500,seiscentos:600,seiscentas:600,setecentos:700,setecentas:700,oitocentos:800,oitocentas:800,novecentos:900,novecentas:900};
+    var tk=str.trim().split(/\s+/),tot=0,seg=0;
+    tk.forEach(function(w){w=w.toLowerCase();if(!w||w==='e')return;if(w==='mil'){tot+=(seg||1)*1000;seg=0;}else if(w in u)seg+=u[w];});
+    return tot+seg;
+  };
+  // 1. Extrair ano: procura padrão "X mil ..." ou 4 dígitos
+  var ano = null;
+  var yrM = t.match(/(?:\S+\s+){0,3}mil(?:\s+\S+){0,5}/i);
+  if(yrM){ var yv=_ptN(yrM[0]); if(yv>=1900&&yv<=2100){ ano=String(yv); t=t.replace(yrM[0],' ').replace(/\s+/g,' ').trim(); } }
+  if(!ano){ var ym=t.match(/\b(2\d{3}|19\d{2})\b/); if(ym){ ano=ym[1]; t=t.replace(ym[0],' ').replace(/\s+/g,' ').trim(); } }
+  if(!ano) ano=String(new Date().getFullYear());
+  // 2. Remover conectores
+  t=t.replace(/\b(do|da|de|em)\b/g,' ').replace(/\s+/g,' ').trim();
+  // 3. Encontrar mês por nome
+  var mes=null;
+  for(var m in meses){ if(t.indexOf(m)!==-1){ mes=meses[m]; t=t.replace(m,' ').replace(/\s+/g,' ').trim(); break; } }
+  // 4. Encontrar dia por extenso
+  var dia=null;
+  for(var i=0;i<numerais.length;i++){ if(t.indexOf(numerais[i][0])!==-1){ dia=String(numerais[i][1]).padStart(2,'0'); t=t.replace(numerais[i][0],' ').replace(/\s+/g,' ').trim(); break; } }
+  // 5. Se mês não encontrado por nome, buscar como número no texto restante
+  if(!mes&&t){ for(var i=0;i<numerais.length;i++){ var n=parseInt(numerais[i][1]); if(n>=1&&n<=12&&t.indexOf(numerais[i][0])!==-1){ mes=String(n).padStart(2,'0'); break; } } }
+  if(dia&&mes) return dia+'/'+mes+'/'+ano;
+  // 6. Fallback: padrão numérico direto
+  var nm=orig.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+  if(nm) return nm[1].padStart(2,'0')+'/'+nm[2].padStart(2,'0')+'/'+(nm[3]?(nm[3].length===2?'20'+nm[3]:nm[3]):String(new Date().getFullYear()));
+  return orig;
+}
+
+function _converterNumerosExtenso(texto){
+  if(!texto) return texto;
+  // Ordinais
+  var t = texto
+    .replace(/\bprimeiro\b|\bprimeira\b/gi,'1º')
+    .replace(/\bsegundo\b|\bsegunda\b/gi,'2º')
+    .replace(/\bterceiro\b|\bterceira\b/gi,'3º')
+    .replace(/\bquarto\b|\bquarta\b/gi,'4º')
+    .replace(/\bquinto\b|\bquinta\b/gi,'5º');
+  var _u={zero:0,um:1,uma:1,dois:2,duas:2,'três':3,tres:3,quatro:4,cinco:5,seis:6,sete:7,oito:8,nove:9,dez:10,onze:11,doze:12,treze:13,quatorze:14,catorze:14,quinze:15,dezesseis:16,dezessete:17,dezoito:18,dezenove:19,vinte:20,trinta:30,quarenta:40,cinquenta:50,sessenta:60,setenta:70,oitenta:80,noventa:90,cem:100,cento:100,duzentos:200,duzentas:200,trezentos:300,trezentas:300,quatrocentos:400,quatrocentas:400,quinhentos:500,quinhentas:500,seiscentos:600,seiscentas:600,setecentos:700,setecentas:700,oitocentos:800,oitocentas:800,novecentos:900,novecentas:900};
+  function _calc(s){var tk=s.toLowerCase().replace(/\be\b/g,' ').split(/\s+/),tot=0,seg=0;tk.forEach(function(w){if(!w)return;if(w==='mil'){tot+=(seg||1)*1000;seg=0;}else if(w in _u)seg+=_u[w];});return tot+seg;}
+  var allW=Object.keys(_u).concat(['mil']);
+  allW.sort(function(a,b){return b.length-a.length;});
+  var esc=allW.map(function(w){return w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');});
+  var wP='(?:'+esc.join('|')+')';
+  var re=new RegExp(wP+'(?:\\s+(?:e\\s+)?'+wP+')*','gi');
+  // Palavras ambíguas sozinhas (artigos/pronomes comuns) — não converter se isoladas
+  var ambig=/^(um|uma|dois|duas|três|tres|quatro|cinco|seis|sete|oito|nove|dez)$/i;
+  t=t.replace(re,function(m){if(ambig.test(m.trim()))return m;var n=_calc(m);return n>0?String(n):m;});
+  return t;
 }
 
 function _buildAtaHTML(d, preview){
