@@ -29,7 +29,7 @@ Single-page HTML/CSS/JS puro. Tema escuro roxo/laranja, fontes Syne + DM Sans.
 - Plano de Ação 5W1H — planos de ação
 - Reparo — serviços subcontratados com calendário (localStorage)
 - Jarvis — assistente de voz inteligente (só superadmin)
-- Documentação — Carta Técnica ✅ concluída; Ata de Reunião 🔜 pendente
+- Documentação — Carta Técnica ✅ concluída; Ata de Reunião ✅ concluída (bug pendente)
 
 ### Módulos futuros:
 - Gestão da Equipe
@@ -194,26 +194,48 @@ Sequência:
 - n8n fluxo gn-documentos: modelo claude-sonnet-4-5, campos titulo/cliente/endereco/detalhes
 - Arquivo tke_logotipo.png adicionado ao repositório
 
-### Ata de Reunião — PENDENTE (próxima sessão)
-- Fluxo Jarvis por voz para coletar: título, local/cliente, participantes, itens discutidos
-- Layout da ata com tabela de participantes e itens com responsável/prazo
+### Ata de Reunião — CONCLUÍDA (24/05/2026) ✅
+- Fluxo Jarvis por voz: título → local → participantes em loop → itens em loop → confirmação
+- Gatilhos de voz: "nova ata", "gerar ata", "criar ata", "ata de reunião", "fazer ata"
+- "Repita / pode repetir / não ouvi / hein" funciona em qualquer step (1–10) sem avançar o fluxo
+- Prazo convertido automaticamente para dd/mm/aaaa (por extenso, dígito ou misto)
+- Step 5: aceita nome direto do próximo participante sem precisar dizer "sim"
+- Palavras negativas explícitas ("não", "nenhum", "só", "acabou") encerram o loop de participantes
+- Layout da ata: logo TKE | cabeçalho | tabela de participantes | tabela de itens/responsável/prazo | tabela de assinaturas | assinatura Gabriel | rodapé TK Elevator
+- Tabela de assinaturas: 3 colunas (Participante | E-mail | Assinatura), Gabriel excluído (tem assinatura dedicada)
+- Ata gerada 100% dos dados do formulário — sem chamada ao n8n / sem texto de IA
+- Funções auxiliares: _converterNumerosExtenso() (extenso→dígito, ordinais), _ataConverterData(), _ataConverterEmail()
+- _ataUltimaPergunta: rastreia última pergunta para suporte ao "repita"
+- ⚠️ BUG PENDENTE: trava no step 9/10 (confirmação final) — investigar na próxima sessão
 
 ## PENDÊNCIAS GERAIS
-- [ ] Hub 3D: remover Jarvis duplicado (sol laranja), nós como quadradinhos brancos fixos, Jarvis único no centro
-- [ ] Integração TK Mobile com Jarvis (fluxo base: Fluxo 1 - TAC Mobile)
-- [ ] Jarvis abrindo qualquer site por voz
-- [ ] Módulo Gestão de Equipe
-- [ ] Lista de clientes para o Jarvis memorizar endereços
-- [ ] Campo de texto no módulo Jarvis para comandos sem voz
-- [ ] Ata de Reunião por voz (próxima sessão)
+
+### Documentação
+- [ ] ⚠️ Ata de Reunião — trava no step 9/10 (confirmação final): investigar gnSpeaking/gnExecutando após loop de itens
+- [ ] Ata de Reunião — testes end-to-end com múltiplos participantes e itens
+
+### Jarvis
+- [ ] TTS streaming / melhorar latência de resposta do Jarvis
+- [ ] Whisper local (substituir Deepgram para reduzir custo/latência)
 - [ ] Fluxo Sênior para consulta de horas extras em tempo real via Jarvis
-- [ ] TTS streaming / melhorar tempo de retorno do Jarvis ao falar
+- [ ] Jarvis abrindo qualquer site por voz
+- [ ] Campo de texto no módulo Jarvis para comandos sem voz
 - [ ] Memória permanente de fatos e perfil do Gabriel (separada das conversas)
 - [ ] Aumentar limite de memória de 20 para 50 mensagens no contexto do Claude
+- [ ] Lista de clientes para o Jarvis memorizar endereços
+
+### Hub / App
+- [ ] Hub 3D: remover Jarvis duplicado (sol laranja), nós como quadradinhos brancos fixos, Jarvis único no centro
 - [ ] Tela de login futurista
 - [ ] Rebrand: remover menções Zona Vip
+- [ ] PWA — transformar GN Gestão em app instalável
+
+### Módulos futuros
+- [ ] Módulo Gestão de Equipe
+- [ ] Módulo Perito Judicial / Gestão de ARTs e Laudos
+- [ ] Integração TK Mobile com Jarvis (fluxo base: Fluxo 1 - TAC Mobile)
+- [ ] Integração Gmail, Google Calendar, Outlook
+
+### Segurança / Infra
 - [ ] Segurança: senha mestra antes do login
 - [ ] Rotacionar API keys e tokens expostos
-- [ ] PWA — transformar GN Gestão em app instalável
-- [ ] Integração Gmail, Google Calendar, Outlook
-- [ ] Módulo Perito Judicial / Gestão de ARTs e Laudos
