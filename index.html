@@ -7149,6 +7149,23 @@ let _ataTitulo = '', _ataLocal = '';
 let _ataParticipantes = [], _ataItens = [];
 let _ataParticipanteAtual = '', _ataItemAtual = '', _ataResponsavelAtual = '';
 let _ataUltimaPergunta = '';
+function gnVoltarHub(){
+  // Esconde todas as telas de módulo — funciona independente de qual esteja aberta
+  ['screenDocumentacao','screenReconhece','screenReparo','screenPlano','screenGN','appScreen'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el){ el.style.cssText = ''; el.style.display = 'none'; }
+  });
+  var as = document.getElementById('appScreen');
+  if(as) as.style.cssText = 'display:none!important';
+  var hs = document.getElementById('hubScreen');
+  if(hs) hs.style.cssText = 'display:flex!important';
+  // Esconde o widget global do Jarvis (equivalente a hideGJ)
+  var gj = document.getElementById('globalJarvis');
+  if(gj) gj.style.display = 'none';
+  var gc = document.getElementById('globalJarvisChat');
+  if(gc) gc.style.display = 'none';
+}
+
 const gnAcoes = {
   'reiniciar jarvis': () => { fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-reiniciar', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({acao:'reiniciar_tts'})}); },
   'reiniciar': () => { fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-reiniciar', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({acao:'reiniciar_tts'})}); },
@@ -7166,13 +7183,14 @@ const gnAcoes = {
   'manutenção': () => enterReparo(),
   'plano': () => enterPlano(),
   'documentação': () => { if(typeof enterDocumentacao === 'function') enterDocumentacao(); },
-  'tela principal': () => backToHub(),
-  'menu principal': () => backToHub(),
-  'central': () => backToHub(),
-  'base': () => backToHub(),
-  'início': () => backToHub(),
-  'voltar': () => backToHub(),
-  'home': () => backToHub(),
+  'tela principal': () => gnVoltarHub(),
+  'menu principal': () => gnVoltarHub(),
+  'central': () => gnVoltarHub(),
+  'base': () => gnVoltarHub(),
+  'início': () => gnVoltarHub(),
+  'voltar': () => gnVoltarHub(),
+  'home': () => gnVoltarHub(),
+  'retornar': () => gnVoltarHub(),
   'firebase': () => window.open('https://console.firebase.google.com', '_blank'),
   'vps': () => window.open('https://hpanel.hostinger.com', '_blank'),
   'tkmobile': () => window.open('https://tkmobile.tkelevatorbr.com.br', '_blank'),
