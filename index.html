@@ -8522,25 +8522,32 @@ function _buildAtaHTML(d, preview){
       +'</tr></thead>'
       +'<tbody>'+itemRows+'</tbody></table>'
     : '';
-  // Seção de assinaturas dos participantes
-  var sigPartsHTML = '';
-  (d.participantes||[]).forEach(function(p){
+  // Tabela de assinaturas dos participantes
+  var sigRows = '';
+  (d.participantes||[]).forEach(function(p, i){
     var nome = typeof p === 'string' ? p : (p.nome||'');
     var email = typeof p === 'string' ? '' : (p.email||'');
     if(!nome) return;
-    sigPartsHTML += '<div style="min-width:180px;flex:0 0 180px">'
-      +'<div style="height:60px;border-bottom:1px solid #444;margin-bottom:.4rem"></div>'
-      +'<div style="font-size:.8rem;text-align:center">'
-      +'<strong>'+esc(nome)+'</strong>'
-      +(email?'<br><span style="color:#666;font-size:.75rem">'+esc(email)+'</span>':'')
-      +'</div></div>';
+    var bg = i%2===0 ? '#fff' : '#f5f3ff';
+    sigRows += '<tr style="background:'+bg+'">'
+      +'<td style="'+tdStyle+'">'+esc(nome)+'</td>'
+      +'<td style="'+tdStyle+'">'+esc(email)+'</td>'
+      +'<td style="padding:.35rem .6rem;border:1px solid #ddd;width:40%">'
+      +'<div style="border-bottom:1px dashed #999;height:40px"></div>'
+      +'</td>'
+      +'</tr>';
   });
-  var sigSection = sigPartsHTML
-    ? '<div style="margin-top:2.5rem">'
-      +'<div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1.5rem;color:#333">Assinaturas</div>'
-      +'<div style="display:flex;flex-wrap:wrap;gap:2.5rem;align-items:flex-end">'
-      + sigPartsHTML
-      +'</div></div>'
+  var sigSection = sigRows
+    ? '<div style="margin-top:2rem">'
+      +'<div style="font-size:.85rem;font-weight:700;margin-bottom:.6rem;color:#333">Assinaturas</div>'
+      +'<table style="width:100%;border-collapse:collapse;font-size:.85rem">'
+      +'<thead><tr>'
+      +'<th style="'+thStyle+'">Participante</th>'
+      +'<th style="'+thStyle+'">E-mail</th>'
+      +'<th style="'+thStyle+';width:40%">Assinatura</th>'
+      +'</tr></thead>'
+      +'<tbody>'+sigRows+'</tbody>'
+      +'</table></div>'
     : '';
   return '<div style="'+styles+'">'
     +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem">'
