@@ -183,6 +183,17 @@ Sequência:
 
 ## MÓDULO DOCUMENTAÇÃO — STATUS ATUAL ✅
 
+### Integração Autentique (assinatura eletrônica) ✅ — 24/05/2026
+- Conta criada em autentique.com.br
+- Token API: configurado no autentique-api.js no VPS
+- Script /root/autentique-api.js rodando na porta 5052 como serviço systemd (autentique-api.service)
+- wkhtmltopdf instalado no VPS para conversão HTML→PDF
+- Fluxo n8n "GN — Assinatura" criado com webhook gn-assinatura
+- Resposta do webhook vem como array: [{ sucesso: true, gabrielLink: "..." }]
+- Gabriel TKE (gabriel.nascimento@tkelevator.com) recebe link direto que abre automaticamente no browser
+- Outros participantes recebem convite por email
+- Gabriel deve sempre se adicionar como participante com email TKE nas atas/cartas
+
 ### Carta Técnica — CONCLUÍDA
 - Fluxo Jarvis por voz funcionando: coleta título → cliente → endereço → detalhes (uma pergunta por vez)
 - Layout da carta: logo TKE (tke_logotipo.png) no canto superior direito, bloco AO à esquerda, Ref. centralizada em itálico, "Prezado Cliente,", corpo justificado, assinatura "Gabriel Nascimento / Supervisor de Serviços — TK Elevator"
@@ -194,7 +205,7 @@ Sequência:
 - n8n fluxo gn-documentos: modelo claude-sonnet-4-5, campos titulo/cliente/endereco/detalhes
 - Arquivo tke_logotipo.png adicionado ao repositório
 
-### Ata de Reunião — CONCLUÍDA (24/05/2026) ✅
+### Ata de Reunião — CONCLUÍDA ✅
 - Fluxo Jarvis por voz: título → local → participantes em loop → itens em loop → confirmação
 - Gatilhos de voz: "nova ata", "gerar ata", "criar ata", "ata de reunião", "fazer ata"
 - "Repita / pode repetir / não ouvi / hein" funciona em qualquer step (1–10) sem avançar o fluxo
@@ -206,15 +217,25 @@ Sequência:
 - Ata gerada 100% dos dados do formulário — sem chamada ao n8n / sem texto de IA
 - Funções auxiliares: _converterNumerosExtenso() (extenso→dígito, ordinais), _ataConverterData(), _ataConverterEmail()
 - _ataUltimaPergunta: rastreia última pergunta para suporte ao "repita"
-- ⚠️ BUG PENDENTE: trava no step 9/10 (confirmação final) — investigar na próxima sessão
+
+## JARVIS — MELHORIAS RECENTES (24/05/2026)
+- Silêncio: interceptado imediatamente no início de gnExecutar, antes do webhook e respostas fixas
+- Triggers de silêncio: ['silêncio', 'silencio', 'stop', 'cala boca', 'cale-se', 'cala', 'basta'] — só ativa com menos de 4 palavras
+- "para" e "chega" removidos da lista (causavam falsos positivos em "enviar para assinatura")
+- Após silêncio: gnModoVoz=false, gnConversationMode=false — só acorda com "Jarvis"
+- gnVoltarHub(): função universal de retorno ao hub para todos os módulos
+
+## SERVIÇOS VPS ATIVOS (187.127.26.136)
+- **autentique-api.service** (porta 5052) — /root/autentique-api.js, systemd, restart automático
+- **jarvis-restart-api** (porta 5051) — restart do Jarvis via webhook
+- **Kokoro TTS** (porta 5050) — /usr/local/bin/jarvis-tts-server.py
+- **n8n** (Docker) — https://n8n.srv1610251.hstgr.cloud
 
 ## PENDÊNCIAS GERAIS
 
-### Documentação
-- [ ] ⚠️ Ata de Reunião — trava no step 9/10 (confirmação final): investigar gnSpeaking/gnExecutando após loop de itens
-- [ ] Ata de Reunião — testes end-to-end com múltiplos participantes e itens
-
-### Jarvis
+### Jarvis / Documentação
+- [ ] Autentique: implementar assinatura automática via API (opcional)
+- [ ] Lista de clientes para o Jarvis memorizar endereços
 - [ ] TTS streaming / melhorar latência de resposta do Jarvis
 - [ ] Whisper local (substituir Deepgram para reduzir custo/latência)
 - [ ] Fluxo Sênior para consulta de horas extras em tempo real via Jarvis
@@ -222,7 +243,6 @@ Sequência:
 - [ ] Campo de texto no módulo Jarvis para comandos sem voz
 - [ ] Memória permanente de fatos e perfil do Gabriel (separada das conversas)
 - [ ] Aumentar limite de memória de 20 para 50 mensagens no contexto do Claude
-- [ ] Lista de clientes para o Jarvis memorizar endereços
 
 ### Hub / App
 - [ ] Hub 3D: remover Jarvis duplicado (sol laranja), nós como quadradinhos brancos fixos, Jarvis único no centro
