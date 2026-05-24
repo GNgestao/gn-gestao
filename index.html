@@ -7473,7 +7473,9 @@ function gnReiniciar(){
 
 async function gnExecutar(comando){
   const cmdLower = comando.toLowerCase().trim();
-  const isSilencio = ['silêncio', 'silencio', 'para', 'stop', 'cala boca', 'chega', 'basta', 'cale-se', 'cala'].some(p => cmdLower.includes(p));
+  const _silTermos = ['silêncio', 'silencio', 'stop', 'cala boca', 'cale-se', 'cala', 'basta'];
+  const _poucasPalavras = cmdLower.split(/\s+/).length < 4;
+  const isSilencio = _poucasPalavras && _silTermos.some(p => cmdLower.includes(p));
   if(isSilencio) {
     gnPararFala();
     gnModoVoz = false;
