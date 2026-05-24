@@ -8767,6 +8767,8 @@ async function enviarCartaAssinatura(){
     });
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
+    console.log('Resposta assinatura:', JSON.stringify(data));
+    console.log('gabrielLink:', data.gabrielLink);
     if(data.gabrielLink){
       window.open(data.gabrielLink, '_blank');
       const msg2 = 'Documento enviado, chefe. Abrindo link de assinatura para você assinar.';
@@ -8812,6 +8814,8 @@ async function enviarAtaAssinatura(){
     });
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
+    console.log('Resposta assinatura:', JSON.stringify(data));
+    console.log('gabrielLink:', data.gabrielLink);
     if(data.gabrielLink){
       window.open(data.gabrielLink, '_blank');
       const msg2 = 'Documento enviado, chefe. Abrindo link de assinatura para você assinar.';
