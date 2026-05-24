@@ -8466,9 +8466,12 @@ function _ataLimparTexto(texto){
     /^reuni[aã]o[:\-]/i,
     /^data\s*[:\-]/i,
     /^local\s*[:\-]/i,
+    /^cliente\s*[\/\\]?\s*local\s*[:\-]/i,
     /^hor[aá]rio?\s*[:\-]/i,
     /^responsável\s*[:\-]/i,
     /^prazo\s*[:\-]/i,
+    /^a[çc][õo]es?\s+e\s+encaminhamentos?/i,
+    /^observa[çc][õo]es?\s*[:\-]?\s*$/i,
     /^[_]{3,}/
   ];
   linhas = linhas.filter(function(linha){
@@ -8478,6 +8481,10 @@ function _ataLimparTexto(texto){
     if(/^[-*•]\s+\S+.*@/.test(t)) return false;
     // Remove linhas de lista que duplicam itens (responsável/prazo inline)
     if(/^[-*•\d]+[\.\)]\s+.*(responsável|prazo)\s*:/i.test(t)) return false;
+    // Remove itens numerados de ação genérica ("1. Ação não especificada")
+    if(/^\d+[\.\)]\s+a[çc][aã]o\s+n[aã]o\s+especificada/i.test(t)) return false;
+    // Remove parágrafos sobre ata elaborada com informações parciais
+    if(/ata\s+(foi\s+)?elaborada\s+(com\s+)?informa[çc][õo]es\s+parciais/i.test(t)) return false;
     return true;
   });
 
@@ -8522,13 +8529,16 @@ function _buildAtaHTML(d, preview){
       +'</tr></thead>'
       +'<tbody>'+itemRows+'</tbody></table>'
     : '';
-  // Tabela de assinaturas dos participantes
+  // Tabela de assinaturas dos participantes (Gabriel Nascimento tem campo próprio, excluir aqui)
   var sigRows = '';
-  (d.participantes||[]).forEach(function(p, i){
+  var sigIdx = 0;
+  (d.participantes||[]).forEach(function(p){
     var nome = typeof p === 'string' ? p : (p.nome||'');
     var email = typeof p === 'string' ? '' : (p.email||'');
     if(!nome) return;
-    var bg = i%2===0 ? '#fff' : '#f5f3ff';
+    if(/gabriel\s+nascimento/i.test(nome)) return;
+    var bg = sigIdx%2===0 ? '#fff' : '#f5f3ff';
+    sigIdx++;
     sigRows += '<tr style="background:'+bg+'">'
       +'<td style="'+tdStyle+'">'+esc(nome)+'</td>'
       +'<td style="'+tdStyle+'">'+esc(email)+'</td>'
