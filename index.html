@@ -8477,14 +8477,22 @@ function _ataLimparTexto(texto){
   linhas = linhas.filter(function(linha){
     var t = linha.trim();
     for(var j=0;j<padroes.length;j++){ if(padroes[j].test(t)) return false; }
-    // Remove linhas de lista que duplicam participantes (contêm @)
+    // Remove linhas de lista com participantes: "- Nome (email)" ou "• Nome (email)"
     if(/^[-*•]\s+\S+.*@/.test(t)) return false;
+    if(/^[-*•]\s+[A-Za-zÀ-ú].*\(.*@.*\)/.test(t)) return false;
     // Remove linhas de lista que duplicam itens (responsável/prazo inline)
     if(/^[-*•\d]+[\.\)]\s+.*(responsável|prazo)\s*:/i.test(t)) return false;
-    // Remove itens numerados de ação genérica ("1. Ação não especificada")
-    if(/^\d+[\.\)]\s+a[çc][aã]o\s+n[aã]o\s+especificada/i.test(t)) return false;
-    // Remove parágrafos sobre ata elaborada com informações parciais
-    if(/ata\s+(foi\s+)?elaborada\s+(com\s+)?informa[çc][õo]es\s+parciais/i.test(t)) return false;
+    // Remove itens numerados genéricos: "1. Ação não especificada", "2. Item não especificado"
+    if(/^\d+[\.\)]\s+(a[çc][aã]o|item)\s+n[aã]o\s+especificad[ao]/i.test(t)) return false;
+    // Remove parágrafos com frases de preenchimento da IA
+    if(/informa[çc][õo]es\s+(parciais|incompletas)/i.test(t)) return false;
+    if(/necessitam\s+(de\s+)?complementa[çc][aã]o/i.test(t)) return false;
+    if(/adequado\s+registro/i.test(t)) return false;
+    if(/ata\s+(foi\s+)?elaborada\s+(com\s+)?informa[çc][õo]es/i.test(t)) return false;
+    // Remove encerramento genérico da reunião
+    if(/sem\s+mais\s+assuntos?\s+a\s+tratar/i.test(t)) return false;
+    if(/reuni[aã]o\s+foi\s+encerrada/i.test(t)) return false;
+    if(/n[aã]o\s+h[aá]\s+mais\s+assuntos?\s+a\s+tratar/i.test(t)) return false;
     return true;
   });
 
