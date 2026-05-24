@@ -8764,10 +8764,19 @@ async function enviarCartaAssinatura(){
       })
     });
     if(!res.ok) throw new Error('HTTP ' + res.status);
-    const msg2 = 'Carta enviada para assinatura com sucesso, senhor.';
-    if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
-      try{ await gnSpeak(msg2); }catch(e){}
-    else alert(msg2);
+    const data = await res.json();
+    if(data.gabrielLink){
+      window.open(data.gabrielLink, '_blank');
+      const msg2 = 'Documento enviado, chefe. Abrindo link de assinatura para você assinar.';
+      if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
+        try{ await gnSpeak(msg2); }catch(e){}
+      else alert(msg2);
+    } else {
+      const msg2 = 'Documento enviado com sucesso, senhor. Verifique seu email para assinar.';
+      if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
+        try{ await gnSpeak(msg2); }catch(e){}
+      else alert(msg2);
+    }
   } catch(err){
     console.error('enviarCartaAssinatura erro:', err);
     const msgErr = 'Erro ao enviar para assinatura, chefe. Verifique o fluxo n8n.';
@@ -8800,10 +8809,19 @@ async function enviarAtaAssinatura(){
       body: JSON.stringify({ tipo: 'ata', html: htmlConteudo, signatarios })
     });
     if(!res.ok) throw new Error('HTTP ' + res.status);
-    const msg2 = 'Ata enviada para assinatura com sucesso, senhor.';
-    if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
-      try{ await gnSpeak(msg2); }catch(e){}
-    else alert(msg2);
+    const data = await res.json();
+    if(data.gabrielLink){
+      window.open(data.gabrielLink, '_blank');
+      const msg2 = 'Documento enviado, chefe. Abrindo link de assinatura para você assinar.';
+      if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
+        try{ await gnSpeak(msg2); }catch(e){}
+      else alert(msg2);
+    } else {
+      const msg2 = 'Documento enviado com sucesso, senhor. Verifique seu email para assinar.';
+      if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
+        try{ await gnSpeak(msg2); }catch(e){}
+      else alert(msg2);
+    }
   } catch(err){
     console.error('enviarAtaAssinatura erro:', err);
     const msgErr = 'Erro ao enviar para assinatura, chefe. Verifique o fluxo n8n.';
