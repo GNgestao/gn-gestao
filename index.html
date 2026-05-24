@@ -7427,8 +7427,8 @@ function gnReiniciar(){
 }
 
 async function gnExecutar(comando){
-  if(gnSpeaking) return;
-  if(gnExecutando) return;
+  if(gnSpeaking){ if(_ataStep>0) console.log('[ATA] gnExecutar BLOQUEADO por gnSpeaking=true, step='+_ataStep+' cmd="'+comando+'"'); return; }
+  if(gnExecutando){ if(_ataStep>0) console.log('[ATA] gnExecutar BLOQUEADO por gnExecutando=true, step='+_ataStep+' cmd="'+comando+'"'); return; }
 
   // Fluxo multi-passo de geração de carta — resposta do usuário
   if(_cartaStep > 0){
@@ -7470,6 +7470,7 @@ async function gnExecutar(comando){
 
   // Fluxo multi-passo de geração de ata — resposta do usuário
   if(_ataStep > 0){
+    console.log('[ATA] gnExecutar recebeu step='+_ataStep+' gnSpeaking='+gnSpeaking+' gnExecutando='+gnExecutando+' resp="'+comando.trim()+'"');
     gnExecutando = true;
     const resp_ata = comando.trim();
     const _ataSimNao = function(t){ return /^(sim|s\b|pode|ok|claro|isso|vai|afirmativo|exato|perfeito|com certeza)/i.test(t.trim().toLowerCase()); };
@@ -7478,46 +7479,58 @@ async function gnExecutar(comando){
       _ataTitulo = _capitalizar(resp_ata);
       _ataStep = 2;
       proxPergAta = 'Qual o local ou cliente?';
+      console.log('[ATA] step 1→2 título="'+_ataTitulo+'"');
     } else if(_ataStep === 2){
       _ataLocal = _capitalizar(resp_ata);
       _ataStep = 3;
       proxPergAta = 'Qual o nome do primeiro participante?';
+      console.log('[ATA] step 2→3 local="'+_ataLocal+'"');
     } else if(_ataStep === 3){
       _ataParticipanteAtual = _capitalizar(resp_ata.trim());
       _ataStep = 4;
       proxPergAta = 'Qual o e-mail de '+_ataParticipanteAtual+'?';
+      console.log('[ATA] step 3→4 participante="'+_ataParticipanteAtual+'"');
     } else if(_ataStep === 4){
-      _ataParticipantes.push({nome:_ataParticipanteAtual, email:_ataConverterEmail(resp_ata)});
+      var emailConv = _ataConverterEmail(resp_ata);
+      _ataParticipantes.push({nome:_ataParticipanteAtual, email:emailConv});
       _ataStep = 5;
       proxPergAta = 'Tem mais algum participante?';
+      console.log('[ATA] step 4→5 email="'+emailConv+'" participantes='+JSON.stringify(_ataParticipantes));
     } else if(_ataStep === 5){
       if(_ataSimNao(resp_ata)){
         _ataStep = 3;
         proxPergAta = 'Qual o nome do próximo participante?';
+        console.log('[ATA] step 5→3 (mais participantes)');
       } else {
         _ataStep = 6;
         proxPergAta = 'Qual o primeiro item discutido?';
+        console.log('[ATA] step 5→6 (fim participantes, total='+_ataParticipantes.length+')');
       }
     } else if(_ataStep === 6){
       _ataItemAtual = _capitalizar(resp_ata.trim());
       _ataStep = 7;
       proxPergAta = 'Quem é o responsável por esse item?';
+      console.log('[ATA] step 6→7 item="'+_ataItemAtual+'"');
     } else if(_ataStep === 7){
       _ataResponsavelAtual = _capitalizar(resp_ata.trim());
       _ataStep = 8;
       proxPergAta = 'Qual o prazo?';
+      console.log('[ATA] step 7→8 responsável="'+_ataResponsavelAtual+'"');
     } else if(_ataStep === 8){
-      _ataItens.push({desc:_ataItemAtual, resp:_ataResponsavelAtual, prazo:_ataConverterData(resp_ata)});
-      console.log('Ata step 8 — item adicionado, _ataItens:', JSON.stringify(_ataItens));
+      var prazoConv = _ataConverterData(resp_ata);
+      _ataItens.push({desc:_ataItemAtual, resp:_ataResponsavelAtual, prazo:prazoConv});
       _ataStep = 9;
       proxPergAta = 'Tem mais algum item?';
+      console.log('[ATA] step 8→9 prazo="'+prazoConv+'" itens='+JSON.stringify(_ataItens));
     } else if(_ataStep === 9){
       if(_ataSimNao(resp_ata)){
         _ataStep = 6;
         proxPergAta = 'Qual o próximo item discutido?';
+        console.log('[ATA] step 9→6 (mais itens)');
       } else {
         _ataStep = 10;
         proxPergAta = 'Posso concluir a ata?';
+        console.log('[ATA] step 9→10 (fim itens, total='+_ataItens.length+')');
       }
     } else if(_ataStep === 10){
       if(_ataSimNao(resp_ata)){
@@ -7528,7 +7541,7 @@ async function gnExecutar(comando){
         if(elAtaConf){ elAtaConf.style.display='block'; elAtaConf.textContent=confirmAtaMsg; }
         if(gnModoVoz){ try{ await gnSpeak(confirmAtaMsg); }catch(e){} }
         const _ataSnap = {titulo:_ataTitulo, local:_ataLocal, participantes:_ataParticipantes.slice(), itens:_ataItens.slice()};
-        console.log('Ata step 10 — abrindo modal com:', JSON.stringify(_ataSnap));
+        console.log('[ATA] step 10 — confirmado, abrindo modal:', JSON.stringify(_ataSnap));
         if(typeof enterDocumentacao === 'function') enterDocumentacao();
         setTimeout(function(){ if(typeof openDocAtaModal==='function') openDocAtaModal(Object.assign({autoGerar:true}, _ataSnap)); }, 400);
         gnExecutando = false;
@@ -7536,6 +7549,7 @@ async function gnExecutar(comando){
       } else {
         _ataStep = 0;
         proxPergAta = 'Tudo bem. O que deseja ajustar?';
+        console.log('[ATA] step 10 — cancelado');
       }
     }
     if(proxPergAta){
@@ -8429,14 +8443,45 @@ function _ataConverterData(s){
 function _ataLimparTexto(texto){
   if(!texto) return texto;
   var linhas = texto.split('\n');
-  var corte = linhas.length;
+
+  // Remove assinatura do final
+  var fim = linhas.length;
   for(var i=linhas.length-1;i>=0;i--){
-    var l=linhas[i].trim().toLowerCase();
-    if(l.match(/^(tk elevator|tk elevadores|thyssenkrupp|atenciosamente|cordialmente|_{3,}|assinatura|gabriel nascimento|supervisor de servi)/)){
-      corte=i;
-    } else if(l.length>0){ break; }
+    var lf=linhas[i].trim().toLowerCase();
+    if(lf.match(/^(tk elevator|tk elevadores|thyssenkrupp|atenciosamente|cordialmente|_{3,}|gabriel nascimento|supervisor de servi|assinatura)/)){
+      fim=i;
+    } else if(lf.length>0){ break; }
   }
-  return linhas.slice(0,corte).join('\n').trim();
+  linhas = linhas.slice(0, fim);
+
+  // Remove seções estruturadas geradas pela IA (duplicam o HTML)
+  var padroes = [
+    /^ata de reuni[aã]o/i,
+    /^dados da reuni[aã]o/i,
+    /^informa[çc][õo]es da reuni[aã]o/i,
+    /^participantes?\s*[:\-]?\s*$/i,
+    /^assuntos?\s+tratados?/i,
+    /^itens?\s+discutidos?/i,
+    /^pautas?\s*[:\-]?\s*$/i,
+    /^reuni[aã]o[:\-]/i,
+    /^data\s*[:\-]/i,
+    /^local\s*[:\-]/i,
+    /^hor[aá]rio?\s*[:\-]/i,
+    /^responsável\s*[:\-]/i,
+    /^prazo\s*[:\-]/i,
+    /^[_]{3,}/
+  ];
+  linhas = linhas.filter(function(linha){
+    var t = linha.trim();
+    for(var j=0;j<padroes.length;j++){ if(padroes[j].test(t)) return false; }
+    // Remove linhas de lista que duplicam participantes (contêm @)
+    if(/^[-*•]\s+\S+.*@/.test(t)) return false;
+    // Remove linhas de lista que duplicam itens (responsável/prazo inline)
+    if(/^[-*•\d]+[\.\)]\s+.*(responsável|prazo)\s*:/i.test(t)) return false;
+    return true;
+  });
+
+  return linhas.join('\n').trim();
 }
 
 function _buildAtaHTML(d, preview){
@@ -8471,11 +8516,31 @@ function _buildAtaHTML(d, preview){
     ? '<table style="width:100%;border-collapse:collapse;margin-top:1.5rem;font-size:.85rem">'
       +'<thead><tr>'
       +'<th style="'+thStyle+';width:32px;text-align:center">#</th>'
-      +'<th style="'+thStyle+'"">Item Discutido</th>'
+      +'<th style="'+thStyle+'">Item Discutido</th>'
       +'<th style="'+thStyle+'">Responsável</th>'
       +'<th style="'+thStyle+'">Prazo</th>'
       +'</tr></thead>'
       +'<tbody>'+itemRows+'</tbody></table>'
+    : '';
+  // Seção de assinaturas dos participantes
+  var sigPartsHTML = '';
+  (d.participantes||[]).forEach(function(p){
+    var nome = typeof p === 'string' ? p : (p.nome||'');
+    var email = typeof p === 'string' ? '' : (p.email||'');
+    if(!nome) return;
+    sigPartsHTML += '<div style="min-width:180px;flex:0 0 180px">'
+      +'<div style="height:60px;border-bottom:1px solid #444;margin-bottom:.4rem"></div>'
+      +'<div style="font-size:.8rem;text-align:center">'
+      +'<strong>'+esc(nome)+'</strong>'
+      +(email?'<br><span style="color:#666;font-size:.75rem">'+esc(email)+'</span>':'')
+      +'</div></div>';
+  });
+  var sigSection = sigPartsHTML
+    ? '<div style="margin-top:2.5rem">'
+      +'<div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1.5rem;color:#333">Assinaturas</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:2.5rem;align-items:flex-end">'
+      + sigPartsHTML
+      +'</div></div>'
     : '';
   return '<div style="'+styles+'">'
     +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem">'
@@ -8494,7 +8559,8 @@ function _buildAtaHTML(d, preview){
     + partTable
     +'<div style="text-align:justify;white-space:pre-wrap;font-size:.88rem;line-height:1.75">'+esc(_ataLimparTexto(d.texto))+'</div>'
     + itemTable
-    +'<div style="margin-top:3.5rem;display:flex;justify-content:flex-start">'
+    + sigSection
+    +'<div style="margin-top:3rem;display:flex;justify-content:flex-start">'
     +'<div style="text-align:center;min-width:200px">'
     +'<div style="border-top:1px solid #666;padding-top:.4rem;font-size:.8rem">'
     +'<strong>Gabriel Nascimento</strong><br>'
