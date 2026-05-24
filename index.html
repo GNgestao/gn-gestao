@@ -7392,6 +7392,7 @@ async function gnListen(){
 
 async function gnTranscrever(blob){
   gnLastActivity = Date.now();
+  const _eraSilencio = !gnModoVoz && !gnConversationMode;
   try {
     gnModoVoz = true;
     const res = await fetch('https://api.deepgram.com/v1/listen?language=pt-BR&model=nova-2&punctuate=true&utterances=true', {
@@ -7407,6 +7408,12 @@ async function gnTranscrever(blob){
     console.log('Ouvido:', texto);
 
     if(!texto || texto.length < 2){
+      gnReiniciar();
+      return;
+    }
+
+    // Modo silêncio — só acorda com "jarvis"
+    if(_eraSilencio && !texto.includes('jarvis')){
       gnReiniciar();
       return;
     }
@@ -7465,6 +7472,16 @@ function gnReiniciar(){
 }
 
 async function gnExecutar(comando){
+  const cmdLower = comando.toLowerCase().trim();
+  const isSilencio = ['silêncio', 'silencio', 'para', 'stop', 'cala boca', 'chega', 'basta', 'cale-se', 'cala'].some(p => cmdLower.includes(p));
+  if(isSilencio) {
+    gnPararFala();
+    gnModoVoz = false;
+    gnConversationMode = false;
+    gnContinuousMode = false;
+    gnExecutando = false;
+    return;
+  }
   if(gnSpeaking){
     if(_ataStep>0){
       console.log('[ATA] gnExecutar BLOQUEADO por gnSpeaking=true, step='+_ataStep+' cmd="'+comando+'"');
