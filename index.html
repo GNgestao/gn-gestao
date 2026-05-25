@@ -5705,13 +5705,15 @@ function recBuildDefault(){
 }
 
 function recCalcTotal(r){
-  var pts = r.ptsIni||100;
-  pts += (r.assiduidade||0)*3;
-  if((r.ponto||0)>=3) pts -= 4;
-  if((r.quaseAc||0)>=5) pts += 10;
-  if((r.treino||0)===1) pts -= 5;
-  if((r.manPrev||0)>=2) pts -= 5;
-  return pts;
+  var ptsIni = r.ptsIni||100;
+  var assiduidade = (r.assiduidade||0)*3;
+  var marcacao = (r.ponto||0)>=3 ? -4 : 0;
+  var quaseAcidente = (r.quaseAc||0)>=5 ? 10 : 0;
+  var treinamento = (r.treino||0)===1 ? -5 : 0;
+  var manPrev = (r.manPrev||0)>=2 ? -5 : 0;
+  var total = ptsIni + assiduidade + marcacao + quaseAcidente + treinamento + manPrev;
+  console.log('Calculando total:', {ptsIni, assiduidade, marcacao, quaseAcidente, treinamento, manPrev, total});
+  return total;
 }
 
 function recRender(data){
@@ -6325,18 +6327,18 @@ function exportRecPDF(){
         var totalColor = total >= 100 ? '#22C55E' : total >= 50 ? '#F59E0B' : '#EF4444';
         var prodStr = (r.produtividade !== null && r.produtividade !== undefined) ? r.produtividade.toFixed(1)+'%' : '-';
         var prodColor = (r.produtividade !== null && r.produtividade < 50) ? '#EF4444' : '#fff';
-        var hzColor = (r.quaseAcidentes||0) < 5 ? '#EF4444' : '#22C55E';
+        var hzColor = (r.quaseAc||0) < 5 ? '#EF4444' : '#22C55E';
         rows += '<tr>';
         if(zonaFirst){ rows += '<td rowspan="'+zonaCount+'" class="td-zona">'+zona+'</td>'; zonaFirst=false; }
         if(setorFirst){ rows += '<td rowspan="'+items.length+'" class="td-setor">'+setor+'</td>'; setorFirst=false; }
         rows += '<td>'+r.nome+'</td>';
-        rows += '<td>'+(r.ptsIniciais||100)+'</td>';
+        rows += '<td>'+(r.ptsIni||100)+'</td>';
         rows += '<td style="color:'+prodColor+'">'+prodStr+'</td>';
         rows += '<td style="color:#22C55E">'+(r.assiduidade||0)+'</td>';
-        rows += '<td style="color:'+((r.marcacaoPonto||0)>=3?'#EF4444':'#fff')+'">'+(r.marcacaoPonto||0)+'</td>';
-        rows += '<td style="color:'+hzColor+'">'+(r.quaseAcidentes||0)+'</td>';
-        rows += '<td style="color:'+((r.treinamento||0)===1?'#EF4444':'#22C55E')+'">'+(r.treinamento===1?'Vencido':'OK')+'</td>';
-        rows += '<td style="color:'+((r.manutencaoPrev||0)>=2?'#EF4444':'#fff')+'">'+(r.manutencaoPrev||0)+'d</td>';
+        rows += '<td style="color:'+((r.ponto||0)>=3?'#EF4444':'#fff')+'">'+(r.ponto||0)+'</td>';
+        rows += '<td style="color:'+hzColor+'">'+(r.quaseAc||0)+'</td>';
+        rows += '<td style="color:'+((r.treino||0)===1?'#EF4444':'#22C55E')+'">'+(r.treino===1?'Vencido':'OK')+'</td>';
+        rows += '<td style="color:'+((r.manPrev||0)>=2?'#EF4444':'#fff')+'">'+(r.manPrev||0)+'d</td>';
         rows += '<td style="font-weight:900;color:'+totalColor+'">'+total+'</td>';
         rows += '</tr>';
       });
