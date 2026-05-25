@@ -3159,6 +3159,7 @@ function showApp(){
 
 function enterModule(mod){
   if(mod !== 'preditiva') return; // outros módulos em breve
+  localStorage.setItem('repTelaAtiva', 'preditiva');
   var as=document.getElementById('appScreen');
   var hs=document.getElementById('hubScreen');
   if(hs) hs.style.cssText='display:none!important';
@@ -3186,11 +3187,13 @@ function hubLogout(){
 }
 
 function enterPlano(){
+  localStorage.setItem('repTelaAtiva', 'plano');
   var hs=document.getElementById('hubScreen');
   if(hs) hs.style.cssText='display:none!important';
   showPlanoScreen();
 }
 function backToHub(){
+  localStorage.removeItem('repTelaAtiva');
   var telas = ['screenReconhece', 'screenReparo', 'screenPlano', 'screenGN', 'appScreen'];
   telas.forEach(function(id){
     var el = document.getElementById(id);
@@ -4513,6 +4516,31 @@ document.addEventListener('DOMContentLoaded', function(){
   if(_cachedUser) {
     window._currentUser = _cachedUser;
     if(typeof showApp === 'function') showApp();
+    var _telaAtiva = localStorage.getItem('repTelaAtiva');
+    var _tabAtiva  = localStorage.getItem('repTabAtiva');
+    if(_telaAtiva) {
+      setTimeout(function(){
+        switch(_telaAtiva){
+          case 'reparo':
+            if(typeof enterReparo === 'function') enterReparo();
+            if(_tabAtiva && typeof repSwitchTab === 'function') repSwitchTab(_tabAtiva);
+            break;
+          case 'reconhece':
+            if(typeof enterReconhece === 'function') enterReconhece();
+            break;
+          case 'plano':
+            if(typeof enterPlano === 'function') enterPlano();
+            break;
+          case 'documentacao':
+            if(typeof enterDocumentacao === 'function') enterDocumentacao();
+            break;
+          case 'preditiva':
+            if(typeof enterModule === 'function') enterModule('preditiva');
+            break;
+          // 'gn' omitido intencionalmente — não restaura Jarvis automaticamente
+        }
+      }, 100);
+    }
   } else {
     var ls = document.getElementById('loginScreen');
     var as = document.getElementById('appScreen');
@@ -5614,6 +5642,7 @@ function recGetMesLabel(key){
 }
 
 function enterReconhece(){
+  localStorage.setItem('repTelaAtiva', 'reconhece');
   var hs = document.getElementById('hubScreen');
   if(hs) hs.style.cssText = 'display:none!important';
   var as = document.getElementById('appScreen');
@@ -5644,6 +5673,7 @@ function enterReconhece(){
 }
 
 function backFromReconhece(){
+  localStorage.removeItem('repTelaAtiva');
   var sr = document.getElementById('screenReconhece');
   if(sr){ sr.style.cssText = ''; sr.style.display = 'none'; }
   var rs = document.getElementById('screenReconhece');
@@ -5810,6 +5840,7 @@ function repToggleAutorizado(){
   }
 }
 function enterReparo(){
+  localStorage.setItem('repTelaAtiva', 'reparo');
   // Hide all screens
   var hs = document.getElementById('hubScreen');
   if(hs) hs.style.cssText = 'display:none!important';
@@ -5831,6 +5862,8 @@ function enterReparo(){
 }
 
 function backFromReparo(){
+  localStorage.removeItem('repTelaAtiva');
+  localStorage.removeItem('repTabAtiva');
   var sr = document.getElementById('screenReparo');
   if(sr){ sr.style.cssText = ''; sr.style.display = 'none'; }
   var rs = document.getElementById('screenReparo');
@@ -5842,6 +5875,7 @@ function backFromReparo(){
 }
 
 function repSwitchTab(tab){
+  localStorage.setItem('repTabAtiva', tab);
   document.querySelectorAll('.rep-tab').forEach(function(t,i){
     var tabs = ['calendario','servicos','carta'];
     t.classList.toggle('active', tabs[i]===tab);
@@ -7238,6 +7272,7 @@ const gnAcoes = {
   draw();
 })();
 function enterGN(){
+  localStorage.setItem('repTelaAtiva', 'gn');
   if(!window._gnAudioCtx){
     window._gnAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
@@ -7246,6 +7281,7 @@ function enterGN(){
   setTimeout(() => { gnStartContinuous(); }, 800);
 }
 function backFromGN(){
+  localStorage.removeItem('repTelaAtiva');
   gnStopContinuous();
   const sc=document.getElementById('screenGN');if(sc)sc.style.display='none';
   ['appScreen','screenReconhece','screenPlano','screenReparo'].forEach(function(id){
@@ -8383,6 +8419,7 @@ async function gnSpeak(texto){
 // ── DOCUMENTAÇÃO ──
 
 function enterDocumentacao(){
+  localStorage.setItem('repTelaAtiva', 'documentacao');
   ['hubScreen','appScreen','screenReconhece','screenPlano','screenReparo','screenGN'].forEach(function(id){
     var el=document.getElementById(id);
     if(el){ el.style.cssText=(id==='hubScreen'||id==='appScreen')?'display:none!important':''; el.style.display='none'; }
@@ -8392,6 +8429,7 @@ function enterDocumentacao(){
 }
 
 function backFromDocumentacao(){
+  localStorage.removeItem('repTelaAtiva');
   console.log('backFromDocumentacao chamada');
   var sc=document.getElementById('screenDocumentacao');
   if(sc) sc.style.display='none';
