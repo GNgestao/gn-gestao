@@ -5938,7 +5938,8 @@ function repRenderCal(){
 
 function repOpenNewOnDate(dateKey){
   openRepServiceModal(null);
-  setTimeout(function(){ var el=document.getElementById('rsData'); if(el) el.value=dateKey; }, 50);
+  var el = document.getElementById('rsData');
+  if(el) el.value = dateKey;
 }
 
 // ── SERVICE LIST ──
@@ -6977,7 +6978,7 @@ function applyRecImport(){
 </div>
 
 <!-- MODAL: NOVO/EDITAR SERVIÇO -->
-<div class="modal-overlay" id="repServiceOverlay">
+<div class="modal-overlay" id="repServiceOverlay" style="z-index:10200">
   <div class="modal" style="max-width:680px">
     <button class="modal-close" onclick="closeModal('repServiceOverlay')">✕</button>
     <h3 id="repServiceModalTitle">🔧 Novo Serviço</h3>
