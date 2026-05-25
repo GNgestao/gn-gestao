@@ -6133,21 +6133,41 @@ function repEncaixarAuto(){
   var equipe = document.getElementById('rsEquipe').value;
   var msg = document.getElementById('repServiceMsg');
 
-  // Find next available day with enough hours
+  var diasNecessarios = Math.ceil(horas / REP_HORAS_DIA);
+  var plantaoEquipes = ['Wellington Paulino','Eduardo','Edson'];
+  var temPlantao = plantaoEquipes.indexOf(equipe) >= 0;
+
+  function isWorkday(date){
+    var day = date.getDay();
+    if(repIsHoliday(date)) return false;
+    if(day === 0 || day === 6) return temPlantao;
+    return true;
+  }
+
   var d = new Date();
   d.setHours(0,0,0,0);
-  if(d.getDay()===0) d.setDate(d.getDate()+1);
-  if(d.getDay()===6) d.setDate(d.getDate()+2);
 
   var found = null;
-  for(var i=0; i<60; i++){
-    if(d.getDay()!==0 && d.getDay()!==6 && !repIsHoliday(d)){
-      var dk = repDateKey(d);
-      var used = repGetDayHoursUsed(dk, equipe);
-      var avail = REP_HORAS_DIA - used;
-      if(avail >= horas){
-        // Check day after isn't blocked by this service overflowing
-        if(horas <= REP_HORAS_DIA){ found = dk; break; }
+  for(var i = 0; i < 90 && !found; i++){
+    if(isWorkday(d)){
+      // Coleta os próximos diasNecessarios dias úteis a partir de d (inclusive)
+      var diasUteis = [];
+      var scan = new Date(d);
+      while(diasUteis.length < diasNecessarios){
+        if(isWorkday(scan)) diasUteis.push(new Date(scan));
+        scan.setDate(scan.getDate()+1);
+        if(scan - d > 90*24*60*60*1000) break;
+      }
+      if(diasUteis.length === diasNecessarios){
+        var allFit = true;
+        for(var j = 0; j < diasUteis.length; j++){
+          // Último dia pode ter menos horas; dias anteriores precisam de REP_HORAS_DIA completo
+          var horasNoDia = (j < diasNecessarios - 1) ? REP_HORAS_DIA : (horas - j * REP_HORAS_DIA);
+          var dk = repDateKey(diasUteis[j]);
+          var used = repGetDayHoursUsed(dk, equipe);
+          if((REP_HORAS_DIA - used) < horasNoDia){ allFit = false; break; }
+        }
+        if(allFit) found = repDateKey(d);
       }
     }
     d.setDate(d.getDate()+1);
@@ -6155,11 +6175,12 @@ function repEncaixarAuto(){
 
   if(found){
     document.getElementById('rsData').value = found;
+    var diasLabel = diasNecessarios > 1 ? ' ('+diasNecessarios+' dias)' : '';
     var dLabel = new Date(found+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
-    msg.textContent = '✅ Encaixado em: '+dLabel;
+    msg.textContent = '✅ Encaixado em: '+dLabel+diasLabel;
     msg.style.color = '#22C55E';
   } else {
-    msg.textContent = '❌ Sem disponibilidade nos próximos 60 dias.';
+    msg.textContent = '❌ Sem disponibilidade nos próximos 90 dias.';
     msg.style.color = '#EF4444';
   }
 }
