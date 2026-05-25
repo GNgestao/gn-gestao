@@ -658,10 +658,10 @@ tr:hover td{background:rgba(91,33,182,.05)}
 .rec-td-setor{text-align:left!important;font-weight:600;font-size:.78rem;white-space:nowrap;color:rgba(196,181,253,.9)}
 .rec-td-nome{text-align:left!important;font-size:.8rem;min-width:150px}
 .rec-td-pts{font-weight:700;font-size:.85rem;color:#FF6200}
-.rec-td-total{font-weight:900;font-size:.9rem;background:rgba(255,98,0,.08)!important}
-.rec-td-total.green{color:#22C55E}
-.rec-td-total.red{color:#EF4444}
-.rec-td-total.yellow{color:#EAB308}
+.rec-td-total{font-weight:900;font-size:.9rem;background:#1e1040!important;position:sticky;right:0;z-index:1}
+.rec-td-total.green{color:#22C55E!important}
+.rec-td-total.red{color:#EF4444!important}
+.rec-td-total.yellow{color:#EAB308!important}
 .rec-cell-input{background:transparent;border:none;color:var(--white);font-family:'DM Sans',sans-serif;font-size:.8rem;text-align:center;width:100%;outline:none;cursor:pointer;border-radius:4px;padding:2px 4px}
 .rec-cell-input:focus{background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.4);cursor:text}
 .rec-cell-input:disabled{color:var(--muted);cursor:default}
@@ -5779,12 +5779,23 @@ function recRender(data){
       html += '<td><select class="rec-cell-input" '+dis+' onchange="recSet('+idx+',\'treino\',+this.value)" style="width:70px"><option value="0"'+((!r.treino)?'selected':'')+'>OK</option><option value="1"'+(r.treino===1?'selected':'')+'>Vencido</option></select></td>';
       var mpCls = (r.manPrev||0)>=2?'negative':'';
       html += '<td><input class="rec-cell-input '+mpCls+'" type="number" min="0" value="'+(r.manPrev||0)+'" '+dis+' onchange="recSet('+idx+',\'manPrev\',+this.value||0)" style="width:38px"></td>';
-      html += '<td class="rec-td-pts rec-td-total '+tClass+'">'+total+'</td>';
+      var totalColor = tClass==='green'?'#22C55E':tClass==='yellow'?'#EAB308':'#EF4444';
+      html += '<td class="rec-td-pts rec-td-total '+tClass+'" style="color:'+totalColor+'">'+total+'</td>';
       html += '</tr>';
     });
   });
   tbody.innerHTML = html;
-  console.log('HTML gerado para tbody:', html.length, 'chars, primeiros 200:', html.slice(0,200));
+  var totalCells = tbody.querySelectorAll('.rec-td-total');
+  var rowCount = tbody.rows.length;
+  console.log('[REC] tbody.rows:', rowCount, '| .rec-td-total no DOM:', totalCells.length, '| html.length:', html.length);
+  if(totalCells.length > 0){
+    var fc = totalCells[0];
+    var cs = window.getComputedStyle(fc);
+    console.log('[REC] Primeira célula total — textContent:', fc.textContent, '| className:', fc.className, '| computed color:', cs.color, '| computed bg:', cs.backgroundColor, '| offsetParent:', fc.offsetParent ? 'visível' : 'NULL(oculto)');
+  } else {
+    console.warn('[REC] ATENÇÃO: nenhuma célula .rec-td-total encontrada no DOM após render!');
+  }
+  if(html.length === 0) console.warn('[REC] ATENÇÃO: html gerado está vazio — nenhum setor/item encontrado no zonaMap!');
 }
 
 function recEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -6916,7 +6927,7 @@ function applyRecImport(){
             <th rowspan="2">Quase<br>Acidente<br><span style="font-size:.65rem;font-weight:400;color:rgba(196,181,253,.5)">+10 se ≥5</span></th>
             <th rowspan="2">Treinamento<br><span style="font-size:.65rem;font-weight:400;color:rgba(196,181,253,.5)">-5 se vencido</span></th>
             <th rowspan="2">Man.<br>Preventiva<br><span style="font-size:.65rem;font-weight:400;color:rgba(196,181,253,.5)">-5 se ≥2d</span></th>
-            <th rowspan="2" style="background:rgba(255,98,0,.1)!important;min-width:60px">Total</th>
+            <th rowspan="2" style="background:#1a1040!important;min-width:60px;position:sticky;right:0;z-index:3">Total</th>
           </tr>
         </thead>
         <tbody id="recTableBody">
