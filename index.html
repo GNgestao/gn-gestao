@@ -3126,6 +3126,7 @@ function showLogin(){
   if(as) as.style.cssText='display:none!important';
 }
 function showApp(){
+  if(window._currentUser) localStorage.setItem('repUsuario', JSON.stringify(window._currentUser));
   var ls=document.getElementById('loginScreen');
   var as=document.getElementById('appScreen');
   var hs=document.getElementById('hubScreen');
@@ -3153,7 +3154,7 @@ function showApp(){
   localStorage.removeItem('elevatech_items_v2');
   localStorage.removeItem('gnpred_items_v3');
   localStorage.removeItem('gnpred_clients_v1');
-  if(window._subscribeData) window._subscribeData();
+  if(window._subscribeData && !window._dataSubscribed){ window._dataSubscribed=true; window._subscribeData(); }
 }
 
 function enterModule(mod){
@@ -3265,6 +3266,8 @@ function forgotPassword(){
 }
 
 function doLogout(){
+  localStorage.removeItem('repUsuario');
+  window._dataSubscribed = false;
   window._fb.signOut(window._fb.auth);
   document.getElementById('userDropdown').style.display='none';
   setTimeout(function(){ window.location.reload(); }, 1500);
@@ -4504,11 +4507,18 @@ document.addEventListener('DOMContentLoaded', function(){
   var dateEl = document.getElementById('headerDate');
   if(dateEl) dateEl.textContent = d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
   if(typeof updateApiBtn === 'function') updateApiBtn();
-  // Show login by default
-  var ls = document.getElementById('loginScreen');
-  var as = document.getElementById('appScreen');
-  if(ls) ls.style.display = 'flex';
-  if(as) as.style.display = 'none';
+  // Restaurar sessão do localStorage ou mostrar login
+  var _cachedUser = null;
+  try { _cachedUser = JSON.parse(localStorage.getItem('repUsuario')); } catch(e) {}
+  if(_cachedUser) {
+    window._currentUser = _cachedUser;
+    if(typeof showApp === 'function') showApp();
+  } else {
+    var ls = document.getElementById('loginScreen');
+    var as = document.getElementById('appScreen');
+    if(ls) ls.style.display = 'flex';
+    if(as) as.style.display = 'none';
+  }
 });
 
 // ── AUTO-MAPPER ──
