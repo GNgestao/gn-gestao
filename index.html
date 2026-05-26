@@ -8942,6 +8942,15 @@ function salvarDocPDF(tipo){
     const resp  = document.getElementById('globalJarvisChatResp');
     if(!el) return;
 
+    // Restore saved position
+    try {
+      var _gjPos = JSON.parse(localStorage.getItem('gj_pos')||'null');
+      if(_gjPos && _gjPos.left && _gjPos.top){
+        el.style.left = _gjPos.left; el.style.top = _gjPos.top;
+        el.style.right = 'auto'; el.style.bottom = 'auto';
+      }
+    } catch(e){}
+
     // Drag
     let dragging = false, moved = false, startX, startY, curL, curT;
     el.addEventListener('mousedown', function(e){
@@ -8966,6 +8975,7 @@ function salvarDocPDF(tipo){
     document.addEventListener('mouseup', function(){
       if(!dragging) return;
       dragging = false; el.style.cursor = 'grab';
+      try { localStorage.setItem('gj_pos', JSON.stringify({left: el.style.left, top: el.style.top})); } catch(e){}
     });
 
     function positionChat(){
@@ -9023,22 +9033,22 @@ function salvarDocPDF(tipo){
     window[name] = function(){ if(orig) orig.apply(this,arguments); setTimeout(showGJ,150); };
   });
 
-  // Wrap back functions → hide global Jarvis
+  // Wrap back functions → keep Jarvis visible on hub
   ['backToHub','backFromReconhece','backFromReparo','backFromDocumentacao'].forEach(function(name){
     const orig = window[name];
-    window[name] = function(){ hideGJ(); if(orig) orig.apply(this,arguments); };
+    window[name] = function(){ if(orig) orig.apply(this,arguments); setTimeout(showGJ,150); };
   });
   // planoGoBack may be defined after this, wrap on DOMContentLoaded
   window.addEventListener('load', function(){
     const orig = window.planoGoBack;
-    if(orig) window.planoGoBack = function(){ hideGJ(); orig.apply(this,arguments); };
+    if(orig) window.planoGoBack = function(){ orig.apply(this,arguments); setTimeout(showGJ,150); };
   });
 
-  // Init after login
+  // Init after login — show on hub immediately
   const origShow = window.showApp;
   window.showApp = function(){
     if(origShow) origShow();
-    setTimeout(initGlobalJarvis, 400);
+    setTimeout(function(){ initGlobalJarvis(); showGJ(); }, 400);
   };
 })();
 </script>
