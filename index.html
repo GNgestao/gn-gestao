@@ -6358,9 +6358,9 @@ function exportRecPDF(){
         rows += '<tr>';
         if(zonaFirst){ rows += '<td rowspan="'+zonaCount+'" class="td-zona">'+zona+'</td>'; zonaFirst=false; }
         if(setorFirst){ rows += '<td rowspan="'+items.length+'" class="td-setor">'+setor+'</td>'; setorFirst=false; }
-        rows += '<td>'+r.nome+'</td>';
-        rows += '<td>'+(r.ptsIni||100)+'</td>';
-        rows += '<td style="color:'+prodColor+'">'+prodStr+'</td>';
+        rows += '<td class="td-nome">'+r.nome+'</td>';
+        rows += '<td style="text-align:center">'+(r.ptsIni||100)+'</td>';
+        rows += '<td style="text-align:center;color:'+prodColor+'">'+prodStr+'</td>';
         rows += '<td style="color:#22C55E">'+(r.assiduidade||0)+'</td>';
         rows += '<td style="color:'+((r.ponto||0)>=3?'#EF4444':'#fff')+'">'+(r.ponto||0)+'</td>';
         rows += '<td style="color:'+hzColor+'">'+(r.quaseAc||0)+'</td>';
@@ -6385,7 +6385,7 @@ function exportRecPDF(){
     +'tbody tr:nth-child(even){background:#1a1240}'
     +'.td-zona{background:#0f0830!important;color:#FF6200;font-weight:700;writing-mode:vertical-rl;text-orientation:mixed}'
     +'.td-setor{background:#1a1040!important;color:#c4b5fd;font-weight:600;font-size:7.5pt;text-align:left!important;white-space:nowrap}'
-    +'tbody td:nth-child(3){text-align:left}'
+    +'.td-nome{text-align:left}'
     +'@page{size:A4 landscape;margin:.8cm}'
     +'<\/style><\/head><body>'
     +'<div class="header"><div><h1>🏆 Reconhece<span>+<\/span><\/h1>'
