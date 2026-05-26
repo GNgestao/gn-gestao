@@ -5706,13 +5706,14 @@ function recBuildDefault(){
 
 function recCalcTotal(r){
   var ptsIni = r.ptsIni||100;
-  var assiduidade = (r.assiduidade||0)*3;
-  var marcacao = (r.ponto||0)>=3 ? -4 : 0;
-  var quaseAcidente = (r.quaseAc||0)>=5 ? 10 : 0;
-  var treinamento = (r.treino||0)===1 ? -5 : 0;
-  var manPrev = (r.manPrev||0)>=2 ? -5 : 0;
-  var total = ptsIni + assiduidade + marcacao + quaseAcidente + treinamento + manPrev;
-  console.log('Calculando total:', {ptsIni, assiduidade, marcacao, quaseAcidente, treinamento, manPrev, total});
+  var prod = r.prod||0;
+  var assiduidade = r.assiduidade||0;
+  var marcacao = r.ponto||0;
+  var quaseAcidente = r.quaseAc||0;
+  var treinamento = r.treino||0;
+  var manPrev = r.manPrev||0;
+  var total = ptsIni + prod + assiduidade - marcacao + quaseAcidente + treinamento - manPrev;
+  console.log('Calculando total:', {ptsIni, prod, assiduidade, marcacao, quaseAcidente, treinamento, manPrev, total});
   return total;
 }
 
