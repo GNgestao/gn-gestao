@@ -4514,10 +4514,14 @@ document.addEventListener('DOMContentLoaded', function(){
   try { _cachedUser = JSON.parse(localStorage.getItem('repUsuario')); } catch(e) {}
   if(_cachedUser) {
     window._currentUser = _cachedUser;
-    if(typeof showApp === 'function') showApp();
-    var _telaAtiva = localStorage.getItem('repTelaAtiva');
+    var _telaAtiva = localStorage.getItem('repTelaAtiva') || 'hub';
     var _tabAtiva  = localStorage.getItem('repTabAtiva');
-    if(_telaAtiva && _telaAtiva !== 'hub') {
+    if(!_telaAtiva || _telaAtiva === 'hub') {
+      // Nenhuma tela salva ou era o hub: mostrar APENAS o hub
+      if(typeof showApp === 'function') showApp();
+    } else {
+      // Tela de módulo salva: mostrar hub e restaurar módulo após initHub
+      if(typeof showApp === 'function') showApp();
       setTimeout(function(){
         switch(_telaAtiva){
           case 'reparo':
@@ -4538,7 +4542,7 @@ document.addEventListener('DOMContentLoaded', function(){
             break;
           // 'gn' omitido intencionalmente — não restaura Jarvis automaticamente
         }
-      }, 100);
+      }, 300);
     }
   } else {
     var ls = document.getElementById('loginScreen');
@@ -7234,6 +7238,7 @@ let _ataParticipantes = [], _ataItens = [];
 let _ataParticipanteAtual = '', _ataItemAtual = '', _ataResponsavelAtual = '';
 let _ataUltimaPergunta = '';
 function gnVoltarHub(){
+  localStorage.setItem('repTelaAtiva', 'hub');
   // Esconde todas as telas de módulo — funciona independente de qual esteja aberta
   ['screenDocumentacao','screenReconhece','screenReparo','screenPlano','screenGN','appScreen'].forEach(function(id){
     var el = document.getElementById(id);
@@ -8028,6 +8033,12 @@ async function gnSpeak(texto){
     if(!canvas) return;
     if(!window.THREE){ console.warn('Three.js not loaded'); return; }
 
+    // Garantir que o canvas está dentro do #hubScreen com posição correta
+    const hubScreen = document.getElementById('hubScreen');
+    if(hubScreen && canvas.parentElement !== hubScreen) hubScreen.insertBefore(canvas, hubScreen.firstChild);
+    canvas.style.position = 'absolute';
+    canvas.style.display = '';
+
     // Cleanup previous
     if(window._hubAnimFrame){ cancelAnimationFrame(window._hubAnimFrame); window._hubAnimFrame = null; }
     if(window._hubRenderer){ window._hubRenderer.dispose(); window._hubRenderer = null; }
@@ -8257,6 +8268,30 @@ async function gnSpeak(texto){
 
   const orig=window.showApp;
   window.showApp=function(){ if(orig) orig(); setTimeout(initHub,200); };
+
+  // Garantir que hubCanvas e hub3DLabels sumam junto com os módulos
+  (function(){
+    function _hideHubCanvas(){
+      var hc=document.getElementById('hubCanvas'), hl=document.getElementById('hub3DLabels');
+      if(hc){ hc.style.display='none'; }
+      if(hl){ hl.style.display='none'; }
+    }
+    function _showHubCanvas(){
+      var hc=document.getElementById('hubCanvas'), hl=document.getElementById('hub3DLabels');
+      if(hc){ hc.style.display=''; }
+      if(hl){ hl.style.display=''; }
+    }
+    // Ocultar canvas ao entrar em qualquer módulo
+    ['enterModule','enterReconhece','enterReparo','enterPlano','enterDocumentacao','enterGN'].forEach(function(n){
+      var o=window[n]; if(!o) return;
+      window[n]=function(){ _hideHubCanvas(); o.apply(this,arguments); };
+    });
+    // Reexibir canvas ao voltar para o hub
+    ['backToHub','backFromReconhece','backFromReparo','backFromDocumentacao','backFromGN','gnVoltarHub','backToModule'].forEach(function(n){
+      var o=window[n]; if(!o) return;
+      window[n]=function(){ o.apply(this,arguments); setTimeout(_showHubCanvas,50); };
+    });
+  })();
 })();
 
 </script>
