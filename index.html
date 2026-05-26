@@ -577,7 +577,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 
 /* ── LOGIN SCREEN ── */
 #loginScreen{position:fixed;inset:0;background:transparent;z-index:1;display:flex;align-items:center;justify-content:center;padding:1.5rem;overflow:hidden}
-#appScreen{display:none;position:relative;z-index:10000}
+#appScreen{display:none;position:relative;z-index:1}
 .login-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:400px;text-align:center}
 .login-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;margin-bottom:.25rem}
 .login-logo span{color:var(--orange)}
@@ -3128,10 +3128,13 @@ function showApp(){
   var as=document.getElementById('appScreen');
   var hs=document.getElementById('hubScreen');
   if(ls) ls.style.cssText='display:none!important';
-  if(as) as.style.cssText='display:none!important';
-  // Só mostra hub se não estiver em módulo ativo (guard contra Firebase re-disparo)
+  // Guard: só manipula telas quando no hub — Firebase pode re-disparar durante módulo ativo
   var _tela = localStorage.getItem('repTelaAtiva') || 'hub';
-  if(hs){ hs.style.cssText = (_tela==='hub') ? 'display:flex!important' : 'display:none!important'; }
+  if(_tela === 'hub') {
+    if(as) as.style.cssText='display:none!important';
+    if(hs){ hs.style.cssText='display:flex!important'; }
+  }
+  // Se em módulo: não toca em appScreen nem hubScreen para não apagar o módulo ativo
   // Update hub user name
   var hubUser = document.getElementById('hubUserName');
   if(hubUser && window._currentUser){
