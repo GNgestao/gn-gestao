@@ -197,7 +197,7 @@ body.light-mode .elevator-bg{opacity:.08}
 
 /* ── HUB ZONA VIP ── */
 #hubScreen{
-  position:fixed;inset:0;background:transparent;z-index:9997;
+  position:fixed;top:0;left:0;width:100%;height:100%;background:transparent;z-index:100;
   display:none;align-items:center;justify-content:center;
   flex-direction:column;padding:0;overflow:hidden;
 }
@@ -577,7 +577,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 
 /* ── LOGIN SCREEN ── */
 #loginScreen{position:fixed;inset:0;background:transparent;z-index:1;display:flex;align-items:center;justify-content:center;padding:1.5rem;overflow:hidden}
-#appScreen{display:none;position:relative;z-index:1}
+#appScreen{display:none;position:relative;z-index:10000}
 .login-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:400px;text-align:center}
 .login-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;margin-bottom:.25rem}
 .login-logo span{color:var(--orange)}
@@ -3129,7 +3129,9 @@ function showApp(){
   var hs=document.getElementById('hubScreen');
   if(ls) ls.style.cssText='display:none!important';
   if(as) as.style.cssText='display:none!important';
-  if(hs){ hs.style.cssText='display:flex!important'; }
+  // Só mostra hub se não estiver em módulo ativo (guard contra Firebase re-disparo)
+  var _tela = localStorage.getItem('repTelaAtiva') || 'hub';
+  if(hs){ hs.style.cssText = (_tela==='hub') ? 'display:flex!important' : 'display:none!important'; }
   // Update hub user name
   var hubUser = document.getElementById('hubUserName');
   if(hubUser && window._currentUser){
@@ -3266,6 +3268,7 @@ function forgotPassword(){
 
 function doLogout(){
   localStorage.removeItem('repUsuario');
+  localStorage.removeItem('repTelaAtiva');
   window._dataSubscribed = false;
   window._currentUser = null;
   var fb = window._fb;
@@ -4520,8 +4523,8 @@ document.addEventListener('DOMContentLoaded', function(){
       // Nenhuma tela salva ou era o hub: mostrar APENAS o hub
       if(typeof showApp === 'function') showApp();
     } else {
-      // Tela de módulo salva: mostrar hub e restaurar módulo após initHub
-      if(typeof showApp === 'function') showApp();
+      // Tela de módulo salva: setup sem exibir hub, entrar direto no módulo
+      if(typeof showApp === 'function') showApp(); // guard interno impede hub de aparecer
       setTimeout(function(){
         switch(_telaAtiva){
           case 'reparo':
@@ -4542,7 +4545,7 @@ document.addEventListener('DOMContentLoaded', function(){
             break;
           // 'gn' omitido intencionalmente — não restaura Jarvis automaticamente
         }
-      }, 300);
+      }, 50);
     }
   } else {
     var ls = document.getElementById('loginScreen');
