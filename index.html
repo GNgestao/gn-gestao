@@ -815,14 +815,6 @@ tr:hover td{background:rgba(91,33,182,.05)}
 .gn-node-pill.active{border-color:#FF6200;background:rgba(255,98,0,.12);color:#FF6200;box-shadow:0 0 10px rgba(255,98,0,.15)}
 #gnHint{margin-top:1rem;font-family:'DM Sans',sans-serif;font-size:.68rem;color:rgba(196,181,253,.3);letter-spacing:.05em;text-align:center}
 @keyframes hubJarvisPulse{0%,100%{box-shadow:0 0 30px rgba(255,98,0,.35),0 0 60px rgba(124,58,237,.15);transform:scale(1)}50%{box-shadow:0 0 55px rgba(255,98,0,.6),0 0 100px rgba(124,58,237,.25);transform:scale(1.05)}}
-#hubJarvis{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;user-select:none}
-#hubJarvisCore{width:100px;height:100px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#4c1d95,#1a0535);border:2.5px solid #FF6200;display:flex;align-items:center;justify-content:center;animation:hubJarvisPulse 2.2s ease-in-out infinite;font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:#fff;letter-spacing:.05em}
-#hubJarvisChat{display:none;position:absolute;z-index:11;background:#1a0535;border:1px solid rgba(255,98,0,.4);border-radius:16px;padding:1rem;width:290px;box-shadow:0 8px 32px rgba(0,0,0,.6)}
-#hubJarvisChatResp{min-height:2.5rem;font-family:'DM Sans',sans-serif;font-size:.82rem;color:rgba(196,181,253,.85);margin-bottom:.75rem;line-height:1.55;max-height:140px;overflow-y:auto;white-space:pre-wrap}
-#hubJarvisChatInput{width:100%;box-sizing:border-box;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:.45rem .75rem;color:#fff;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;margin-bottom:.5rem}
-#hubJarvisChatInput::placeholder{color:rgba(196,181,253,.35)}
-#hubJarvisSendBtn{width:100%;background:rgba(255,98,0,.2);border:1px solid rgba(255,98,0,.4);color:#FF6200;border-radius:8px;padding:.45rem;font-size:.82rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s}
-#hubJarvisSendBtn:hover{background:rgba(255,98,0,.35)}
 #globalJarvis{display:none;position:fixed;bottom:2rem;right:2rem;z-index:10001;cursor:grab;user-select:none;pointer-events:none}
 #globalJarvisCore{width:80px;height:80px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#4c1d95,#1a0535);border:2.5px solid #FF6200;display:flex;align-items:center;justify-content:center;animation:hubJarvisPulse 2.2s ease-in-out infinite;font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;color:#fff;letter-spacing:.05em;pointer-events:auto}
 #globalJarvisChat{display:none;position:fixed;z-index:10002;background:#1a0535;border:1px solid rgba(255,98,0,.4);border-radius:16px;padding:1rem;width:290px;box-shadow:0 8px 32px rgba(0,0,0,.6);pointer-events:auto}
@@ -913,15 +905,6 @@ tr:hover td{background:rgba(91,33,182,.05)}
 <!-- HUB ZONA VIP -->
 <div id="hubScreen">
   <canvas id="hubCanvas" style="position:absolute;inset:0;width:100%;height:100%;z-index:1"></canvas>
-  <div id="hubJarvis">
-    <div id="hubJarvisCore">Jarvis</div>
-  </div>
-  <div id="hubJarvisChat" style="position:relative">
-    <button onclick="document.getElementById('hubJarvisChat').style.display='none'" style="position:absolute;top:8px;right:8px;background:transparent;border:none;color:#fff;cursor:pointer;font-size:1.2rem;line-height:1;padding:0">×</button>
-    <div id="hubJarvisChatResp"></div>
-    <input id="hubJarvisChatInput" type="text" placeholder="Fale com o Jarvis..." autocomplete="off">
-    <button id="hubJarvisSendBtn" onclick="hubJarvisSend()">Enviar</button>
-  </div>
   <div id="hubOverlay" style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh">
     <div style="display:none;font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.25em;color:rgba(196,181,253,.35);text-transform:uppercase;margin-bottom:2rem">GN Gestão — Zona Vip</div>
     <div id="hubUserDisplay" style="display:none"><span id="hubRoleBadge2"></span><span id="hubUserName2"></span></div>
@@ -3206,7 +3189,7 @@ function enterPlano(){
   showPlanoScreen();
 }
 function backToHub(){
-  localStorage.removeItem('repTelaAtiva');
+  localStorage.setItem('repTelaAtiva', 'hub');
   var telas = ['screenReconhece', 'screenReparo', 'screenPlano', 'screenGN', 'appScreen'];
   telas.forEach(function(id){
     var el = document.getElementById(id);
@@ -4534,7 +4517,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if(typeof showApp === 'function') showApp();
     var _telaAtiva = localStorage.getItem('repTelaAtiva');
     var _tabAtiva  = localStorage.getItem('repTabAtiva');
-    if(_telaAtiva) {
+    if(_telaAtiva && _telaAtiva !== 'hub') {
       setTimeout(function(){
         switch(_telaAtiva){
           case 'reparo':
@@ -4902,6 +4885,7 @@ function hidePlanoScreen(){
   if(modHeader) modHeader.style.display='none';
 }
 function backToModule(){
+  localStorage.setItem('repTelaAtiva', 'hub');
   hidePlanoScreen();
   // Go back to hub
   var hs = document.getElementById('hubScreen');
@@ -5689,7 +5673,7 @@ function enterReconhece(){
 }
 
 function backFromReconhece(){
-  localStorage.removeItem('repTelaAtiva');
+  localStorage.setItem('repTelaAtiva', 'hub');
   var sr = document.getElementById('screenReconhece');
   if(sr){ sr.style.cssText = ''; sr.style.display = 'none'; }
   var rs = document.getElementById('screenReconhece');
@@ -5893,7 +5877,7 @@ function enterReparo(){
 }
 
 function backFromReparo(){
-  localStorage.removeItem('repTelaAtiva');
+  localStorage.setItem('repTelaAtiva', 'hub');
   localStorage.removeItem('repTabAtiva');
   var sr = document.getElementById('screenReparo');
   if(sr){ sr.style.cssText = ''; sr.style.display = 'none'; }
@@ -7333,7 +7317,7 @@ function enterGN(){
   setTimeout(() => { gnStartContinuous(); }, 800);
 }
 function backFromGN(){
-  localStorage.removeItem('repTelaAtiva');
+  localStorage.setItem('repTelaAtiva', 'hub');
   gnStopContinuous();
   const sc=document.getElementById('screenGN');if(sc)sc.style.display='none';
   ['appScreen','screenReconhece','screenPlano','screenReparo'].forEach(function(id){
@@ -8273,81 +8257,6 @@ async function gnSpeak(texto){
   window.showApp=function(){ if(orig) orig(); setTimeout(initHub,200); };
 })();
 
-// Hub Jarvis Flutuante
-(function(){
-  function initHubJarvis(){
-    const role = window._currentUser?.role || 'viewer';
-    if(role !== 'superadmin') return;
-
-    const el    = document.getElementById('hubJarvis');
-    const chat  = document.getElementById('hubJarvisChat');
-    const input = document.getElementById('hubJarvisChatInput');
-    const resp  = document.getElementById('hubJarvisChatResp');
-    if(!el) return;
-
-    el.style.display = 'block';
-
-    function positionChat(){
-      const rect = el.getBoundingClientRect();
-      let cx = rect.left + rect.width/2 - 145;
-      let cy = rect.bottom + 12;
-      cx = Math.max(8, Math.min(window.innerWidth - 298, cx));
-      cy = Math.max(8, Math.min(window.innerHeight - 240, cy));
-      chat.style.position = 'fixed';
-      chat.style.left = cx + 'px';
-      chat.style.top  = cy + 'px';
-    }
-
-    document.getElementById('hubJarvisCore').addEventListener('dblclick', function(){
-      gnListening = false;
-      gnSpeaking = false;
-      gnExecutando = false;
-      if(gnStream){ gnStream.getTracks().forEach(t=>t.stop()); gnStream=null; }
-      if(gnMediaRecorder){ try{ gnMediaRecorder.stop(); }catch(e){} gnMediaRecorder=null; }
-      setTimeout(gnStartContinuous, 500);
-    });
-
-    document.getElementById('hubJarvisCore').addEventListener('click', function(){
-      if(chat.style.display === 'none'){
-        positionChat();
-        chat.style.display = 'block';
-        resp.textContent = '';
-        input.focus();
-      } else {
-        chat.style.display = 'none';
-      }
-    });
-
-    input.addEventListener('keydown', function(e){
-      if(e.key === 'Enter') window.hubJarvisSend();
-    });
-
-    setTimeout(function(){ if(!gnContinuousMode) gnStartContinuous(); }, 800);
-  }
-
-  window.hubJarvisSend = function(){
-    const input = document.getElementById('hubJarvisChatInput');
-    const resp  = document.getElementById('hubJarvisChatResp');
-    const texto = (input.value||'').trim();
-    if(!texto) return;
-    input.value = '';
-    resp.textContent = '...';
-    gnModoVoz = false;
-    gnCommandSource = 'text';
-    gnSessionHistory.push({role:'user',content:texto});
-    gnTextTargetEl = resp;
-    if(gnMediaRecorder && gnMediaRecorder.state !== 'inactive'){ gnMediaRecorder.stop(); }
-    if(gnStream){ gnStream.getTracks().forEach(t=>t.stop()); gnStream=null; }
-    gnListening = false;
-    if(typeof gnExecutar === 'function') gnExecutar(texto);
-  };
-
-  const origShow = window.showApp;
-  window.showApp = function(){
-    if(origShow) origShow();
-    setTimeout(initHubJarvis, 350);
-  };
-})();
 </script>
 
 <!-- ══ TELA DOCUMENTAÇÃO ══ -->
@@ -8481,7 +8390,7 @@ function enterDocumentacao(){
 }
 
 function backFromDocumentacao(){
-  localStorage.removeItem('repTelaAtiva');
+  localStorage.setItem('repTelaAtiva', 'hub');
   console.log('backFromDocumentacao chamada');
   var sc=document.getElementById('screenDocumentacao');
   if(sc) sc.style.display='none';
