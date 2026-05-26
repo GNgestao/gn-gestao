@@ -5712,7 +5712,7 @@ function recCalcTotal(r){
   var quaseAcidente = r.quaseAc||0;
   var treinamento = r.treino||0;
   var manPrev = r.manPrev||0;
-  var total = ptsIni + prod + assiduidade - marcacao + quaseAcidente + treinamento - manPrev;
+  var total = Math.round((ptsIni + prod + assiduidade - marcacao + quaseAcidente + treinamento - manPrev) * 100) / 100;
   console.log('Calculando total:', {ptsIni, prod, assiduidade, marcacao, quaseAcidente, treinamento, manPrev, total});
   return total;
 }
@@ -5781,7 +5781,8 @@ function recRender(data){
       var mpCls = (r.manPrev||0)>=2?'negative':'';
       html += '<td><input class="rec-cell-input '+mpCls+'" type="number" min="0" value="'+(r.manPrev||0)+'" '+dis+' onchange="recSet('+idx+',\'manPrev\',+this.value||0)" style="width:38px"></td>';
       var totalColor = tClass==='green'?'#22C55E':tClass==='yellow'?'#EAB308':'#EF4444';
-      html += '<td class="rec-td-pts rec-td-total '+tClass+'" style="color:'+totalColor+'">'+total+'</td>';
+      var totalStr = Number.isInteger(total) ? total.toString() : total.toFixed(2);
+      html += '<td class="rec-td-pts rec-td-total '+tClass+'" style="color:'+totalColor+'">'+totalStr+'</td>';
       html += '</tr>';
     });
   });
