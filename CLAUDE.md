@@ -250,6 +250,9 @@ Sequência:
 - [ ] Rebrand: remover menções Zona Vip
 - [ ] PWA — transformar GN Gestão em app instalável
 
+### Médias prioridade
+- [ ] Rebrand Jarvis → Ultron: trocar nome, wake word, visual do botão flutuante e referências no código (~3k tokens) — Gabriel ainda decidindo
+
 ### Módulos futuros
 - [ ] Módulo Gestão de Equipe
 - [ ] Módulo Perito Judicial / Gestão de ARTs e Laudos
