@@ -195,6 +195,10 @@ body.light-mode .form-group input,body.light-mode .form-group select{background:
 body.light-mode .search-bar input{background:#F0EEFF;color:#1a0535}
 body.light-mode .elevator-bg{opacity:.08}
 
+/* ── FUNDO SÓLIDO PARA TODOS OS MÓDULOS (evita transparência sobre estrelas) ── */
+#appScreen,#screenReconhece,#screenReparo,#screenDocumentacao{background:#1e1040!important}
+#screenGN{background:#080415!important}
+
 /* ── HUB ZONA VIP ── */
 #hubScreen{
   position:fixed;top:0;left:0;width:100%;height:100%;background:transparent;z-index:100;
@@ -577,7 +581,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 
 /* ── LOGIN SCREEN ── */
 #loginScreen{position:fixed;inset:0;background:transparent;z-index:1;display:flex;align-items:center;justify-content:center;padding:1.5rem;overflow:hidden}
-#appScreen{display:none;position:relative;z-index:1}
+#appScreen{display:none;position:relative;z-index:1;background:#1e1040;min-height:100vh}
 .login-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:400px;text-align:center}
 .login-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;margin-bottom:.25rem}
 .login-logo span{color:var(--orange)}
