@@ -7323,6 +7323,8 @@ function backFromGN(){
   ['appScreen','screenReconhece','screenPlano','screenReparo'].forEach(function(id){
     const el=document.getElementById(id);if(el) el.style.cssText='';
   });
+  var _gj=document.getElementById('globalJarvis');if(_gj)_gj.style.display='none';
+  var _gc=document.getElementById('globalJarvisChat');if(_gc)_gc.style.display='none';
   const hs=document.getElementById('hubScreen');if(hs)hs.style.cssText='display:flex!important';
 }
 function gnSetStatus(msg,mode){const el=document.getElementById('gnStatus');if(!el)return;el.textContent=msg;el.className=mode||'';}
@@ -8032,15 +8034,13 @@ async function gnSpeak(texto){
     if(window._hubWindowListeners){ window.removeEventListener('mouseup', window._hubWindowListeners.mouseup); window.removeEventListener('mousemove', window._hubWindowListeners.mousemove); }
     if(window._hubResizeHandler) window.removeEventListener('resize', window._hubResizeHandler);
 
-    canvas.style.filter = 'none';
-    canvas.style.background = '#050510';
-    const W0 = canvas.offsetWidth || 800, H0 = canvas.offsetHeight || 600;
+    const W0 = window.innerWidth, H0 = window.innerHeight;
 
     // --- Scene ---
     const scene = new THREE.Scene();
 
     const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
-    renderer.setSize(W0, H0);
+    renderer.setSize(W0, H0, false);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     window._hubRenderer = renderer;
 
@@ -8184,7 +8184,7 @@ async function gnSpeak(texto){
     canvas.addEventListener('click', e=>{ const rect=canvas.getBoundingClientRect(); mouse.x=((e.clientX-rect.left)/rect.width)*2-1; mouse.y=-((e.clientY-rect.top)/rect.height)*2+1; const idx=doRaycast(); if(idx>=0){const nd=nodeData[idx];if(nd.accessible&&nd.action)nd.action();} });
     canvas.addEventListener('touchend', e=>{ e.preventDefault(); const rect=canvas.getBoundingClientRect(),t=e.changedTouches[0]; mouse.x=((t.clientX-rect.left)/rect.width)*2-1; mouse.y=-((t.clientY-rect.top)/rect.height)*2+1; const idx=doRaycast(); if(idx>=0){const nd=nodeData[idx];if(nd.accessible&&nd.action)nd.action();} });
 
-    const onResize=()=>{ const W=canvas.offsetWidth,H=canvas.offsetHeight; renderer.setSize(W,H); camera.aspect=W/H; camera.updateProjectionMatrix(); };
+    const onResize=()=>{ const W=window.innerWidth,H=window.innerHeight; renderer.setSize(W,H,false); camera.aspect=W/H; camera.updateProjectionMatrix(); };
     window.addEventListener('resize',onResize); window._hubResizeHandler=onResize;
 
     function toScreen(pos){ const v=pos.clone().project(camera); const rect=canvas.getBoundingClientRect(); return{x:(v.x+1)/2*rect.width,y:(-v.y+1)/2*rect.height,vis:v.z<1}; }
@@ -8195,6 +8195,8 @@ async function gnSpeak(texto){
 
     function animate(){
       window._hubAnimFrame=requestAnimationFrame(animate);
+      const _hs=document.getElementById('hubScreen');
+      if(!_hs||_hs.style.display==='none') return;
       tick+=0.016;
 
       // Auto-rotation when idle > 1.5s
