@@ -6352,8 +6352,8 @@ function exportRecPDF(){
       items.forEach(function(r){
         var total = recCalcTotal(r);
         var totalColor = total >= 100 ? '#22C55E' : total >= 50 ? '#F59E0B' : '#EF4444';
-        var prodStr = (r.produtividade !== null && r.produtividade !== undefined) ? r.produtividade.toFixed(1)+'%' : '-';
-        var prodColor = (r.produtividade !== null && r.produtividade < 50) ? '#EF4444' : '#fff';
+        var prodStr = (r.prod !== null && r.prod !== undefined) ? parseFloat(r.prod).toFixed(2) : '-';
+        var prodColor = (r.prod !== null && r.prod !== undefined && r.prod < 50) ? '#EF4444' : '#fff';
         var hzColor = (r.quaseAc||0) < 5 ? '#EF4444' : '#22C55E';
         rows += '<tr>';
         if(zonaFirst){ rows += '<td rowspan="'+zonaCount+'" class="td-zona">'+zona+'</td>'; zonaFirst=false; }
