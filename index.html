@@ -68,7 +68,11 @@
       });
     } else {
       window._currentUser = null;
-      if(typeof showLogin === 'function') showLogin();
+      // Só mostra login se não há sessão em cache — evita sobrescrever a restauração
+      // do DOMContentLoaded durante a inicialização assíncrona do Firebase Auth
+      var _hasCached = false;
+      try { _hasCached = !!localStorage.getItem('repUsuario'); } catch(e) {}
+      if(!_hasCached && typeof showLogin === 'function') showLogin();
     }
   });
   // Subscribe to Firestore data
@@ -873,7 +877,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 
 
 <!-- LOGIN SCREEN -->
-<div id="loginScreen">
+<div id="loginScreen" style="display:none">
   <div class="login-box">
     <div class="login-logo">GN <span>Gestão</span></div>
     <div class="login-sub" style="color:#FF6200;letter-spacing:.12em">✦ Zona Vip ✦</div>
