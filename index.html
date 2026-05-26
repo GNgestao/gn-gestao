@@ -32,6 +32,13 @@
   window._fb = { auth, db, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, doc, setDoc, getDoc, getDocs, collection, onSnapshot, deleteDoc, query, where };
 
   // Auth state listener
+  function _startSubscriptions(){
+    if(window._subscribeData && !window._dataSubscribed){
+      window._dataSubscribed = true;
+      window._subscribeData();
+    }
+  }
+
   onAuthStateChanged(auth, function(user) {
     if (user) {
       // Try to get profile, but fallback quickly if Firestore is slow
@@ -42,6 +49,7 @@
         // Save profile in background
         setDoc(doc(db,'users',user.uid), { name: user.email.split('@')[0], email: user.email, role: role, createdAt: Date.now() }, {merge:true});
         if(typeof showApp === 'function') showApp();
+        _startSubscriptions();
       }, 3000);
 
       getDoc(doc(db, 'users', user.uid)).then(function(userDoc) {
@@ -59,12 +67,14 @@
         // Update role in Firestore if needed
         setDoc(doc(db,'users',user.uid), { name: name, email: user.email, role: role }, {merge:true});
         if(typeof showApp === 'function') showApp();
+        _startSubscriptions();
       }).catch(function(e){
         clearTimeout(timeout);
         // On error, still let user in with basic role
         var role = (user.email === SUPER_ADMIN_EMAIL) ? 'superadmin' : 'viewer';
         window._currentUser = { uid: user.uid, email: user.email, name: user.email.split('@')[0], role: role };
         if(typeof showApp === 'function') showApp();
+        _startSubscriptions();
       });
     } else {
       window._currentUser = null;
@@ -3158,7 +3168,7 @@ function showApp(){
   localStorage.removeItem('elevatech_items_v2');
   localStorage.removeItem('gnpred_items_v3');
   localStorage.removeItem('gnpred_clients_v1');
-  if(window._subscribeData && !window._dataSubscribed){ window._dataSubscribed=true; window._subscribeData(); }
+  // Subscriptions iniciadas apenas após Firebase confirmar auth (ver onAuthStateChanged)
 }
 
 function enterModule(mod){
@@ -3186,8 +3196,7 @@ function enterModule(mod){
 }
 
 function hubLogout(){
-  var fb = window._fb;
-  if(fb && fb.signOut) fb.signOut(fb.auth);
+  doLogout();
 }
 
 function enterPlano(){
@@ -3275,9 +3284,12 @@ function forgotPassword(){
 function doLogout(){
   localStorage.removeItem('repUsuario');
   window._dataSubscribed = false;
-  window._fb.signOut(window._fb.auth);
-  document.getElementById('userDropdown').style.display='none';
-  setTimeout(function(){ window.location.reload(); }, 1500);
+  window._currentUser = null;
+  var fb = window._fb;
+  if(fb && fb.signOut) fb.signOut(fb.auth);
+  var dd = document.getElementById('userDropdown');
+  if(dd) dd.style.display = 'none';
+  setTimeout(function(){ window.location.reload(); }, 800);
 }
 
 function translateAuthError(code){
