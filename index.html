@@ -7838,6 +7838,46 @@ async function gnExecutar(comando){
   else if(cmd.includes('reconhece')||cmd.includes('desempenho')) gnActivateNode('reconhece');
   else if(cmd.includes('reparo')||cmd.includes('servi')) gnActivateNode('reparo');
   else if(cmd.includes('plano')) gnActivateNode('plano');
+
+  // Abertura de sites por voz/texto
+  const _aberturaGatilhos = ['abre o ','abre ','abrir o ','abrir ','vai para o ','vai para ','acessa o ','acessa ','acessar o ','acessar '];
+  if(_aberturaGatilhos.some(function(g){ return cmd.includes(g); })){
+    const _siteMapa = [
+      { chaves: ['tk mobile','tke mobile','mobile'], url: 'https://mobileapp.tkelevator.com', nome: 'TK Mobile' },
+      { chaves: ['gmail','email','e-mail'], url: 'https://mail.google.com', nome: 'Gmail' },
+      { chaves: ['youtube'], url: 'https://youtube.com', nome: 'YouTube' },
+      { chaves: ['whatsapp'], url: 'https://web.whatsapp.com', nome: 'WhatsApp' },
+      { chaves: ['google'], url: 'https://google.com', nome: 'Google' },
+      { chaves: ['n8n'], url: 'https://n8n.srv1610251.hstgr.cloud', nome: 'n8n' },
+      { chaves: ['github'], url: 'https://github.com/GNgestao', nome: 'GitHub' },
+      { chaves: ['autentique'], url: 'https://autentique.com.br', nome: 'Autentique' },
+      { chaves: ['chatgpt','chat gpt'], url: 'https://chat.openai.com', nome: 'ChatGPT' },
+      { chaves: ['claude'], url: 'https://claude.ai', nome: 'Claude' }
+    ];
+    const _siteAchado = _siteMapa.find(function(s){ return s.chaves.some(function(c){ return cmd.includes(c); }); });
+    if(_siteAchado){
+      window.open(_siteAchado.url, '_blank');
+      const _msgSite = 'Abrindo ' + _siteAchado.nome + ', Chefe.';
+      if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',_msgSite); }
+      else if(gnModoVoz){ try{ await gnSpeak(_msgSite); }catch(e){} }
+      gnExecutando = false;
+      return;
+    }
+    // Site não mapeado — tentar extrair domínio do comando
+    let _dominioTexto = cmd;
+    _aberturaGatilhos.forEach(function(g){ _dominioTexto = _dominioTexto.replace(g, ' '); });
+    _dominioTexto = _dominioTexto.replace(/\b(o|a|do|da|site|página|pagina|meu|minha)\b/g, '').trim();
+    if(_dominioTexto.length > 2){
+      const _urlAberta = _dominioTexto.includes('.') ? 'https://' + _dominioTexto : 'https://' + _dominioTexto.replace(/\s+/g,'') + '.com';
+      window.open(_urlAberta, '_blank');
+      const _msgGen = 'Tentando abrir ' + _dominioTexto.trim() + ', Chefe.';
+      if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',_msgGen); }
+      else if(gnModoVoz){ try{ await gnSpeak(_msgGen); }catch(e){} }
+      gnExecutando = false;
+      return;
+    }
+  }
+
   const respostasFixas = [
     { gatilhos: ['está aí', 'esta ai', 'você está aí', 'voce esta ai'], resposta: 'Para o senhor, sempre.' },
     { gatilhos: ['acorda', 'acordar', 'está acordado', 'esta acordado', 'está acordada', 'esta acordada'], resposta: 'Estou acordado, Chefe. Pronto para atender suas necessidades.' },
