@@ -9124,7 +9124,13 @@ function salvarDocPDF(tipo){
       const resposta = (data.resposta||data.response||'').replace(/\*+/g,'').replace(/#+/g,'').replace(/_{2,}/g,'').trim() || 'Não consegui processar o comando.';
       const urlMatch = resposta.match(/<url>(.*?)<\/url>/);
       if(urlMatch) window.open(urlMatch[1], '_blank');
-      const textoLimpo = resposta.replace(/<function_calls>[\s\S]*?<\/function_calls>/g, '').trim() || 'Não consegui processar o comando.';
+      const textoLimpo = resposta
+        .replace(/<function_calls>[\s\S]*?<\/function_calls>/g, '')
+        .replace(/<invoke[\s\S]*?<\/invoke>/g, '')
+        .replace(/<trigger>[\s\S]*?<\/trigger>/g, '')
+        .replace(/<url>[\s\S]*?<\/url>/g, '')
+        .replace(/<[^>]+>/g, '')
+        .trim() || 'Abrindo agora, Chefe.';
       gnSessionHistory.push({role:'user', content:texto});
       gnSessionHistory.push({role:'assistant', content:textoLimpo});
       if(typeof window._gjAddMessage === 'function') window._gjAddMessage('bot', textoLimpo);
