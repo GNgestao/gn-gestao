@@ -7502,6 +7502,7 @@ async function gnTranscrever(blob){
   const _eraSilencio = !gnModoVoz && !gnConversationMode;
   try {
     gnModoVoz = true;
+    window._gjModoTexto = false;
     const res = await fetch('https://api.deepgram.com/v1/listen?language=pt-BR&model=nova-2&punctuate=true&utterances=true', {
       method: 'POST',
       headers: {
@@ -7874,6 +7875,7 @@ async function gnExecutar(comando){
     if(gnCommandSource === 'text'){
       gnCommandSource = 'voice';
       if(gnTextTargetEl){ gnTextTargetEl.textContent = resposta; gnTextTargetEl = null; }
+      window._gjModoTexto = false;
       gnSetStatus("Diga 'Jarvis' para ativar",'');
       gnSetBars('');
       gnDeactivateNodes();
@@ -7941,6 +7943,7 @@ document.addEventListener('keydown', function(e){
 });
 
 async function gnSpeak(texto){
+  if(window._gjModoTexto) return Promise.resolve();
   if(gnSpeaking) return Promise.resolve();
   document.getElementById('gnCore').classList.add('speaking');
   gnSpeaking = true;
@@ -9069,6 +9072,7 @@ function salvarDocPDF(tipo){
     if(typeof window._gjAddMessage === 'function') window._gjAddMessage('user', texto);
     resp.textContent = '...';
     gnModoVoz = false;
+    window._gjModoTexto = true;
     gnCommandSource = 'text';
     gnSessionHistory.push({role:'user',content:texto});
     gnTextTargetEl = resp;
