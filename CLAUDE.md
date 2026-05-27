@@ -7,7 +7,7 @@ Sistema de gestão operacional pessoal e profissional de Gabriel Nascimento, ges
 - VPS: Hostinger, IP 187.127.26.136, Ubuntu 24.04
 - n8n: https://n8n.srv1610251.hstgr.cloud (container n8n-n8n-1)
 - App: https://gngestao.github.io/gn-gestao/
-- GitHub: github.com/GNgestao/gn-gestao (arquivo principal: index.html, 8400+ linhas)
+- GitHub: github.com/GNgestao/gn-gestao (arquivo principal: index.html, ~9200+ linhas)
 - Evolution API (WhatsApp): http://187.127.26.136:8081, instância gn-whatsapp, apikey gn-evolution-2026, número 5581982381146
 - SSH: ssh root@187.127.26.136
 - GitHub token (sem expiração): ghp_*** (ver com Gabriel)
@@ -225,40 +225,81 @@ Sequência:
 - Após silêncio: gnModoVoz=false, gnConversationMode=false — só acorda com "Jarvis"
 - gnVoltarHub(): função universal de retorno ao hub para todos os módulos
 
+## JARVIS — MELHORIAS RECENTES (26-27/05/2026)
+
+### Chat de texto ✅
+- Chat com histórico scrollável e bolhas estilo WhatsApp (gj-msg-user / gj-msg-bot)
+- Histórico persiste na sessão via localStorage('jarvis_chat_history')
+- Flag window._gjModoTexto: texto → sem TTS; voz → TTS normal
+- globalJarvisSend() chama webhook gn-assistente diretamente (com memória PostgreSQL)
+- enviarCartaAssinatura() e enviarAtaAssinatura() respeitam _gjModoTexto
+
+### Abertura de sites e pesquisa ✅
+- Abertura por voz/texto: "abrir X", "abre o X", "vai para X", "acessa X"
+- Sites mapeados: TK Mobile (https://mobile.br.tkelevator.com/TKEMobile/Default.aspx), Gmail, YouTube, WhatsApp, Google, n8n, GitHub, Autentique, ChatGPT, Claude
+- Sites não mapeados: extrai domínio e tenta https://dominio.com
+- Pesquisa em sites: "pesquisar X no YouTube/Google/Spotify/Maps" com encodeURIComponent
+- Limpeza de XML nas respostas: 5 passes de regex (function_calls, invoke, trigger, url, tags genéricas)
+- Detecção em gnExecutar() (voz) e globalJarvisSend() (texto), antes do webhook
+
+### Memória e API ✅
+- Memória permanente funcionando: conversas salvas no PostgreSQL
+- Créditos API Anthropic recarregados: USD 5,98 disponíveis
+
+## RECONHECE+ — Correções (26-27/05/2026)
+- Fórmula TOTAL corrigida: ptsIni + prod + assiduidade - marcacao + quaseAcidente + treinamento - manPrev
+- Arredondamento para 2 casas decimais
+- Coluna TOTAL sticky (sempre visível na tabela)
+- PDF: produtividade aparecendo corretamente, centralizada
+- Data de geração removida do PDF
+- Login e tela ativa persistem após F5
+
+## REPARO SUBCONTRATADO — Correções (26-27/05/2026)
+- Botão "+ Serviço" funcionando
+- Encaixe automático multi-dia corrigido
+- Login e tela ativa persistem após F5
+
+## HUB — Correções (26-27/05/2026)
+- Jarvis duplicado (sol laranja) removido
+- Jarvis móvel restaurado no hub
+- Canvas Three.js não sobrepõe mais as telas dos módulos
+- Fundo roxo (#1e1040) em todos os módulos
+- Hub centralizado com tamanho correto
+
 ## SERVIÇOS VPS ATIVOS (187.127.26.136)
 - **autentique-api.service** (porta 5052) — /root/autentique-api.js, systemd, restart automático
 - **jarvis-restart-api** (porta 5051) — restart do Jarvis via webhook
 - **Kokoro TTS** (porta 5050) — /usr/local/bin/jarvis-tts-server.py
 - **n8n** (Docker) — https://n8n.srv1610251.hstgr.cloud
 
+## INFRA VPS — Instalações (26-27/05/2026)
+- wkhtmltopdf instalado para conversão HTML→PDF (Autentique)
+- node-fetch@2 instalado para Autentique API (/root/autentique-api.js)
+
 ## PENDÊNCIAS GERAIS
 
-### Jarvis / Documentação
-- [ ] Autentique: implementar assinatura automática via API (opcional)
-- [ ] Lista de clientes para o Jarvis memorizar endereços
-- [ ] TTS streaming / melhorar latência de resposta do Jarvis
-- [ ] Whisper local (substituir Deepgram para reduzir custo/latência)
-- [ ] Fluxo Sênior para consulta de horas extras em tempo real via Jarvis
-- [ ] Jarvis abrindo qualquer site por voz
-- [ ] Campo de texto no módulo Jarvis para comandos sem voz
-- [ ] Memória permanente de fatos e perfil do Gabriel (separada das conversas)
-- [ ] Aumentar limite de memória de 20 para 50 mensagens no contexto do Claude
+### Módulos novos
+- [ ] Módulo Gestão de Equipe + férias + escala de plantões (~40k tokens)
+- [ ] Módulo Perito Judicial / Gestão de ARTs e Laudos (~50k tokens)
+- [ ] Ata CIPA via Jarvis (~20k tokens) — modelo analisado
 
-### Hub / App
-- [ ] Hub 3D: remover Jarvis duplicado (sol laranja), nós como quadradinhos brancos fixos, Jarvis único no centro
-- [ ] Tela de login futurista
-- [ ] Rebrand: remover menções Zona Vip
-- [ ] PWA — transformar GN Gestão em app instalável
+### Jarvis / Integrações
+- [ ] Integração TK Mobile com Jarvis — fluxo base: Fluxo 1 - TAC Mobile (~20k tokens)
+- [ ] Fluxo Sênior — consulta HE em tempo real via Jarvis (~15k tokens)
+- [ ] Lista de clientes — endereços memorizados no Jarvis (~5k tokens)
+- [ ] Integração Gmail + Google Calendar (~40k tokens)
+- [ ] TTS streaming / melhorar latência (~20k tokens)
+- [ ] Whisper local — substituir Deepgram (~15k tokens)
+- [ ] Memória permanente de fatos + aumentar limite para 50 msgs (~10k tokens)
+- [ ] Autentique: assinatura automática via API (opcional)
 
-### Médias prioridade
-- [ ] Rebrand Jarvis → Ultron: trocar nome, wake word, visual do botão flutuante e referências no código (~3k tokens) — Gabriel ainda decidindo
-
-### Módulos futuros
-- [ ] Módulo Gestão de Equipe
-- [ ] Módulo Perito Judicial / Gestão de ARTs e Laudos
-- [ ] Integração TK Mobile com Jarvis (fluxo base: Fluxo 1 - TAC Mobile)
-- [ ] Integração Gmail, Google Calendar, Outlook
+### Hub / App / Visual
+- [ ] Hub 3D estilo Obsidian (~30k tokens)
+- [ ] Tela de login futurista (~15k tokens)
+- [ ] PWA — transformar GN Gestão em app instalável (~8k tokens)
+- [ ] Rebrand: remover menções Zona Vip (~3k tokens)
+- [ ] Rebrand Jarvis → Ultron: nome, wake word, visual (~3k tokens) — Gabriel ainda decidindo
 
 ### Segurança / Infra
-- [ ] Segurança: senha mestra antes do login
+- [ ] Senha mestra antes do login (~10k tokens)
 - [ ] Rotacionar API keys e tokens expostos
