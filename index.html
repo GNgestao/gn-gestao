@@ -9063,23 +9063,34 @@ function salvarDocPDF(tipo){
     });
   }
 
-  window.globalJarvisSend = function(){
+  window.globalJarvisSend = async function(){
     const input = document.getElementById('globalJarvisChatInput');
-    const resp  = document.getElementById('globalJarvisChatResp');
     const texto = (input.value||'').trim();
     if(!texto) return;
     input.value = '';
     if(typeof window._gjAddMessage === 'function') window._gjAddMessage('user', texto);
-    resp.textContent = '...';
     gnModoVoz = false;
     window._gjModoTexto = true;
-    gnCommandSource = 'text';
-    gnSessionHistory.push({role:'user',content:texto});
-    gnTextTargetEl = resp;
     if(gnMediaRecorder && gnMediaRecorder.state !== 'inactive'){ gnMediaRecorder.stop(); }
     if(gnStream){ gnStream.getTracks().forEach(t=>t.stop()); gnStream=null; }
     gnListening = false;
-    if(typeof gnExecutar === 'function') gnExecutar(texto);
+    try{
+      const res = await fetch(GN_WEBHOOK, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({comando: texto, historico: gnSessionHistory.slice(-10)})
+      });
+      const data = await res.json();
+      const resposta = (data.resposta||data.response||'').replace(/\*+/g,'').replace(/#+/g,'').replace(/_{2,}/g,'').trim() || 'Não consegui processar o comando.';
+      gnSessionHistory.push({role:'user', content:texto});
+      gnSessionHistory.push({role:'assistant', content:resposta});
+      if(typeof window._gjAddMessage === 'function') window._gjAddMessage('bot', resposta);
+    }catch(err){
+      console.error('globalJarvisSend erro:', err);
+      if(typeof window._gjAddMessage === 'function') window._gjAddMessage('bot', 'Erro ao processar sua mensagem.');
+    }finally{
+      window._gjModoTexto = false;
+    }
   };
 
   function showGJ(){ const el=document.getElementById('globalJarvis'); if(el) el.style.display='block'; if(typeof gnStartContinuous==='function'&&!gnContinuousMode) gnStartContinuous(); }
