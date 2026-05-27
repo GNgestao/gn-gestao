@@ -7839,11 +7839,38 @@ async function gnExecutar(comando){
   else if(cmd.includes('reparo')||cmd.includes('servi')) gnActivateNode('reparo');
   else if(cmd.includes('plano')) gnActivateNode('plano');
 
+  // Pesquisa dentro de sites por voz/texto
+  const _pesqGatilhos = ['pesquisar ','pesquisa ','buscar ','busca ','procurar ','procura ','search '];
+  const _pesqSites = [
+    { chaves: ['no youtube','no yt'], urlBase: 'https://youtube.com/results?search_query=', nome: 'YouTube' },
+    { chaves: ['no google'], urlBase: 'https://google.com/search?q=', nome: 'Google' },
+    { chaves: ['no spotify'], urlBase: 'https://open.spotify.com/search/', nome: 'Spotify' },
+    { chaves: ['no maps','no google maps'], urlBase: 'https://google.com/maps/search/', nome: 'Google Maps' }
+  ];
+  const _pesqGatilhoAchado = _pesqGatilhos.find(function(g){ return cmd.includes(g); });
+  if(_pesqGatilhoAchado){
+    const _pesqSiteAchado = _pesqSites.find(function(s){ return s.chaves.some(function(c){ return cmd.includes(c); }); });
+    if(_pesqSiteAchado){
+      const _pesqInicio = cmd.indexOf(_pesqGatilhoAchado) + _pesqGatilhoAchado.length;
+      let _pesqFim = cmd.length;
+      _pesqSiteAchado.chaves.forEach(function(c){ const idx=cmd.indexOf(c); if(idx>_pesqInicio&&idx<_pesqFim) _pesqFim=idx; });
+      const _pesqTermo = comando.substring(_pesqInicio, _pesqFim).trim();
+      if(_pesqTermo.length > 0){
+        window.open(_pesqSiteAchado.urlBase + encodeURIComponent(_pesqTermo), '_blank');
+        const _pesqMsg = 'Pesquisando "' + _pesqTermo + '" no ' + _pesqSiteAchado.nome + ', Chefe.';
+        if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',_pesqMsg); }
+        else if(gnModoVoz){ try{ await gnSpeak(_pesqMsg); }catch(e){} }
+        gnExecutando = false;
+        return;
+      }
+    }
+  }
+
   // Abertura de sites por voz/texto
   const _aberturaGatilhos = ['abre o ','abre ','abrir o ','abrir ','vai para o ','vai para ','acessa o ','acessa ','acessar o ','acessar '];
   if(_aberturaGatilhos.some(function(g){ return cmd.includes(g); })){
     const _siteMapa = [
-      { chaves: ['tk mobile','tke mobile','mobile'], url: 'https://mobileapp.tkelevator.com', nome: 'TK Mobile' },
+      { chaves: ['tk mobile','tke mobile','mobile'], url: 'https://mobile.br.tkelevator.com/TKEMobile/Default.aspx', nome: 'TK Mobile' },
       { chaves: ['gmail','email','e-mail'], url: 'https://mail.google.com', nome: 'Gmail' },
       { chaves: ['youtube'], url: 'https://youtube.com', nome: 'YouTube' },
       { chaves: ['whatsapp'], url: 'https://web.whatsapp.com', nome: 'WhatsApp' },
@@ -9115,10 +9142,34 @@ function salvarDocPDF(tipo){
     if(gnStream){ gnStream.getTracks().forEach(t=>t.stop()); gnStream=null; }
     gnListening = false;
     const _gjCmd = texto.toLowerCase();
+    const _gjPesqGatilhos = ['pesquisar ','pesquisa ','buscar ','busca ','procurar ','procura ','search '];
+    const _gjPesqSites = [
+      { chaves: ['no youtube','no yt'], urlBase: 'https://youtube.com/results?search_query=', nome: 'YouTube' },
+      { chaves: ['no google'], urlBase: 'https://google.com/search?q=', nome: 'Google' },
+      { chaves: ['no spotify'], urlBase: 'https://open.spotify.com/search/', nome: 'Spotify' },
+      { chaves: ['no maps','no google maps'], urlBase: 'https://google.com/maps/search/', nome: 'Google Maps' }
+    ];
+    const _gjPesqGatilhoAchado = _gjPesqGatilhos.find(function(g){ return _gjCmd.includes(g); });
+    if(_gjPesqGatilhoAchado){
+      const _gjPesqSiteAchado = _gjPesqSites.find(function(s){ return s.chaves.some(function(c){ return _gjCmd.includes(c); }); });
+      if(_gjPesqSiteAchado){
+        const _gjPesqInicio = _gjCmd.indexOf(_gjPesqGatilhoAchado) + _gjPesqGatilhoAchado.length;
+        let _gjPesqFim = _gjCmd.length;
+        _gjPesqSiteAchado.chaves.forEach(function(c){ const idx=_gjCmd.indexOf(c); if(idx>_gjPesqInicio&&idx<_gjPesqFim) _gjPesqFim=idx; });
+        const _gjPesqTermo = texto.substring(_gjPesqInicio, _gjPesqFim).trim();
+        if(_gjPesqTermo.length > 0){
+          window.open(_gjPesqSiteAchado.urlBase + encodeURIComponent(_gjPesqTermo), '_blank');
+          const _gjPesqMsg = 'Pesquisando "' + _gjPesqTermo + '" no ' + _gjPesqSiteAchado.nome + ', Chefe.';
+          if(typeof window._gjAddMessage === 'function') window._gjAddMessage('bot', _gjPesqMsg);
+          window._gjModoTexto = false;
+          return;
+        }
+      }
+    }
     const _gjGatilhos = ['abre o ','abre ','abrir o ','abrir ','vai para o ','vai para ','acessa o ','acessa ','acessar o ','acessar '];
     if(_gjGatilhos.some(function(g){ return _gjCmd.includes(g); })){
       const _gjSiteMapa = [
-        { chaves: ['tk mobile','tke mobile','mobile'], url: 'https://mobileapp.tkelevator.com', nome: 'TK Mobile' },
+        { chaves: ['tk mobile','tke mobile','mobile'], url: 'https://mobile.br.tkelevator.com/TKEMobile/Default.aspx', nome: 'TK Mobile' },
         { chaves: ['gmail','email','e-mail'], url: 'https://mail.google.com', nome: 'Gmail' },
         { chaves: ['youtube'], url: 'https://youtube.com', nome: 'YouTube' },
         { chaves: ['whatsapp'], url: 'https://web.whatsapp.com', nome: 'WhatsApp' },
