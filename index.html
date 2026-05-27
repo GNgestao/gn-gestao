@@ -9122,9 +9122,12 @@ function salvarDocPDF(tipo){
       });
       const data = await res.json();
       const resposta = (data.resposta||data.response||'').replace(/\*+/g,'').replace(/#+/g,'').replace(/_{2,}/g,'').trim() || 'Não consegui processar o comando.';
+      const urlMatch = resposta.match(/<url>(.*?)<\/url>/);
+      if(urlMatch) window.open(urlMatch[1], '_blank');
+      const textoLimpo = resposta.replace(/<function_calls>[\s\S]*?<\/function_calls>/g, '').trim() || 'Não consegui processar o comando.';
       gnSessionHistory.push({role:'user', content:texto});
-      gnSessionHistory.push({role:'assistant', content:resposta});
-      if(typeof window._gjAddMessage === 'function') window._gjAddMessage('bot', resposta);
+      gnSessionHistory.push({role:'assistant', content:textoLimpo});
+      if(typeof window._gjAddMessage === 'function') window._gjAddMessage('bot', textoLimpo);
     }catch(err){
       console.error('globalJarvisSend erro:', err);
       if(typeof window._gjAddMessage === 'function') window._gjAddMessage('bot', 'Erro ao processar sua mensagem.');
