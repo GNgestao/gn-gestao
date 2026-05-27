@@ -821,10 +821,16 @@ tr:hover td{background:rgba(91,33,182,.05)}
 @keyframes hubJarvisPulse{0%,100%{box-shadow:0 0 30px rgba(255,98,0,.35),0 0 60px rgba(124,58,237,.15);transform:scale(1)}50%{box-shadow:0 0 55px rgba(255,98,0,.6),0 0 100px rgba(124,58,237,.25);transform:scale(1.05)}}
 #globalJarvis{display:none;position:fixed;bottom:2rem;right:2rem;z-index:10001;cursor:grab;user-select:none;pointer-events:none}
 #globalJarvisCore{width:80px;height:80px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#4c1d95,#1a0535);border:2.5px solid #FF6200;display:flex;align-items:center;justify-content:center;animation:hubJarvisPulse 2.2s ease-in-out infinite;font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;color:#fff;letter-spacing:.05em;pointer-events:auto}
-#globalJarvisChat{display:none;position:fixed;z-index:10002;background:#1a0535;border:1px solid rgba(255,98,0,.4);border-radius:16px;padding:1rem;width:290px;box-shadow:0 8px 32px rgba(0,0,0,.6);pointer-events:auto}
-#globalJarvisChatResp{min-height:2.5rem;font-family:'DM Sans',sans-serif;font-size:.82rem;color:rgba(196,181,253,.85);margin-bottom:.75rem;line-height:1.55;max-height:140px;overflow-y:auto;white-space:pre-wrap}
-#globalJarvisChatInput{width:100%;box-sizing:border-box;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:.45rem .75rem;color:#fff;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;margin-bottom:.5rem}
-#globalJarvisChatInput::placeholder{color:rgba(196,181,253,.35)}
+#globalJarvisChat{display:none;position:fixed;z-index:10002;background:#1a0535;border:1px solid rgba(255,98,0,.4);border-radius:16px;padding:1rem;width:380px;box-shadow:0 8px 32px rgba(0,0,0,.6);pointer-events:auto}
+#globalJarvisChatHistory{min-height:300px;max-height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:.5rem;margin-bottom:.75rem;padding:.25rem 0;scrollbar-width:thin;scrollbar-color:rgba(124,58,237,.4) transparent}
+#globalJarvisChatHistory::-webkit-scrollbar{width:4px}
+#globalJarvisChatHistory::-webkit-scrollbar-thumb{background:rgba(124,58,237,.4);border-radius:2px}
+.gj-msg{max-width:82%;padding:.45rem .75rem;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:.82rem;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.gj-msg-user{align-self:flex-end;background:rgba(255,98,0,.18);border:1px solid rgba(255,98,0,.35);color:#fff;border-bottom-right-radius:3px}
+.gj-msg-bot{align-self:flex-start;background:rgba(124,58,237,.18);border:1px solid rgba(124,58,237,.35);color:rgba(196,181,253,.9);border-bottom-left-radius:3px}
+#globalJarvisChatResp{display:none}
+#globalJarvisChatInput{width:100%;box-sizing:border-box;background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.45);border-radius:8px;padding:.55rem .75rem;color:#fff;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;margin-bottom:.5rem}
+#globalJarvisChatInput::placeholder{color:rgba(196,181,253,.45)}
 #globalJarvisSendBtn{width:100%;background:rgba(255,98,0,.2);border:1px solid rgba(255,98,0,.4);color:#FF6200;border-radius:8px;padding:.45rem;font-size:.82rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s}
 #globalJarvisSendBtn:hover{background:rgba(255,98,0,.35)}
 
@@ -3276,6 +3282,7 @@ function forgotPassword(){
 function doLogout(){
   localStorage.removeItem('repUsuario');
   localStorage.removeItem('repTelaAtiva');
+  localStorage.removeItem('jarvis_chat_history');
   window._dataSubscribed = false;
   window._currentUser = null;
   var fb = window._fb;
@@ -8924,6 +8931,8 @@ function salvarDocPDF(tipo){
 </div>
 <div id="globalJarvisChat" style="position:relative">
   <button onclick="document.getElementById('globalJarvisChat').style.display='none'" style="position:absolute;top:8px;right:8px;background:transparent;border:none;color:#fff;cursor:pointer;font-size:1.2rem;line-height:1;padding:0">×</button>
+  <div style="font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;color:rgba(255,98,0,.55);letter-spacing:.1em;margin-bottom:.5rem;padding-bottom:.35rem;border-bottom:1px solid rgba(255,98,0,.15)">JARVIS</div>
+  <div id="globalJarvisChatHistory"></div>
   <div id="globalJarvisChatResp"></div>
   <input id="globalJarvisChatInput" type="text" placeholder="Fale com o Jarvis..." autocomplete="off">
   <button id="globalJarvisSendBtn" onclick="globalJarvisSend()">Enviar</button>
@@ -8980,22 +8989,66 @@ function salvarDocPDF(tipo){
 
     function positionChat(){
       const rect = el.getBoundingClientRect();
-      let cx = rect.left + rect.width/2 - 145;
-      let cy = rect.top - 242;
-      cx = Math.max(8, Math.min(window.innerWidth - 298, cx));
+      let cx = rect.left + rect.width/2 - 190;
+      let cy = rect.top - 540;
+      cx = Math.max(8, Math.min(window.innerWidth - 388, cx));
       if(cy < 8) cy = rect.bottom + 12;
-      cy = Math.max(8, Math.min(window.innerHeight - 250, cy));
+      cy = Math.max(8, Math.min(window.innerHeight - 550, cy));
       chat.style.position = 'fixed';
       chat.style.left = cx + 'px';
       chat.style.top  = cy + 'px';
     }
+
+    function _gjRenderMsg(container, role, text){
+      const div = document.createElement('div');
+      div.className = 'gj-msg ' + (role === 'user' ? 'gj-msg-user' : 'gj-msg-bot');
+      div.textContent = text;
+      container.appendChild(div);
+    }
+
+    function _gjScroll(){
+      const h = document.getElementById('globalJarvisChatHistory');
+      if(h) h.scrollTop = h.scrollHeight;
+    }
+
+    function _gjLoadHistory(){
+      const h = document.getElementById('globalJarvisChatHistory');
+      if(!h) return;
+      h.innerHTML = '';
+      try {
+        const saved = JSON.parse(localStorage.getItem('jarvis_chat_history') || '[]');
+        saved.forEach(function(m){ _gjRenderMsg(h, m.role, m.text); });
+      } catch(e){}
+      setTimeout(_gjScroll, 50);
+    }
+
+    window._gjAddMessage = function(role, text){
+      const h = document.getElementById('globalJarvisChatHistory');
+      if(!h) return;
+      _gjRenderMsg(h, role, text);
+      _gjScroll();
+      try {
+        const saved = JSON.parse(localStorage.getItem('jarvis_chat_history') || '[]');
+        saved.push({role: role, text: text});
+        localStorage.setItem('jarvis_chat_history', JSON.stringify(saved));
+      } catch(e){}
+    };
+
+    // Intercept bot responses written to hidden resp element
+    new MutationObserver(function(){
+      const text = resp.textContent.trim();
+      if(text && text !== '...'){
+        window._gjAddMessage('bot', text);
+        resp.textContent = '';
+      }
+    }).observe(resp, {childList: true, characterData: true, subtree: true});
 
     document.getElementById('globalJarvisCore').addEventListener('click', function(){
       if(moved) return;
       if(chat.style.display === 'none'){
         positionChat();
         chat.style.display = 'block';
-        resp.textContent = '';
+        _gjLoadHistory();
         input.focus();
       } else {
         chat.style.display = 'none';
@@ -9013,6 +9066,7 @@ function salvarDocPDF(tipo){
     const texto = (input.value||'').trim();
     if(!texto) return;
     input.value = '';
+    if(typeof window._gjAddMessage === 'function') window._gjAddMessage('user', texto);
     resp.textContent = '...';
     gnModoVoz = false;
     gnCommandSource = 'text';
