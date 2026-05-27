@@ -8819,8 +8819,8 @@ async function enviarCartaAssinatura(){
   if(btn){ btn.disabled = true; btn.textContent = 'Enviando...'; }
   const cartaCliente = document.getElementById('docCartaCliente').value.trim();
   const msg1 = 'Enviando carta para assinatura, chefe.';
-  if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
-    try{ await gnSpeak(msg1); }catch(e){}
+  if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',msg1); }
+  else if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function') try{ await gnSpeak(msg1); }catch(e){}
   try{
     const res = await fetch(GN_ASSINATURA_WEBHOOK, {
       method: 'POST',
@@ -8840,20 +8840,20 @@ async function enviarCartaAssinatura(){
     if(data.gabrielLink){
       window.open(data.gabrielLink, '_blank');
       const msg2 = 'Documento enviado, chefe. Abrindo link de assinatura para você assinar.';
-      if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
-        try{ await gnSpeak(msg2); }catch(e){}
+      if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',msg2); }
+      else if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function') try{ await gnSpeak(msg2); }catch(e){}
       else alert(msg2);
     } else {
       const msg2 = 'Documento enviado com sucesso, senhor. Verifique seu email para assinar.';
-      if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
-        try{ await gnSpeak(msg2); }catch(e){}
+      if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',msg2); }
+      else if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function') try{ await gnSpeak(msg2); }catch(e){}
       else alert(msg2);
     }
   } catch(err){
     console.error('enviarCartaAssinatura erro:', err);
     const msgErr = 'Erro ao enviar para assinatura, chefe. Verifique o fluxo n8n.';
-    if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
-      try{ await gnSpeak(msgErr); }catch(e){}
+    if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',msgErr); }
+    else if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function') try{ await gnSpeak(msgErr); }catch(e){}
     else alert('Erro ao enviar para assinatura.');
   }
   if(btn){ btn.disabled = false; btn.textContent = '✍️ Enviar para Assinatura'; }
@@ -8872,8 +8872,8 @@ async function enviarAtaAssinatura(){
   const signatarios = partsGlobal.map(function(p){ return { nome: p.nome, email: p.email, action: 'sign' }; })
     .concat([{ nome: 'Gabriel Nascimento', email: 'gabriel.nascimento@tkelevator.com', action: 'sign' }]);
   const msg1 = 'Enviando ata para assinatura, chefe.';
-  if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
-    try{ await gnSpeak(msg1); }catch(e){}
+  if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',msg1); }
+  else if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function') try{ await gnSpeak(msg1); }catch(e){}
   try{
     const res = await fetch(GN_ASSINATURA_WEBHOOK, {
       method: 'POST',
@@ -8888,20 +8888,20 @@ async function enviarAtaAssinatura(){
     if(data.gabrielLink){
       window.open(data.gabrielLink, '_blank');
       const msg2 = 'Documento enviado, chefe. Abrindo link de assinatura para você assinar.';
-      if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
-        try{ await gnSpeak(msg2); }catch(e){}
+      if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',msg2); }
+      else if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function') try{ await gnSpeak(msg2); }catch(e){}
       else alert(msg2);
     } else {
       const msg2 = 'Documento enviado com sucesso, senhor. Verifique seu email para assinar.';
-      if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
-        try{ await gnSpeak(msg2); }catch(e){}
+      if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',msg2); }
+      else if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function') try{ await gnSpeak(msg2); }catch(e){}
       else alert(msg2);
     }
   } catch(err){
     console.error('enviarAtaAssinatura erro:', err);
     const msgErr = 'Erro ao enviar para assinatura, chefe. Verifique o fluxo n8n.';
-    if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function')
-      try{ await gnSpeak(msgErr); }catch(e){}
+    if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',msgErr); }
+    else if(typeof gnModoVoz !== 'undefined' && gnModoVoz && typeof gnSpeak === 'function') try{ await gnSpeak(msgErr); }catch(e){}
     else alert('Erro ao enviar para assinatura.');
   }
   if(btn){ btn.disabled = false; btn.textContent = '✍️ Enviar para Assinatura'; }
