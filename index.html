@@ -7425,7 +7425,7 @@ async function gnListen(){
   console.log('Loop iniciado - aguardando voz...');
 
   try {
-    gnStream = await navigator.mediaDevices.getUserMedia({audio: true});
+    gnStream = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: true, sampleRate: 16000}});
     gnAudioChunks = [];
     gnMediaRecorder = new MediaRecorder(gnStream);
 
@@ -8046,10 +8046,11 @@ async function gnSpeak(texto){
       if(window._gnAudioCtx.state === 'suspended'){
         await window._gnAudioCtx.resume();
       }
-      const bufferCopy = arrayBuffer.slice(0);
-      if(arrayBuffer.byteLength > 500000){
-        console.warn('TTS buffer muito grande (' + arrayBuffer.byteLength + ' bytes) — pulando reprodução');
-      } else {
+      const bufferCopy = (arrayBuffer.byteLength > 1500000 ? arrayBuffer.slice(0, 1500000) : arrayBuffer.slice(0));
+      if(arrayBuffer.byteLength > 1500000){
+        console.warn('TTS buffer muito grande (' + arrayBuffer.byteLength + ' bytes) — truncando para 1.5MB');
+      }
+      {
         await Promise.race([
           new Promise((resolve) => {
             window._gnAudioCtx.decodeAudioData(bufferCopy, (decoded) => {
