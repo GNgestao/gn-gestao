@@ -7900,7 +7900,7 @@ async function gnExecutar(comando){
   gnExecutando = true;
   gnListening = false;
   if(gnRecognition){ try{ gnRecognition.abort(); }catch(e){} gnRecognition=null; }
-  document.getElementById('gnCore').classList.add('listening');
+  var _gnCoreEl = document.getElementById('gnCore'); if(_gnCoreEl) _gnCoreEl.classList.add('listening');
   gnSetStatus('Processando...','listening');
   gnSetBars('active');
   gnDeactivateNodes();
@@ -7971,7 +7971,7 @@ async function gnExecutar(comando){
     const resposta = (data.resposta||data.response||'').replace(/\*+/g,'').replace(/#+/g,'').replace(/_{2,}/g,'').trim() || 'Não consegui processar o comando.';
     gnSessionHistory.push({role:'user',content:comando});
     gnSessionHistory.push({role:'assistant',content:resposta});
-    const respEl = document.getElementById('gnResponse');
+    const respEl = document.getElementById('gnResponse') || document.getElementById('globalJarvisChatResp');
     if(respEl){ respEl.textContent=resposta; respEl.style.display='none'; }
     if(gnCommandSource === 'text'){
       gnCommandSource = 'voice';
@@ -9626,6 +9626,11 @@ async function cipaEnviarAssinatura(){
         window._gjModoTexto = false;
         return;
       }
+    }
+    if(typeof gnExecutar === 'function'){
+      await gnExecutar(texto);
+      window._gjModoTexto = false;
+      return;
     }
     try{
       const res = await fetch(GN_WEBHOOK, {
