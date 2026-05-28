@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>GN Gestão Zona Vip</title>
+<title>GN Gestão</title>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -837,6 +837,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 /* ── DOCUMENTAÇÃO ── */
 #screenDocumentacao{display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto;isolation:isolate}
 .doc-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;background:rgba(50,29,101,.85);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2;backdrop-filter:blur(8px)}
+.cipa-header{background:linear-gradient(135deg,#321d65 0%,#5B21B6 40%,#c44a00 75%,#FF6200 100%);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,98,0,.2)}
 .doc-title{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;color:var(--white)}
 .doc-title span{color:#FF6200}
 .doc-body{padding:2rem 1.5rem;max-width:860px;margin:0 auto}
@@ -892,7 +893,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 <div id="loginScreen" style="display:none">
   <div class="login-box">
     <div class="login-logo">GN <span>Gestão</span></div>
-    <div class="login-sub" style="color:#FF6200;letter-spacing:.12em">✦ Zona Vip ✦</div>
+    <div class="login-sub" style="color:#FF6200;letter-spacing:.12em">✦ GN Gestão ✦</div>
     <div class="login-tabs">
       <button class="login-tab active" id="tabLogin" onclick="switchLoginTab('login')">Entrar</button>
       <button class="login-tab" id="tabRegister" onclick="switchLoginTab('register')">Cadastrar</button>
@@ -912,11 +913,11 @@ tr:hover td{background:rgba(91,33,182,.05)}
 
 <!-- APP SCREEN -->
 
-<!-- HUB ZONA VIP -->
+<!-- HUB -->
 <div id="hubScreen">
   <canvas id="hubCanvas" style="position:absolute;inset:0;width:100%;height:100%;z-index:1"></canvas>
   <div id="hubOverlay" style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh">
-    <div style="display:none;font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.25em;color:rgba(196,181,253,.35);text-transform:uppercase;margin-bottom:2rem">GN Gestão — Zona Vip</div>
+    <div style="display:none;font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.25em;color:rgba(196,181,253,.35);text-transform:uppercase;margin-bottom:2rem">GN Gestão</div>
     <div id="hubUserDisplay" style="display:none"><span id="hubRoleBadge2"></span><span id="hubUserName2"></span></div>
     <div style="display:none;font-family:'DM Sans',sans-serif;font-size:.7rem;color:rgba(196,181,253,.25);margin-top:3rem;letter-spacing:.08em">Clique em qualquer módulo para acessar</div>
     <div style="position:absolute;bottom:2rem;font-family:'DM Sans',sans-serif;font-size:.72rem;color:rgba(196,181,253,.3);cursor:pointer;letter-spacing:.08em;text-transform:uppercase" onclick="hubLogout()">⬅ Sair</div>
@@ -928,7 +929,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 
 <header>
   <div style="display:flex;align-items:center;gap:1rem">
-    <button onclick="backToHub()" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background .2s;white-space:nowrap" title="Voltar ao Zona Vip">⬅ Zona Vip</button>
+    <button onclick="backToHub()" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background .2s;white-space:nowrap">⬅ GN Gestão</button>
     <div class="logo">Manutenção <span>Preditiva</span> <span style="font-weight:400;font-size:.85rem;color:var(--muted);margin-left:.5rem">/ GN Gestão</span></div>
   </div>
   <div style="display:flex;align-items:center;gap:.75rem">
@@ -946,7 +947,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 <!-- MODULE HEADER (Plano de Ação, Reparo, etc.) -->
 <div id="moduleHeader" style="display:none;background:linear-gradient(135deg,#321d65 0%,#5B21B6 40%,#c44a00 75%,#FF6200 100%);padding:1.1rem 2rem;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,98,0,.2)">
   <div style="display:flex;align-items:center;gap:1rem">
-    <button onclick="planoGoBack()" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap">⬅ Zona Vip</button>
+    <button onclick="planoGoBack()" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap">⬅ GN Gestão</button>
     <div class="logo" id="moduleHeaderTitle">Plano de <span>Ação</span> <span style="font-weight:400;font-size:.85rem;color:var(--muted);margin-left:.5rem">/ GN Gestão</span></div>
   </div>
   <div style="display:flex;align-items:center;gap:.75rem">
@@ -2691,7 +2692,7 @@ function exportPDF(){
     +'@media print{body{padding:1rem}}'
     +'</style></head><body>'
     +'<div style="background:linear-gradient(135deg,#321d65 0%,#5B21B6 50%,#FF6200 100%);padding:.75rem 1.25rem;border-radius:8px;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center">'
-    +'<div><h1 style="color:#fff;font-size:1.2rem;font-weight:900;margin:0;font-family:Arial,sans-serif">GN Gestão <span style="color:#FF6200">Zona Vip</span></h1>'
+    +'<div><h1 style="color:#fff;font-size:1.2rem;font-weight:900;margin:0;font-family:Arial,sans-serif">GN Gestão</h1>'
     +'<div style="color:rgba(255,255,255,.8);font-size:.78rem;margin-top:.2rem">'+client.name+(equipFilter?' · Equip. '+equipFilter:'')+'</div></div>'
     +'<div style="font-size:.75rem;color:rgba(255,255,255,.7)">'+meta+'</div></div>'
     +'<div class="summary-row">'
@@ -2713,7 +2714,7 @@ function exportPDF(){
     +'</tr></thead>'
     +'<tbody>'+rows+'</tbody>'
     +'</table>'
-    +'<div class="footer">GN Gestão Zona Vip · Manutenção Preditiva de Elevadores</div>'
+    +'<div class="footer">GN Gestão · Manutenção Preditiva de Elevadores</div>'
     +'</body></html>';
 
   // Download as HTML then print
@@ -4890,7 +4891,7 @@ function planoGoBack(){
   if(detail && detail.classList.contains('visible')){
     showList();
     var backBtn = document.getElementById('planoBackBtn');
-    if(backBtn) backBtn.textContent = '⬅ Zona Vip';
+    if(backBtn) backBtn.textContent = '⬅ GN Gestão';
   } else {
     backToModule();
   }
@@ -6263,7 +6264,7 @@ function repLoadCarta(){
   preview.innerHTML = '<div class="carta-preview">'
     +'<div class="carta-header">'
     +'<div><div class="carta-logo">TKE</div><div style="font-size:.78rem;color:#555;margin-top:.2rem">TK Elevadores</div></div>'
-    +'<div style="text-align:right;font-size:.78rem;color:#555">Recife, '+hoje+'<br>GN Gestão Zona Vip</div>'
+    +'<div style="text-align:right;font-size:.78rem;color:#555">Recife, '+hoje+'</div>'
     +'</div>'
     +'<div class="carta-title">CARTA DE CONCLUSÃO DE SERVIÇO</div>'
     +'<div class="carta-field"><label>Cliente / Edifício</label><p>'+s.cliente+'</p></div>'
@@ -6574,7 +6575,7 @@ function applyRecImport(){
 <!-- HEADER STICKY DO MÓDULO PLANO -->
 <div style="background:linear-gradient(135deg,#321d65 0%,#5B21B6 40%,#c44a00 75%,#FF6200 100%);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,98,0,.2)">
   <div style="display:flex;align-items:center;gap:1rem">
-    <button onclick="planoGoBack()" id="planoBackBtn" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;transition:background .2s">⬅ Zona Vip</button>
+    <button onclick="planoGoBack()" id="planoBackBtn" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;transition:background .2s">⬅ GN Gestão</button>
     <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;letter-spacing:-.01em">Plano de <span style="color:#FF6200">Ação</span> <span style="font-weight:400;font-size:.82rem;color:rgba(196,181,253,.6);margin-left:.4rem">/ GN Gestão</span></div>
   </div>
   <div style="display:flex;align-items:center;gap:.5rem">
@@ -6901,7 +6902,7 @@ function applyRecImport(){
 <div id="screenReconhece" style="display:none">
   <div class="rec-header">
     <div style="display:flex;align-items:center;gap:1rem">
-      <button onclick="backFromReconhece()" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer">⬅ Zona Vip</button>
+      <button onclick="backFromReconhece()" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer">⬅ GN Gestão</button>
       <div class="rec-title">🏆 Reconhece<span>+</span></div>
     </div>
     <div style="font-size:.78rem;color:rgba(245,240,255,.6)" id="recUserInfo"></div>
@@ -6984,7 +6985,7 @@ function applyRecImport(){
 <div id="screenReparo" style="display:none">
   <div class="rep-header">
     <div style="display:flex;align-items:center;gap:1rem">
-      <button onclick="backFromReparo()" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer">⬅ Zona Vip</button>
+      <button onclick="backFromReparo()" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer">⬅ GN Gestão</button>
       <div class="rep-title">🔧 Reparo <span>Subcontratado</span></div>
     </div>
     <div style="display:flex;gap:.5rem">
@@ -7160,9 +7161,9 @@ function applyRecImport(){
 
 <div id="screenGN" style="display:none">
   <canvas id="gnCanvas"></canvas>
-  <button class="gn-back-btn" onclick="backFromGN()">⬅ Zona Vip</button>
+  <button class="gn-back-btn" onclick="backFromGN()">⬅ GN Gestão</button>
   <div id="gnUI">
-    <div id="gnHeader">Assistente Inteligente — Zona Vip</div>
+    <div id="gnHeader">Assistente Inteligente</div>
     <div id="gnCoreWrap" onclick="gnToggleListen()">
       <div class="gn-orbit"></div>
       <div class="gn-orbit"></div>
@@ -8422,7 +8423,7 @@ async function gnSpeak(texto){
 <div id="screenDocumentacao" style="display:none">
   <div class="doc-header">
     <div style="display:flex;align-items:center;gap:1rem">
-      <button onclick="backFromDocumentacao()" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer">⬅ Zona Vip</button>
+      <button onclick="backFromDocumentacao()" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer">⬅ GN Gestão</button>
       <div class="doc-title">📄 <span>Documentação</span></div>
     </div>
   </div>
@@ -9032,10 +9033,11 @@ function salvarDocPDF(tipo){
 
 <!-- ══ TELA CIPA ══ -->
 <div id="screenCIPA" style="display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto">
-  <div style="background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.08);padding:.75rem 1.25rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:2;backdrop-filter:blur(6px)">
-    <button onclick="backFromCIPA()" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer">⬅ Voltar</button>
-    <div style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;color:#fff">🛡️ <span style="color:#FF6200">Ata CIPA</span></div>
-    <div style="margin-left:auto"><img src="https://gngestao.github.io/gn-gestao/tke_logotipo.png" alt="TK Elevator" style="height:30px;width:auto;opacity:.85"></div>
+  <div class="cipa-header">
+    <div style="display:flex;align-items:center;gap:1rem">
+      <button onclick="backFromCIPA()" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer">⬅ GN Gestão</button>
+      <div style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;color:#fff">🛡️ <span style="color:#FF6200">Ata CIPA</span></div>
+    </div>
   </div>
   <div style="max-width:920px;margin:0 auto;padding:1.25rem 1rem 3rem">
 
