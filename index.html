@@ -819,7 +819,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 .gn-node-pill.active{border-color:#FF6200;background:rgba(255,98,0,.12);color:#FF6200;box-shadow:0 0 10px rgba(255,98,0,.15)}
 #gnHint{margin-top:1rem;font-family:'DM Sans',sans-serif;font-size:.68rem;color:rgba(196,181,253,.3);letter-spacing:.05em;text-align:center}
 @keyframes hubJarvisPulse{0%,100%{box-shadow:0 0 30px rgba(255,98,0,.35),0 0 60px rgba(124,58,237,.15);transform:scale(1)}50%{box-shadow:0 0 55px rgba(255,98,0,.6),0 0 100px rgba(124,58,237,.25);transform:scale(1.05)}}
-#globalJarvis{display:none;position:fixed;bottom:2rem;right:2rem;z-index:10001;cursor:grab;user-select:none;pointer-events:none}
+#globalJarvis{display:none;position:fixed;bottom:2rem;right:2rem;z-index:10001;cursor:grab;user-select:none;pointer-events:auto}
 #globalJarvisCore{width:80px;height:80px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#4c1d95,#1a0535);border:2.5px solid #FF6200;display:flex;align-items:center;justify-content:center;animation:hubJarvisPulse 2.2s ease-in-out infinite;font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;color:#fff;letter-spacing:.05em;pointer-events:auto}
 #globalJarvisChat{display:none;position:fixed;z-index:10002;background:#1a0535;border:1px solid rgba(255,98,0,.4);border-radius:16px;padding:1rem;width:380px;box-shadow:0 8px 32px rgba(0,0,0,.6);pointer-events:auto}
 #globalJarvisChatHistory{min-height:300px;max-height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:.5rem;margin-bottom:.75rem;padding:.25rem 0;scrollbar-width:thin;scrollbar-color:rgba(124,58,237,.4) transparent}
@@ -9640,13 +9640,9 @@ async function cipaEnviarAssinatura(){
 
   // Init after login — show on hub immediately
   const origShow = window.showApp;
-  var _gjInited = false;
   window.showApp = function(){
     if(origShow) origShow();
-    setTimeout(function(){
-      if(!_gjInited){ initGlobalJarvis(); _gjInited = true; }
-      showGJ();
-    }, 1200);
+    setTimeout(function(){ initGlobalJarvis(); showGJ(); }, 1200);
   };
 })();
 </script>
