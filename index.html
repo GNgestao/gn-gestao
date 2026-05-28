@@ -9404,7 +9404,7 @@ async function cipaEnviarAssinatura(){
 (function(){
   function initGlobalJarvis(){
     const role = window._currentUser?.role || 'viewer';
-    if(role !== 'superadmin') return;
+    if(role !== 'superadmin'){ setTimeout(function(){ initGlobalJarvis(); }, 800); return; }
 
     const el    = document.getElementById('globalJarvis');
     const chat  = document.getElementById('globalJarvisChat');
@@ -9618,7 +9618,7 @@ async function cipaEnviarAssinatura(){
     }
   };
 
-  function showGJ(){ const el=document.getElementById('globalJarvis'); if(el) el.style.display='block'; if(typeof gnStartContinuous==='function'&&!gnContinuousMode) gnStartContinuous(); }
+  function showGJ(){ if(!window._currentUser || window._currentUser.role !== 'superadmin') return; const el=document.getElementById('globalJarvis'); if(el) el.style.display='block'; if(typeof gnStartContinuous==='function'&&!gnContinuousMode) gnStartContinuous(); }
   function hideGJ(){ const el=document.getElementById('globalJarvis'); if(el) el.style.display='none'; const c=document.getElementById('globalJarvisChat'); if(c) c.style.display='none'; }
 
   // Wrap enter functions → show global Jarvis
@@ -9640,9 +9640,13 @@ async function cipaEnviarAssinatura(){
 
   // Init after login — show on hub immediately
   const origShow = window.showApp;
+  var _gjInited = false;
   window.showApp = function(){
     if(origShow) origShow();
-    setTimeout(function(){ initGlobalJarvis(); showGJ(); }, 1200);
+    setTimeout(function(){
+      if(!_gjInited){ initGlobalJarvis(); _gjInited = true; }
+      showGJ();
+    }, 1200);
   };
 })();
 </script>
