@@ -7565,7 +7565,7 @@ async function gnTranscrever(blob){
       return;
     }
 
-    const temWake = texto.includes('jarvis') || texto.includes('charles') || texto.includes('chaves') || texto.includes('jarves') || texto.includes('jarvi');
+    const temWake = texto.includes('jarvis') || texto.includes('charles') || texto.includes('chaves') || texto.includes('jarves') || texto.includes('jarvi') || texto.includes('javis') || texto.includes('jarvist') || texto.includes('jarvs') || texto.includes('charlis') || texto.includes('jalves') || texto.includes('chalves') || texto.includes('javi');
     if(gnConversationMode){
       const comando = temWake ? texto.replace(/.*jarvis[,\s]*/i,'').trim() : texto;
       if(comando.length > 2){
