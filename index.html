@@ -7472,13 +7472,14 @@ async function gnListen(){
     };
 
     gnMediaRecorder.onstop = async function(){
+      if(window._gnMaxRecTimeout){ clearTimeout(window._gnMaxRecTimeout); window._gnMaxRecTimeout = null; }
       if(!gnContinuousMode) return;
       const blob = new Blob(gnAudioChunks, {type:'audio/webm'});
       gnAudioChunks = [];
       gnListening = false;
 
-      if(blob.size < 5000){
-        console.log('Audio muito curto, ignorando');
+      if(blob.size < 50000){
+        console.log('Audio muito curto ou silêncio (' + blob.size + ' bytes), ignorando');
         gnReiniciar();
         return;
       }
@@ -7488,6 +7489,15 @@ async function gnListen(){
     };
 
     gnMediaRecorder.start(100);
+
+    // Timeout máximo de 30s para evitar acúmulo de áudio em ambientes ruidosos
+    window._gnMaxRecTimeout = setTimeout(function(){
+      if(gnMediaRecorder && gnMediaRecorder.state === 'recording'){
+        console.warn('Timeout máximo de gravação (30s) — parando MediaRecorder');
+        gnMediaRecorder.stop();
+        if(gnStream){ gnStream.getTracks().forEach(t=>t.stop()); gnStream=null; }
+      }
+    }, 30000);
 
   } catch(err) {
     console.error('Erro ao acessar microfone:', err);
@@ -8037,23 +8047,31 @@ async function gnSpeak(texto){
         await window._gnAudioCtx.resume();
       }
       const bufferCopy = arrayBuffer.slice(0);
-      await Promise.race([
-        new Promise((resolve) => {
-          window._gnAudioCtx.decodeAudioData(bufferCopy, (decoded) => {
-            const source = window._gnAudioCtx.createBufferSource();
-            source.buffer = decoded;
-            source.connect(window._gnAudioCtx.destination);
-            window._gnCurrentSource = source;
-            source.onended = () => { window._gnCurrentSource = null; resolve(); };
-            source.start(0);
-            if(window._gnAudioCtx.state === 'suspended') window._gnAudioCtx.resume();
-          }, (err) => {
-            console.error('decodeAudioData erro:', err);
+      if(arrayBuffer.byteLength > 500000){
+        console.warn('TTS buffer muito grande (' + arrayBuffer.byteLength + ' bytes) — pulando reprodução');
+      } else {
+        await Promise.race([
+          new Promise((resolve) => {
+            window._gnAudioCtx.decodeAudioData(bufferCopy, (decoded) => {
+              const source = window._gnAudioCtx.createBufferSource();
+              source.buffer = decoded;
+              source.connect(window._gnAudioCtx.destination);
+              window._gnCurrentSource = source;
+              source.onended = () => { window._gnCurrentSource = null; resolve(); };
+              source.start(0);
+              if(window._gnAudioCtx.state === 'suspended') window._gnAudioCtx.resume();
+            }, (err) => {
+              console.error('decodeAudioData erro:', err);
+              resolve();
+            });
+          }),
+          new Promise(resolve => setTimeout(() => {
+            console.warn('TTS timeout 15s — forçando stop da source');
+            if(window._gnCurrentSource){ try{ window._gnCurrentSource.stop(); }catch(e){} window._gnCurrentSource = null; }
             resolve();
-          });
-        }),
-        new Promise(resolve => setTimeout(resolve, 15000))
-      ]);
+          }, 15000))
+        ]);
+      }
     }
   }catch(err){
     console.error('gnSpeak erro:', err);
