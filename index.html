@@ -9538,6 +9538,22 @@ async function cipaEnviarAssinatura(){
     if(gnStream){ gnStream.getTracks().forEach(t=>t.stop()); gnStream=null; }
     gnListening = false;
     const _gjCmd = texto.toLowerCase();
+    const _gjModulosDirecto = [
+      { chaves: ['plano de ação','plano de acao'], fn: function(){ if(typeof enterPlano==='function') enterPlano(); } },
+      { chaves: ['reconhece+','reconhece'], fn: function(){ if(typeof enterReconhece==='function') enterReconhece(); } },
+      { chaves: ['reparo'], fn: function(){ if(typeof enterReparo==='function') enterReparo(); } },
+      { chaves: ['documentação','documentacao'], fn: function(){ if(typeof enterDocumentacao==='function') enterDocumentacao(); } },
+      { chaves: ['cipa'], fn: function(){ if(typeof enterCIPA==='function') enterCIPA(); } },
+      { chaves: ['manutenção preditiva','preditiva'], fn: function(){ if(typeof enterModule==='function') enterModule('preditiva'); } },
+      { chaves: ['voltar','base','hub','tela principal','menu principal'], fn: function(){ if(typeof gnVoltarHub==='function') gnVoltarHub(); } },
+    ];
+    const _gjDiretoAchado = _gjModulosDirecto.find(function(m){ return m.chaves.some(function(c){ return _gjCmd.includes(c); }); });
+    if(_gjDiretoAchado){
+      _gjDiretoAchado.fn();
+      if(typeof window._gjAddMessage === 'function') window._gjAddMessage('bot', 'Abrindo agora, Chefe.');
+      window._gjModoTexto = false;
+      return;
+    }
     const _gjPesqGatilhos = ['pesquisar ','pesquisa ','buscar ','busca ','procurar ','procura ','search '];
     const _gjPesqSites = [
       { chaves: ['no youtube','no yt'], urlBase: 'https://youtube.com/results?search_query=', nome: 'YouTube' },
@@ -9587,10 +9603,19 @@ async function cipaEnviarAssinatura(){
       let _gjDominio = _gjCmd;
       _gjGatilhos.forEach(function(g){ _gjDominio = _gjDominio.replace(g, ' '); });
       _gjDominio = _gjDominio.replace(/\b(o|a|do|da|site|página|pagina|meu|minha|aba)\b/g, '').trim();
-      const _gjAcaoAchada = Object.keys(gnAcoes).find(function(k){ return _gjDominio.includes(k); });
-      if(_gjAcaoAchada){
-        gnAcoes[_gjAcaoAchada]();
-        if(typeof window._gjAddMessage === 'function') window._gjAddMessage('bot', 'Abrindo ' + _gjAcaoAchada + ', Chefe.');
+      const _gjModulos = [
+        { chaves: ['plano de ação','plano de acao','plano'], fn: function(){ if(typeof enterPlano==='function') enterPlano(); } },
+        { chaves: ['reconhece+','reconhece','desempenho'], fn: function(){ if(typeof enterReconhece==='function') enterReconhece(); } },
+        { chaves: ['reparo','manutenção corretiva'], fn: function(){ if(typeof enterReparo==='function') enterReparo(); } },
+        { chaves: ['documentação','documentacao'], fn: function(){ if(typeof enterDocumentacao==='function') enterDocumentacao(); } },
+        { chaves: ['cipa','ata cipa','ata da cipa'], fn: function(){ if(typeof enterCIPA==='function') enterCIPA(); } },
+        { chaves: ['manutenção preditiva','preditiva','manutenção'], fn: function(){ if(typeof enterModule==='function') enterModule('preditiva'); } },
+        { chaves: ['tela principal','menu principal','voltar','base','hub','início','home'], fn: function(){ if(typeof gnVoltarHub==='function') gnVoltarHub(); } },
+      ];
+      const _gjModuloAchado = _gjModulos.find(function(m){ return m.chaves.some(function(c){ return _gjDominio.includes(c); }); });
+      if(_gjModuloAchado){
+        _gjModuloAchado.fn();
+        if(typeof window._gjAddMessage === 'function') window._gjAddMessage('bot', 'Abrindo agora, Chefe.');
         window._gjModoTexto = false;
         return;
       }
