@@ -3144,6 +3144,13 @@ function showApp(){
   if(_tela === 'hub') {
     if(as) as.style.cssText='display:none!important';
     if(hs){ hs.style.cssText='display:flex!important'; }
+  } else if(_tela === 'cipa') {
+    // Mostra hub apenas se a tela CIPA não estiver visível (evita sobrescrever restore via DOMContentLoaded)
+    var _cipaEl = document.getElementById('screenCIPA');
+    if(!_cipaEl || _cipaEl.style.display !== 'block') {
+      if(as) as.style.cssText='display:none!important';
+      if(hs){ hs.style.cssText='display:flex!important'; }
+    }
   }
   // Se em módulo: não toca em appScreen nem hubScreen para não apagar o módulo ativo
   // Update hub user name
@@ -4557,6 +4564,9 @@ document.addEventListener('DOMContentLoaded', function(){
             break;
           case 'preditiva':
             if(typeof enterModule === 'function') enterModule('preditiva');
+            break;
+          case 'cipa':
+            if(typeof enterCIPA === 'function') enterCIPA();
             break;
           // 'gn' omitido intencionalmente — não restaura Jarvis automaticamente
         }
