@@ -4885,7 +4885,7 @@ function showPlanoScreen(){
       if(nm) nm.textContent = (window._currentUser.name||window._currentUser.email||'').slice(0,14)+'...';
     }
   }
-  document.getElementById('screenPlano').style.display='';
+  document.getElementById('screenPlano').style.display='block';
   document.getElementById('pa-planList').style.display='block';
   var detailEl = document.getElementById('pa-planDetail');
   if(detailEl) detailEl.classList.remove('visible');
