@@ -7877,7 +7877,7 @@ async function gnExecutar(comando){
   }
 
   // Abertura de sites por voz/texto
-  const _aberturaGatilhos = ['abre o ','abre ','abrir o ','abrir ','vai para o ','vai para ','acessa o ','acessa ','acessar o ','acessar '];
+  const _aberturaGatilhos = ['abre o ','abre ','abrir o ','abrir ','vai para o ','vai para ','acessa o ','acessa ','acessar o ','acessar ','quero ver ','me abre ','pode abrir ','poderia abrir ','me mostra ','mostra o '];
   if(_aberturaGatilhos.some(function(g){ return cmd.includes(g); })){
     const _siteMapa = [
       { chaves: ['tk mobile','tke mobile','mobile'], url: 'https://mobile.br.tkelevator.com/TKEMobile/Default.aspx', nome: 'TK Mobile' },
@@ -8067,10 +8067,10 @@ async function gnSpeak(texto){
             });
           }),
           new Promise(resolve => setTimeout(() => {
-            console.warn('TTS timeout 15s — forçando stop da source');
+            console.warn('TTS timeout 25s — forçando stop da source');
             if(window._gnCurrentSource){ try{ window._gnCurrentSource.stop(); }catch(e){} window._gnCurrentSource = null; }
             resolve();
-          }, 15000))
+          }, 25000))
         ]);
       }
     }
@@ -9184,7 +9184,7 @@ function salvarDocPDF(tipo){
         }
       }
     }
-    const _gjGatilhos = ['abre o ','abre ','abrir o ','abrir ','vai para o ','vai para ','acessa o ','acessa ','acessar o ','acessar '];
+    const _gjGatilhos = ['abre o ','abre ','abrir o ','abrir ','vai para o ','vai para ','acessa o ','acessa ','acessar o ','acessar ','quero ver ','me abre ','pode abrir ','poderia abrir ','me mostra ','mostra o '];
     if(_gjGatilhos.some(function(g){ return _gjCmd.includes(g); })){
       const _gjSiteMapa = [
         { chaves: ['tk mobile','tke mobile','mobile'], url: 'https://mobile.br.tkelevator.com/TKEMobile/Default.aspx', nome: 'TK Mobile' },
