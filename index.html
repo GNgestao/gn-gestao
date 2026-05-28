@@ -196,7 +196,7 @@ body.light-mode .search-bar input{background:#F0EEFF;color:#1a0535}
 body.light-mode .elevator-bg{opacity:.08}
 
 /* ── FUNDO SÓLIDO PARA TODOS OS MÓDULOS (evita transparência sobre estrelas) ── */
-#appScreen,#screenReconhece,#screenReparo,#screenDocumentacao{background:#1e1040!important}
+#appScreen,#screenReconhece,#screenReparo,#screenDocumentacao,#screenCIPA{background:#1e1040!important}
 #screenGN{background:#080415!important}
 
 /* ── HUB ZONA VIP ── */
@@ -7257,7 +7257,7 @@ let _ataUltimaPergunta = '';
 function gnVoltarHub(){
   localStorage.setItem('repTelaAtiva', 'hub');
   // Esconde todas as telas de módulo — funciona independente de qual esteja aberta
-  ['screenDocumentacao','screenReconhece','screenReparo','screenPlano','screenGN','appScreen'].forEach(function(id){
+  ['screenDocumentacao','screenCIPA','screenReconhece','screenReparo','screenPlano','screenGN','appScreen'].forEach(function(id){
     var el = document.getElementById(id);
     if(el){ el.style.cssText = ''; el.style.display = 'none'; }
   });
@@ -7289,6 +7289,9 @@ const gnAcoes = {
   'manutenção': () => enterReparo(),
   'plano': () => enterPlano(),
   'documentação': () => { if(typeof enterDocumentacao === 'function') enterDocumentacao(); },
+  'ata da cipa': () => { if(typeof enterCIPA === 'function') enterCIPA(); },
+  'ata cipa': () => { if(typeof enterCIPA === 'function') enterCIPA(); },
+  'cipa': () => { if(typeof enterCIPA === 'function') enterCIPA(); },
   'tela principal': () => gnVoltarHub(),
   'menu principal': () => gnVoltarHub(),
   'central': () => gnVoltarHub(),
@@ -7831,6 +7834,20 @@ async function gnExecutar(comando){
     return;
   }
 
+  // Detecta comando de abertura do módulo CIPA — antes de triggersAta para evitar match em 'nova ata'
+  const triggersCIPA = ['nova ata da cipa','ata cipa','gerar ata cipa','ata da cipa','abrir cipa'];
+  if(triggersCIPA.some(function(t){ return cmdLower.includes(t); })){
+    gnExecutando = true;
+    if(typeof enterCIPA === 'function') enterCIPA();
+    const msgCIPA = 'Abrindo o módulo de Ata da CIPA, Chefe.';
+    gnCurrentResposta = msgCIPA;
+    const elCIPA = document.getElementById('globalJarvisChatResp')||document.getElementById('hubJarvisChatResp');
+    if(elCIPA){ elCIPA.style.display='block'; elCIPA.textContent=msgCIPA; }
+    if(gnModoVoz){ try{ await gnSpeak(msgCIPA); }catch(e){} }
+    gnExecutando = false;
+    return;
+  }
+
   // Detecta comando de criação de ata — inicia fluxo de voz
   const cmdAta = comando.toLowerCase();
   const triggersAta = ['nova ata','gerar ata','criar ata','ata de reunião','ata de reuniao','fazer ata'];
@@ -8191,6 +8208,7 @@ async function gnSpeak(texto){
       {id:'deepgram',     label:'Deepgram',              theta:150, baseY: -8, action:()=>window.open('https://console.deepgram.com','_blank'),                   roles:['superadmin']},
       {id:'plano',        label:'Plano de\nAção',        theta:180, baseY: 30, action:()=>enterPlano(),                                                          roles:['superadmin','admin','viewer']},
       {id:'documentacao', label:'Documentação',          theta:240, baseY:-16, action:()=>enterDocumentacao(),                                                       roles:['superadmin','admin']},
+      {id:'cipa',         label:'CIPA',                  theta:225, baseY: 12, action:()=>enterCIPA(),                                                             roles:['superadmin','admin']},
       {id:'gestaoEquipe', label:'Gestão de\nEquipe',     theta:300, baseY:  8, action:null,                                                                       roles:['superadmin','admin']},
       {id:'github',       label:'GitHub',                theta:210, baseY: 26, action:()=>window.open('https://github.com/GNgestao/gn-gestao','_blank'),           roles:['superadmin']},
       {id:'firebase',     label:'Firebase',              theta:255, baseY:-20, action:()=>window.open('https://console.firebase.google.com','_blank'),             roles:['superadmin']},
@@ -8386,12 +8404,12 @@ async function gnSpeak(texto){
       if(hl){ hl.style.display=''; }
     }
     // Ocultar canvas ao entrar em qualquer módulo
-    ['enterModule','enterReconhece','enterReparo','enterPlano','enterDocumentacao','enterGN'].forEach(function(n){
+    ['enterModule','enterReconhece','enterReparo','enterPlano','enterDocumentacao','enterGN','enterCIPA'].forEach(function(n){
       var o=window[n]; if(!o) return;
       window[n]=function(){ _hideHubCanvas(); o.apply(this,arguments); };
     });
     // Reexibir canvas ao voltar para o hub
-    ['backToHub','backFromReconhece','backFromReparo','backFromDocumentacao','backFromGN','gnVoltarHub','backToModule'].forEach(function(n){
+    ['backToHub','backFromReconhece','backFromReparo','backFromDocumentacao','backFromGN','gnVoltarHub','backToModule','backFromCIPA'].forEach(function(n){
       var o=window[n]; if(!o) return;
       window[n]=function(){ o.apply(this,arguments); setTimeout(_showHubCanvas,50); };
     });
@@ -9012,6 +9030,352 @@ function salvarDocPDF(tipo){
 }
 </script>
 
+<!-- ══ TELA CIPA ══ -->
+<div id="screenCIPA" style="display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto">
+  <div style="background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.08);padding:.75rem 1.25rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:2;backdrop-filter:blur(6px)">
+    <button onclick="backFromCIPA()" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer">⬅ Voltar</button>
+    <div style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;color:#fff">🛡️ <span style="color:#FF6200">Ata CIPA</span></div>
+    <div style="margin-left:auto"><img src="https://gngestao.github.io/gn-gestao/tke_logotipo.png" alt="TK Elevator" style="height:30px;width:auto;opacity:.85"></div>
+  </div>
+  <div style="max-width:920px;margin:0 auto;padding:1.25rem 1rem 3rem">
+
+    <!-- Dados da Reunião -->
+    <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:1.25rem;margin-bottom:1.1rem">
+      <div style="font-family:'Syne',sans-serif;font-size:.75rem;font-weight:700;color:#FF6200;letter-spacing:.12em;margin-bottom:.85rem">DADOS DA REUNIÃO</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;margin-bottom:.6rem">
+        <div><label style="display:block;font-size:.68rem;color:rgba(255,255,255,.4);margin-bottom:.22rem;font-family:'DM Sans',sans-serif">Nº da Reunião</label>
+          <input id="cipaNReuniao" type="number" min="1" placeholder="12" style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);color:#fff;border-radius:7px;padding:.42rem .55rem;font-size:.82rem;font-family:'DM Sans',sans-serif;outline:none"></div>
+        <div><label style="display:block;font-size:.68rem;color:rgba(255,255,255,.4);margin-bottom:.22rem;font-family:'DM Sans',sans-serif">Data</label>
+          <input id="cipaData" type="date" style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);color:#fff;border-radius:7px;padding:.42rem .55rem;font-size:.82rem;font-family:'DM Sans',sans-serif;outline:none"></div>
+        <div><label style="display:block;font-size:.68rem;color:rgba(255,255,255,.4);margin-bottom:.22rem;font-family:'DM Sans',sans-serif">Horário</label>
+          <input id="cipaHorario" type="time" style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);color:#fff;border-radius:7px;padding:.42rem .55rem;font-size:.82rem;font-family:'DM Sans',sans-serif;outline:none"></div>
+        <div><label style="display:block;font-size:.68rem;color:rgba(255,255,255,.4);margin-bottom:.22rem;font-family:'DM Sans',sans-serif">Tipo</label>
+          <select id="cipaTipo" style="width:100%;background:#1a0d3a;border:1px solid rgba(255,255,255,.13);color:#fff;border-radius:7px;padding:.42rem .45rem;font-size:.82rem;font-family:'DM Sans',sans-serif;outline:none">
+            <option>Ordinária</option><option>Extraordinária</option></select></div>
+      </div>
+      <div><label style="display:block;font-size:.68rem;color:rgba(255,255,255,.4);margin-bottom:.22rem;font-family:'DM Sans',sans-serif">Local</label>
+        <input id="cipaLocal" type="text" value="Avenida Conselheiro Aguiar, 196, Bairro Boa Viagem, Recife/PE" style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);color:#fff;border-radius:7px;padding:.42rem .55rem;font-size:.82rem;font-family:'DM Sans',sans-serif;outline:none"></div>
+    </div>
+
+    <!-- Plano de Trabalho -->
+    <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:1.25rem;margin-bottom:1.1rem">
+      <div style="font-family:'Syne',sans-serif;font-size:.75rem;font-weight:700;color:#FF6200;letter-spacing:.12em;margin-bottom:.85rem">PLANO DE TRABALHO</div>
+      <div id="cipaItensContainer"></div>
+      <button onclick="cipaAddItem()" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.3);color:#FF6200;border-radius:7px;padding:.38rem .9rem;font-size:.76rem;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:.4rem">＋ Adicionar Item</button>
+    </div>
+
+    <!-- Participantes -->
+    <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:1.25rem;margin-bottom:1.1rem">
+      <div style="font-family:'Syne',sans-serif;font-size:.75rem;font-weight:700;color:#FF6200;letter-spacing:.12em;margin-bottom:.85rem">PARTICIPANTES</div>
+      <div id="cipaMembrosContainer"></div>
+      <div style="margin-top:.9rem">
+        <div style="font-size:.67rem;color:rgba(255,255,255,.33);margin-bottom:.38rem;font-family:'DM Sans',sans-serif;letter-spacing:.08em">CONVIDADOS</div>
+        <div id="cipaConvidadosContainer"></div>
+        <button onclick="cipaAddConvidado()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);color:rgba(255,255,255,.6);border-radius:7px;padding:.36rem .78rem;font-size:.74rem;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:.32rem">＋ Adicionar Convidado</button>
+      </div>
+    </div>
+
+    <!-- Ações -->
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1.1rem">
+      <button onclick="cipaGerarAta()" style="background:rgba(255,98,0,.18);border:1px solid rgba(255,98,0,.44);color:#FF6200;border-radius:8px;padding:.48rem 1.15rem;font-size:.82rem;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:600">📄 Gerar Ata</button>
+      <button id="cipaPdfBtn" onclick="cipaSalvarPDF()" style="display:none;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.17);color:#fff;border-radius:8px;padding:.48rem 1.15rem;font-size:.82rem;font-family:'DM Sans',sans-serif;cursor:pointer">🖨️ Salvar PDF</button>
+      <button id="cipaAssinarBtn" onclick="cipaEnviarAssinatura()" style="display:none;background:rgba(100,220,120,.1);border:1px solid rgba(100,220,120,.28);color:#7de89a;border-radius:8px;padding:.48rem 1.15rem;font-size:.82rem;font-family:'DM Sans',sans-serif;cursor:pointer">✍️ Enviar para Assinatura</button>
+    </div>
+
+    <!-- Prévia -->
+    <div id="cipaPreviewWrap" style="display:none;margin-bottom:2rem">
+      <div style="font-size:.68rem;color:rgba(255,255,255,.38);font-family:'DM Sans',sans-serif;margin-bottom:.45rem;letter-spacing:.06em">PRÉVIA DA ATA</div>
+      <div id="cipaPreview" style="background:#fff;border-radius:10px;padding:1.5rem;overflow-x:auto"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── MÓDULO CIPA ──
+
+var _cipaMembrosDefault = [
+  { nome:'Gabriel da Silva Nascimento',        cargo:'Presidente CIPA',  email:'gabriel.nascimento@tkelevator.com' },
+  { nome:'Elba Juliana M. Simões',             cargo:'Secretária',        email:'' },
+  { nome:'Uilson Lourenço da Silva',           cargo:'Membro Titular',    email:'' },
+  { nome:'Paulo André Laurentino de Oliveira', cargo:'Membro Titular',    email:'' },
+  { nome:'Mislayne Luanda Freire Pereira',     cargo:'Membro Titular',    email:'' },
+  { nome:'Luiz Paulo da Silva',                cargo:'Membro Titular',    email:'' }
+];
+var _cipaItensDefault = [
+  { id:1, situacao:'Quase acidentes',                  historico:'Myslaine/Uilson/Luiz e Gabriel', prazo:'30/12/2026', responsavel:'Myslaine/Uilson/Luiz/Gabriel', status:'Andamento' },
+  { id:2, situacao:'Iluminação de emergência no DLOG', historico:'Luiz',  prazo:'', responsavel:'Luiz',    status:'Andamento'    },
+  { id:3, situacao:'Organização do pátio',             historico:'CIPA',  prazo:'', responsavel:'CIPA',    status:'Em andamento' },
+  { id:4, situacao:'Resolução de Quase Acidentes',     historico:'CIPA',  prazo:'', responsavel:'CIPA',    status:'Andamento'    },
+  { id:5, situacao:'Campanha mundial de segurança',    historico:'CIPA',  prazo:'', responsavel:'CIPA',    status:'Andamento'    },
+  { id:6, situacao:'Carro de Frota',                   historico:'CIPA',  prazo:'', responsavel:'CIPA',    status:'Andamento'    },
+  { id:7, situacao:'SIPAT',                            historico:'Juliana',prazo:'',responsavel:'Juliana', status:'Andamento'    }
+];
+var _cipaItens = [];
+var _cipaNextId = 8;
+var _cipaDiasEx = ['','primeiro','segundo','terceiro','quarto','quinto','sexto','sétimo','oitavo','nono','décimo','décimo primeiro','décimo segundo','décimo terceiro','décimo quarto','décimo quinto','décimo sexto','décimo sétimo','décimo oitavo','décimo nono','vigésimo','vigésimo primeiro','vigésimo segundo','vigésimo terceiro','vigésimo quarto','vigésimo quinto','vigésimo sexto','vigésimo sétimo','vigésimo oitavo','vigésimo nono','trigésimo','trigésimo primeiro'];
+var _cipaMesesEx = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+
+function _cipaEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function _cipaLoadItens(){
+  try{
+    var saved=JSON.parse(localStorage.getItem('cipa_itens')||'null');
+    if(saved&&saved.length){ _cipaItens=saved; _cipaNextId=Math.max.apply(null,saved.map(function(i){ return i.id||0; }))+1; }
+    else _cipaItens=JSON.parse(JSON.stringify(_cipaItensDefault));
+  }catch(e){ _cipaItens=JSON.parse(JSON.stringify(_cipaItensDefault)); }
+}
+function _cipaSaveItens(){ try{ localStorage.setItem('cipa_itens',JSON.stringify(_cipaItens)); }catch(e){} }
+
+function enterCIPA(){
+  localStorage.setItem('repTelaAtiva','cipa');
+  ['hubScreen','appScreen','screenReconhece','screenPlano','screenReparo','screenGN','screenDocumentacao'].forEach(function(id){
+    var el=document.getElementById(id); if(!el) return;
+    if(id==='hubScreen'||id==='appScreen') el.style.cssText='display:none!important';
+    else{ el.style.cssText=''; el.style.display='none'; }
+  });
+  var sc=document.getElementById('screenCIPA'); if(sc) sc.style.display='block';
+  _cipaLoadItens();
+  _cipaRenderItens();
+  _cipaRenderMembros();
+  document.getElementById('cipaData').value=new Date().toISOString().slice(0,10);
+  document.getElementById('cipaPreviewWrap').style.display='none';
+  document.getElementById('cipaPdfBtn').style.display='none';
+  document.getElementById('cipaAssinarBtn').style.display='none';
+}
+
+function backFromCIPA(){
+  localStorage.setItem('repTelaAtiva','hub');
+  var sc=document.getElementById('screenCIPA'); if(sc) sc.style.display='none';
+  var as=document.getElementById('appScreen'); if(as) as.style.cssText='display:none!important';
+  var hs=document.getElementById('hubScreen'); if(hs) hs.style.cssText='display:flex!important';
+}
+
+var _cipaInStyle='width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:6px;padding:.38rem .52rem;font-size:.77rem;font-family:\'DM Sans\',sans-serif;outline:none';
+var _cipaSelStyle='width:100%;background:#1a0d3a;border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:6px;padding:.38rem .42rem;font-size:.75rem;font-family:\'DM Sans\',sans-serif;outline:none';
+var _cipaTxStyle='width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff;border-radius:6px;padding:.34rem .52rem;font-size:.76rem;font-family:\'DM Sans\',sans-serif;outline:none;resize:vertical';
+var _cipaLbStyle='font-size:.66rem;color:rgba(255,255,255,.34);font-family:\'DM Sans\',sans-serif;margin-bottom:.18rem';
+
+function _cipaRenderItens(){
+  var c=document.getElementById('cipaItensContainer'); if(!c) return;
+  c.innerHTML='';
+  _cipaItens.forEach(function(item){
+    var opts=['Não iniciado','Iniciado','Em andamento','Andamento','Concluído'].map(function(s){
+      return '<option value="'+s+'"'+(item.status===s?' selected':'')+'>'+s+'</option>';
+    }).join('');
+    var row=document.createElement('div');
+    row.dataset.id=item.id;
+    row.style.cssText='background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:.65rem .7rem;margin-bottom:.5rem';
+    row.innerHTML=
+      '<div style="display:grid;grid-template-columns:2fr 95px 1fr 34px;gap:.42rem;margin-bottom:.42rem;align-items:end">'
+        +'<div><div style="'+_cipaLbStyle+'">Situação</div><input class="cipa-situacao" type="text" value="'+_cipaEsc(item.situacao||'')+'" style="'+_cipaInStyle+'"></div>'
+        +'<div><div style="'+_cipaLbStyle+'">Prazo</div><input class="cipa-prazo" type="text" value="'+_cipaEsc(item.prazo||'')+'" placeholder="dd/mm/aaaa" style="'+_cipaInStyle+'"></div>'
+        +'<div><div style="'+_cipaLbStyle+'">Responsável</div><input class="cipa-responsavel" type="text" value="'+_cipaEsc(item.responsavel||'')+'" style="'+_cipaInStyle+'"></div>'
+        +'<button onclick="cipaRemoveItem(this)" style="background:rgba(255,55,55,.1);border:1px solid rgba(255,55,55,.2);color:#ff7575;border-radius:6px;padding:.28rem .42rem;font-size:.8rem;cursor:pointer;align-self:end">🗑</button>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 138px;gap:.42rem;align-items:end;margin-bottom:.42rem">'
+        +'<div><div style="'+_cipaLbStyle+'">Histórico atual</div>'
+          +'<div style="background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.06);border-radius:6px;padding:.32rem .5rem;font-size:.75rem;color:rgba(255,255,255,.48);font-family:\'DM Sans\',sans-serif;min-height:1.75rem;line-height:1.4">'+_cipaEsc(item.historico||'—')+'</div>'
+        +'</div>'
+        +'<div><div style="'+_cipaLbStyle+'">Status</div><select class="cipa-status" style="'+_cipaSelStyle+'">'+opts+'</select></div>'
+      +'</div>'
+      +'<div><div style="font-size:.66rem;color:rgba(255,98,0,.52);font-family:\'DM Sans\',sans-serif;margin-bottom:.18rem">Atualização deste mês → acrescentada ao histórico ao gerar</div>'
+        +'<textarea class="cipa-atualizacao" rows="2" placeholder="Descreva o que aconteceu neste período..." style="'+_cipaTxStyle+'"></textarea>'
+      +'</div>';
+    c.appendChild(row);
+  });
+}
+
+function _cipaRenderMembros(){
+  var c=document.getElementById('cipaMembrosContainer'); if(!c) return;
+  c.innerHTML='';
+  _cipaMembrosDefault.forEach(function(m){
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:.6rem;padding:.42rem .65rem;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;margin-bottom:.32rem;flex-wrap:wrap';
+    row.innerHTML=
+      '<label style="display:flex;align-items:center;gap:.38rem;cursor:pointer;flex:1;min-width:210px">'
+        +'<input type="checkbox" class="cipa-presente" checked style="accent-color:#FF6200;width:15px;height:15px;cursor:pointer">'
+        +'<span style="font-size:.8rem;color:#ddd6ff;font-family:\'DM Sans\',sans-serif">'+_cipaEsc(m.nome)+'</span>'
+        +'<span style="font-size:.67rem;color:rgba(255,255,255,.33);font-family:\'DM Sans\',sans-serif"> — '+_cipaEsc(m.cargo)+'</span>'
+      +'</label>'
+      +'<input type="text" class="cipa-justificativa" placeholder="Justificativa (se ausente)" style="display:none;flex:1;min-width:170px;background:rgba(255,255,255,.07);border:1px solid rgba(255,98,0,.2);color:#fff;border-radius:6px;padding:.33rem .52rem;font-size:.75rem;font-family:\'DM Sans\',sans-serif;outline:none">';
+    var cb=row.querySelector('.cipa-presente'), jt=row.querySelector('.cipa-justificativa');
+    cb.addEventListener('change',function(){ jt.style.display=this.checked?'none':'block'; });
+    c.appendChild(row);
+  });
+}
+
+function cipaRemoveItem(btn){
+  var row=btn.closest('[data-id]'); if(!row) return;
+  var id=parseInt(row.dataset.id);
+  _cipaItens=_cipaItens.filter(function(i){ return i.id!==id; });
+  _cipaSaveItens(); _cipaRenderItens();
+}
+function cipaAddItem(){
+  _cipaItens.push({ id:_cipaNextId++, situacao:'', historico:'', prazo:'', responsavel:'CIPA', status:'Não iniciado' });
+  _cipaSaveItens(); _cipaRenderItens();
+}
+function cipaAddConvidado(){
+  var c=document.getElementById('cipaConvidadosContainer'); if(!c) return;
+  var row=document.createElement('div');
+  row.style.cssText='display:flex;gap:.42rem;margin-bottom:.32rem;align-items:center';
+  row.innerHTML='<input type="text" class="cipa-conv-nome" placeholder="Nome do convidado" style="flex:2;'+_cipaInStyle+'">'
+    +'<input type="text" class="cipa-conv-funcao" placeholder="Função/Empresa" style="flex:1;'+_cipaInStyle+'">'
+    +'<button onclick="this.parentElement.remove()" style="background:rgba(255,55,55,.1);border:1px solid rgba(255,55,55,.2);color:#ff7575;border-radius:6px;padding:.28rem .42rem;font-size:.8rem;cursor:pointer">✕</button>';
+  c.appendChild(row);
+}
+
+function _cipaColetarItens(){
+  var c=document.getElementById('cipaItensContainer'); if(!c) return _cipaItens;
+  var updated=[];
+  c.querySelectorAll('[data-id]').forEach(function(row){
+    var id=parseInt(row.dataset.id);
+    var orig=_cipaItens.find(function(i){ return i.id===id; })||{};
+    var situacao=((row.querySelector('.cipa-situacao')||{}).value||'').trim()||orig.situacao||'';
+    var prazo=((row.querySelector('.cipa-prazo')||{}).value||'').trim()||orig.prazo||'';
+    var responsavel=((row.querySelector('.cipa-responsavel')||{}).value||'').trim()||orig.responsavel||'';
+    var status=(row.querySelector('.cipa-status')||{}).value||orig.status||'';
+    var atualizacao=((row.querySelector('.cipa-atualizacao')||{}).value||'').trim();
+    var historico=orig.historico||'';
+    if(atualizacao){ var mes=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'}); historico=historico?(historico+' | '+mes+': '+atualizacao):atualizacao; }
+    updated.push({ id:id, situacao:situacao, prazo:prazo, responsavel:responsavel, status:status, historico:historico });
+  });
+  return updated;
+}
+function _cipaColetarMembros(){
+  var c=document.getElementById('cipaMembrosContainer'); if(!c) return [];
+  return _cipaMembrosDefault.map(function(m,i){
+    var row=c.children[i]; if(!row) return { nome:m.nome, cargo:m.cargo, email:m.email||'', presente:true, justificativa:'' };
+    var cb=row.querySelector('.cipa-presente'), jt=row.querySelector('.cipa-justificativa');
+    return { nome:m.nome, cargo:m.cargo, email:m.email||'', presente:cb?cb.checked:true, justificativa:jt?jt.value:'' };
+  });
+}
+function _cipaColetarConvidados(){
+  var c=document.getElementById('cipaConvidadosContainer'); if(!c) return [];
+  return Array.from(c.children).map(function(row){
+    return { nome:((row.querySelector('.cipa-conv-nome')||{}).value||'').trim(), funcao:((row.querySelector('.cipa-conv-funcao')||{}).value||'').trim() };
+  }).filter(function(cv){ return cv.nome; });
+}
+
+function _buildCipaAtaHTML(d,preview){
+  var esc=function(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+  var stC=preview?'background:#fff;color:#111;padding:1.5rem 2rem;font-family:Arial,sans-serif;font-size:.84rem;line-height:1.7':'font-family:Arial,sans-serif;font-size:11pt;color:#111;line-height:1.8';
+  var th='background:#b00;color:#fff;padding:.38rem .52rem;font-size:.77rem;border:1px solid #999;text-align:center;font-weight:700';
+  var td='padding:.38rem .52rem;font-size:.77rem;border:1px solid #ccc;vertical-align:top';
+  var tdc='padding:.38rem .52rem;font-size:.77rem;border:1px solid #ccc;vertical-align:top;text-align:center';
+  function sym(s){ if(!s||s==='Não iniciado') return '○'; if(s==='Iniciado') return '◑'; if(s==='Concluído') return '●'; return '◕'; }
+  var dt=d.data?new Date(d.data+'T12:00:00'):new Date();
+  var plano=(d.itens||[]).map(function(it,i){
+    return '<tr><td style="'+tdc+'">'+(i+1)+'</td><td style="'+td+'">'+esc(it.situacao)+'</td><td style="'+td+'">'+esc(it.historico)+'</td>'
+      +'<td style="'+tdc+'">'+esc(it.prazo||'—')+'</td><td style="'+td+'">'+esc(it.responsavel)+'</td><td style="'+tdc+'">'+sym(it.status)+' '+esc(it.status)+'</td></tr>';
+  }).join('');
+  var ausentes=(d.membros||[]).filter(function(m){ return !m.presente; });
+  var membros=(d.membros||[]).map(function(m){
+    return '<tr><td style="'+td+'">'+esc(m.nome)+'</td><td style="'+tdc+'">'+esc(m.cargo)+'</td>'
+      +'<td style="'+tdc+'">'+(m.presente?'Presente':'Ausente')+'</td><td style="'+td+';min-width:125px"></td></tr>';
+  }).join('');
+  return '<div style="'+stC+'">'
+    +'<div style="display:flex;align-items:flex-start;margin-bottom:1rem">'
+      +'<div style="flex:1"></div>'
+      +'<div style="text-align:center;flex:2">'
+        +'<div style="font-weight:700;font-size:.9rem;line-height:1.4">ATA DE REUNIÃO DA COMISSÃO INTERNA DE PREVENÇÃO DE ACIDENTES</div>'
+        +'<div style="font-weight:700;font-size:.84rem;margin-top:.22rem">CIPA – GESTÃO 2026 &nbsp;|&nbsp; FILIAL: RECIFE/PE</div>'
+        +'<div style="font-size:.78rem;margin-top:.18rem">Reunião Nº '+esc(String(d.nReuniao||'__'))+'  —  '+esc(d.tipo||'Ordinária')+'</div>'
+      +'</div>'
+      +'<div style="flex:1;text-align:right"><img src="https://gngestao.github.io/gn-gestao/tke_logotipo.png" style="height:36px;width:auto" alt="TKE"></div>'
+    +'</div>'
+    +'<hr style="border:none;border-top:2px solid #b00;margin-bottom:1rem">'
+    +'<p style="margin-bottom:.7rem;text-align:justify;text-indent:2em">Ao <strong>'+esc(_cipaDiasEx[dt.getDate()]||dt.getDate())+'</strong> dia do mês de <strong>'+esc(_cipaMesesEx[dt.getMonth()])+'</strong> de <strong>'+dt.getFullYear()+'</strong>, no estabelecimento da TK Elevadores Brasil LTDA, situada à '+esc(d.local||'')+', às <strong>'+esc(d.horario||'—')+'h</strong>, deu-se início a reunião da CIPA Gestão 2026.</p>'
+    +'<p style="margin-bottom:.95rem;text-align:justify;text-indent:2em">Foi apresentada a ATA da CIPA gestão anterior, revisado os itens pendentes e suas ações para dar continuidade no processo.</p>'
+    +'<div style="font-weight:700;font-size:.82rem;margin-bottom:.38rem;background:#b00;color:#fff;padding:.32rem .65rem">PLANO DE TRABALHO</div>'
+    +'<table style="width:100%;border-collapse:collapse;margin-bottom:.7rem"><thead><tr>'
+      +'<th style="'+th+';width:26px">#</th><th style="'+th+'">Situação</th><th style="'+th+'">Ação / Histórico</th>'
+      +'<th style="'+th+';width:80px">Prazo</th><th style="'+th+'">Responsável</th><th style="'+th+';width:100px">Status</th>'
+    +'</tr></thead><tbody>'+plano+'</tbody></table>'
+    +'<div style="font-size:.74rem;margin-bottom:1rem"><strong>Legenda:</strong> ○ Não iniciado &nbsp; ◑ Iniciado &nbsp; ◕ Em andamento &nbsp; ● Concluído</div>'
+    +'<p style="margin-bottom:1.4rem;text-align:justify;text-indent:2em">Nada mais havendo a tratar, foi encerrada a reunião da qual foi lavrada a presente ata, que após lida e aprovada pelos membros presentes, vai assinada abaixo.</p>'
+    +'<div style="display:flex;gap:2.5rem;margin-bottom:2rem;flex-wrap:wrap">'
+      +'<div style="text-align:center;min-width:195px"><div style="border-top:1px solid #666;padding-top:.38rem;font-size:.77rem"><strong>Gabriel da Silva Nascimento</strong><br><span style="color:#555">Presidente da CIPA</span></div></div>'
+      +'<div style="text-align:center;min-width:195px"><div style="border-top:1px solid #666;padding-top:.38rem;font-size:.77rem"><strong>Elba Juliana M. Simões</strong><br><span style="color:#555">Secretária da CIPA</span></div></div>'
+    +'</div>'
+    +'<div style="font-weight:700;font-size:.82rem;margin-bottom:.38rem;background:#b00;color:#fff;padding:.32rem .65rem">MEMBROS DA CIPA</div>'
+    +'<table style="width:100%;border-collapse:collapse;margin-bottom:1rem"><thead><tr>'
+      +'<th style="'+th+'">Nome</th><th style="'+th+'">Cargo</th><th style="'+th+';width:90px">Presença</th><th style="'+th+'">Assinatura</th>'
+    +'</tr></thead><tbody>'+membros+'</tbody></table>'
+    +(ausentes.length?
+      '<div style="font-weight:700;font-size:.82rem;margin-bottom:.38rem;background:#555;color:#fff;padding:.32rem .65rem">JUSTIFICATIVA DE AUSÊNCIA</div>'
+      +'<table style="width:100%;border-collapse:collapse;margin-bottom:1rem"><thead><tr><th style="'+th+'">Nome</th><th style="'+th+'">Justificativa</th></tr></thead><tbody>'
+      +ausentes.map(function(m){ return '<tr><td style="'+td+'">'+esc(m.nome)+'</td><td style="'+td+'">'+esc(m.justificativa||'—')+'</td></tr>'; }).join('')
+      +'</tbody></table>':'')
+    +((d.convidados||[]).length?
+      '<div style="font-weight:700;font-size:.82rem;margin-bottom:.38rem;background:#555;color:#fff;padding:.32rem .65rem">CONVIDADOS</div>'
+      +'<table style="width:100%;border-collapse:collapse;margin-bottom:1rem"><thead><tr><th style="'+th+'">Nome</th><th style="'+th+'">Função</th><th style="'+th+'">Assinatura</th></tr></thead><tbody>'
+      +(d.convidados||[]).map(function(cv){ return '<tr><td style="'+td+'">'+esc(cv.nome)+'</td><td style="'+td+'">'+esc(cv.funcao)+'</td><td style="'+td+';min-width:125px"></td></tr>'; }).join('')
+      +'</tbody></table>':'')
+    +'<div style="text-align:right;font-size:.69rem;color:#999;border-top:1px solid #e5e5e5;padding-top:.45rem;margin-top:1rem">TK Elevator — CIPA Gestão 2026 — Filial Recife/PE</div>'
+    +'</div>';
+}
+
+function cipaGerarAta(){
+  var itens=_cipaColetarItens(), membros=_cipaColetarMembros(), convidados=_cipaColetarConvidados();
+  _cipaItens=itens; _cipaSaveItens();
+  var d={ nReuniao:document.getElementById('cipaNReuniao').value, data:document.getElementById('cipaData').value,
+    horario:document.getElementById('cipaHorario').value, local:document.getElementById('cipaLocal').value,
+    tipo:document.getElementById('cipaTipo').value, itens:itens, membros:membros, convidados:convidados };
+  window._docCipaData=d;
+  document.getElementById('cipaPreview').innerHTML=_buildCipaAtaHTML(d,true);
+  document.getElementById('cipaPreviewWrap').style.display='block';
+  document.getElementById('cipaPdfBtn').style.display='inline-block';
+  document.getElementById('cipaAssinarBtn').style.display='inline-block';
+  setTimeout(function(){ var pw=document.getElementById('cipaPreviewWrap'); if(pw) pw.scrollIntoView({behavior:'smooth'}); },100);
+}
+
+function cipaSalvarPDF(){
+  var d=window._docCipaData; if(!d){ alert('Gere a ata primeiro.'); return; }
+  var html='<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Ata CIPA — TK Elevator</title>'
+    +'<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:2cm;color:#111;font-size:11pt;background:#fff}@page{size:A4;margin:1.5cm}@media print{body{padding:0}}</style>'
+    +'</head><body>'+_buildCipaAtaHTML(d,false)+'</body></html>';
+  var w=window.open('','_blank','width=800,height=900');
+  if(w){ w.document.write(html); w.document.close(); setTimeout(function(){ w.print(); },600); }
+}
+
+async function cipaEnviarAssinatura(){
+  var htmlConteudo=document.getElementById('cipaPreview').innerHTML;
+  if(!htmlConteudo){ alert('Gere a ata antes de enviar para assinatura.'); return; }
+  var btn=document.getElementById('cipaAssinarBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Enviando...'; }
+  var membros=_cipaColetarMembros();
+  var signatarios=membros.filter(function(m){ return m.presente; }).map(function(m){ return { nome:m.nome, email:m.email||'', action:'sign' }; });
+  if(!signatarios.some(function(s){ return s.email==='gabriel.nascimento@tkelevator.com'; }))
+    signatarios.push({ nome:'Gabriel Nascimento', email:'gabriel.nascimento@tkelevator.com', action:'sign' });
+  var msg1='Enviando ata da CIPA para assinatura, chefe.';
+  if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',msg1); }
+  else if(typeof gnModoVoz!=='undefined'&&gnModoVoz&&typeof gnSpeak==='function') try{ await gnSpeak(msg1); }catch(e){}
+  try{
+    var res=await fetch(GN_ASSINATURA_WEBHOOK,{ method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ tipo:'ata_cipa', html:htmlConteudo, signatarios:signatarios }) });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    var raw=await res.json(), data=Array.isArray(raw)?raw[0]:raw;
+    if(data.gabrielLink){
+      window.open(data.gabrielLink,'_blank');
+      var msg2='Ata da CIPA enviada, chefe. Abrindo link de assinatura.';
+      if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',msg2); }
+      else if(typeof gnModoVoz!=='undefined'&&gnModoVoz&&typeof gnSpeak==='function') try{ await gnSpeak(msg2); }catch(e){}
+      else alert(msg2);
+    } else {
+      var msg2='Ata da CIPA enviada com sucesso, senhor. Verifique seu email.';
+      if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',msg2); }
+      else alert(msg2);
+    }
+  }catch(err){
+    console.error('cipaEnviarAssinatura:',err);
+    var msgE='Erro ao enviar ata da CIPA para assinatura, chefe.';
+    if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',msgE); }
+    else alert(msgE);
+  }
+  if(btn){ btn.disabled=false; btn.textContent='✍️ Enviar para Assinatura'; }
+}
+</script>
+
 <!-- Jarvis Flutuante Global (abas de módulo) -->
 <div id="globalJarvis">
   <div id="globalJarvisCore">Jarvis</div>
@@ -9248,13 +9612,13 @@ function salvarDocPDF(tipo){
   function hideGJ(){ const el=document.getElementById('globalJarvis'); if(el) el.style.display='none'; const c=document.getElementById('globalJarvisChat'); if(c) c.style.display='none'; }
 
   // Wrap enter functions → show global Jarvis
-  ['enterModule','enterReconhece','enterReparo','enterPlano','enterDocumentacao'].forEach(function(name){
+  ['enterModule','enterReconhece','enterReparo','enterPlano','enterDocumentacao','enterCIPA'].forEach(function(name){
     const orig = window[name];
     window[name] = function(){ if(orig) orig.apply(this,arguments); setTimeout(showGJ,150); };
   });
 
   // Wrap back functions → keep Jarvis visible on hub
-  ['backToHub','backFromReconhece','backFromReparo','backFromDocumentacao'].forEach(function(name){
+  ['backToHub','backFromReconhece','backFromReparo','backFromDocumentacao','backFromCIPA'].forEach(function(name){
     const orig = window[name];
     window[name] = function(){ if(orig) orig.apply(this,arguments); setTimeout(showGJ,150); };
   });
