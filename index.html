@@ -836,6 +836,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 
 /* ── DOCUMENTAÇÃO ── */
 #screenDocumentacao{display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto;isolation:isolate}
+#screenCIPA{display:none;position:fixed;inset:0;background:#1e1040!important;min-height:100vh;z-index:10000;overflow-y:auto;isolation:isolate}
 .doc-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;background:rgba(50,29,101,.85);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2;backdrop-filter:blur(8px)}
 .cipa-header{background:linear-gradient(135deg,#321d65 0%,#5B21B6 40%,#c44a00 75%,#FF6200 100%);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,98,0,.2)}
 .doc-title{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;color:var(--white)}
@@ -9042,7 +9043,7 @@ function salvarDocPDF(tipo){
 </script>
 
 <!-- ══ TELA CIPA ══ -->
-<div id="screenCIPA" style="display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto">
+<div id="screenCIPA" style="display:none">
   <div class="cipa-header">
     <div style="display:flex;align-items:center;gap:1rem">
       <button onclick="backFromCIPA()" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer">⬅ GN Gestão</button>
