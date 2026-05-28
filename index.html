@@ -9647,7 +9647,7 @@ async function cipaEnviarAssinatura(){
   const origShow = window.showApp;
   window.showApp = function(){
     if(origShow) origShow();
-    setTimeout(function(){ initGlobalJarvis(); showGJ(); }, 400);
+    setTimeout(function(){ initGlobalJarvis(); showGJ(); }, 1200);
   };
 })();
 </script>
