@@ -9586,7 +9586,14 @@ async function cipaEnviarAssinatura(){
       }
       let _gjDominio = _gjCmd;
       _gjGatilhos.forEach(function(g){ _gjDominio = _gjDominio.replace(g, ' '); });
-      _gjDominio = _gjDominio.replace(/\b(o|a|do|da|site|página|pagina|meu|minha)\b/g, '').trim();
+      _gjDominio = _gjDominio.replace(/\b(o|a|do|da|site|página|pagina|meu|minha|aba)\b/g, '').trim();
+      const _gjAcaoAchada = Object.keys(gnAcoes).find(function(k){ return _gjDominio.includes(k); });
+      if(_gjAcaoAchada){
+        gnAcoes[_gjAcaoAchada]();
+        if(typeof window._gjAddMessage === 'function') window._gjAddMessage('bot', 'Abrindo ' + _gjAcaoAchada + ', Chefe.');
+        window._gjModoTexto = false;
+        return;
+      }
       if(_gjDominio.length > 2){
         window.open('https://www.google.com/search?q=' + encodeURIComponent(_gjDominio.trim()), '_blank');
         const _gjMsgGen = 'Buscando ' + _gjDominio.trim() + ' no Google, Chefe.';
