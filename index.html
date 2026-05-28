@@ -9416,10 +9416,15 @@ async function cipaEnviarAssinatura(){
     try {
       var _gjPos = JSON.parse(localStorage.getItem('gj_pos')||'null');
       if(_gjPos && _gjPos.left && _gjPos.top){
-        el.style.left = _gjPos.left; el.style.top = _gjPos.top;
-        el.style.right = 'auto'; el.style.bottom = 'auto';
+        var px = parseFloat(_gjPos.left), py = parseFloat(_gjPos.top);
+        if(px >= 0 && px < window.innerWidth - 80 && py >= 0 && py < window.innerHeight - 80){
+          el.style.left = _gjPos.left; el.style.top = _gjPos.top;
+          el.style.right = 'auto'; el.style.bottom = 'auto';
+        } else {
+          localStorage.removeItem('gj_pos');
+        }
       }
-    } catch(e){}
+    } catch(e){ localStorage.removeItem('gj_pos'); }
 
     // Drag
     let dragging = false, moved = false, startX, startY, curL, curT;
