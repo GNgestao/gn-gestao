@@ -837,6 +837,7 @@ tr:hover td{background:rgba(91,33,182,.05)}
 /* ── DOCUMENTAÇÃO ── */
 #screenDocumentacao{display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto;isolation:isolate}
 #screenCIPA{display:none;position:fixed;inset:0;background:#1e1040!important;min-height:100vh;z-index:10000;overflow-y:auto;isolation:isolate}
+#screenPlano{display:none;position:fixed;inset:0;background:#1e1040!important;min-height:100vh;z-index:10000;overflow-y:auto;isolation:isolate}
 .doc-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;background:rgba(50,29,101,.85);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2;backdrop-filter:blur(8px)}
 .cipa-header{background:linear-gradient(135deg,#321d65 0%,#5B21B6 40%,#c44a00 75%,#FF6200 100%);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,98,0,.2)}
 .doc-title{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;color:var(--white)}
@@ -6582,7 +6583,7 @@ function applyRecImport(){
 <input type="file" id="importFileInput" accept=".xlsx,.xls,.csv" style="position:fixed;top:-999px;left:-999px;opacity:0;width:1px;height:1px" onchange="importExcel(event)"/>
 
 <!-- ══ PLANO DE AÇÃO ══ -->
-<div id="screenPlano" style="display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto;isolation:isolate">
+<div id="screenPlano" style="display:none">
 <!-- HEADER STICKY DO MÓDULO PLANO -->
 <div style="background:linear-gradient(135deg,#321d65 0%,#5B21B6 40%,#c44a00 75%,#FF6200 100%);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,98,0,.2)">
   <div style="display:flex;align-items:center;gap:1rem">
