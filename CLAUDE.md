@@ -7,7 +7,7 @@ Sistema de gestão operacional pessoal e profissional de Gabriel Nascimento, ges
 - VPS: Hostinger, IP 187.127.26.136, Ubuntu 24.04
 - n8n: https://n8n.srv1610251.hstgr.cloud (container n8n-n8n-1)
 - App: https://gngestao.github.io/gn-gestao/
-- GitHub: github.com/GNgestao/gn-gestao (arquivo principal: index.html, ~9200+ linhas)
+- GitHub: github.com/GNgestao/gn-gestao (arquivo principal: index.html, ~9700+ linhas)
 - Evolution API (WhatsApp): http://187.127.26.136:8081, instância gn-whatsapp, apikey gn-evolution-2026, número 5581982381146
 - SSH: ssh root@187.127.26.136
 - GitHub token (sem expiração): ghp_*** (ver com Gabriel)
@@ -29,7 +29,8 @@ Single-page HTML/CSS/JS puro. Tema escuro roxo/laranja, fontes Syne + DM Sans.
 - Plano de Ação 5W1H — planos de ação
 - Reparo — serviços subcontratados com calendário (localStorage)
 - Jarvis — assistente de voz inteligente (só superadmin)
-- Documentação — Carta Técnica ✅ concluída; Ata de Reunião ✅ concluída (bug pendente)
+- Documentação — Carta Técnica ✅ concluída; Ata de Reunião ✅ concluída
+- CIPA ✅ — Ata CIPA completa; formulário, PDF, envio Autentique, integração Jarvis
 
 ### Módulos futuros:
 - Gestão da Equipe
@@ -218,6 +219,22 @@ Sequência:
 - Funções auxiliares: _converterNumerosExtenso() (extenso→dígito, ordinais), _ataConverterData(), _ataConverterEmail()
 - _ataUltimaPergunta: rastreia última pergunta para suporte ao "repita"
 
+## MÓDULO CIPA — STATUS ATUAL ✅ (28/05/2026)
+
+- Formulário completo com 7 itens pré-carregados (EPI, Ergonomia, Acidentes, etc.)
+- Geração de PDF formatado com layout profissional
+- Envio para assinatura via Autentique integrado
+- Integração com Jarvis por voz e texto (gatilhos: "nova ata cipa", "gerar ata cipa", "cipa")
+- Nó CIPA adicionado ao hub neural
+- Header com gradiente laranja/roxo igual aos outros módulos
+- Botão "← GN Gestão" (logo TKE e referências Zona Vip removidos)
+
+## REBRAND — GN Gestão (28/05/2026)
+
+- "Zona Vip" removido de todos os módulos (título, login, hub, botões, PDF, JS strings)
+- Todos os botões "← Zona Vip" substituídos por "← GN Gestão"
+- Logo TKE removido da interface CIPA (app é pessoal, sem branding corporativo)
+
 ## JARVIS — MELHORIAS RECENTES (24/05/2026)
 - Silêncio: interceptado imediatamente no início de gnExecutar, antes do webhook e respostas fixas
 - Triggers de silêncio: ['silêncio', 'silencio', 'stop', 'cala boca', 'cale-se', 'cala', 'basta'] — só ativa com menos de 4 palavras
@@ -245,6 +262,19 @@ Sequência:
 ### Memória e API ✅
 - Memória permanente funcionando: conversas salvas no PostgreSQL
 - Créditos API Anthropic recarregados: USD 5,98 disponíveis
+
+## JARVIS — MELHORIAS (28/05/2026)
+- Silêncio filtrado: threshold 50KB — áudio silencioso não vai mais ao Deepgram
+- TTS: timeout 25s, buffer limitado a 1,5MB com truncamento automático
+- Microfone: echoCancellation, noiseSuppression, autoGainControl, sampleRate 16000
+- Pesquisa em sites por texto funcionando
+- Sites não mapeados: fallback para busca no Google automaticamente
+- Jarvis abrindo sites por voz: PENDENTE (popup blocker Chrome)
+
+## BUGS CORRIGIDOS (28/05/2026)
+- Hub ficando em branco ao restaurar sessão com CIPA como última tela: `case 'cipa'` adicionado ao switch do DOMContentLoaded + guard no showApp()
+- Fundo estrelado vazando atrás do módulo CIPA: `#screenCIPA` com `isolation:isolate` no CSS
+- Fundo estrelado vazando atrás do Plano de Ação: `#screenPlano` com `isolation:isolate` no CSS
 
 ## RECONHECE+ — Correções (26-27/05/2026)
 - Fórmula TOTAL corrigida: ptsIni + prod + assiduidade - marcacao + quaseAcidente + treinamento - manPrev
@@ -281,9 +311,9 @@ Sequência:
 ### Módulos novos
 - [ ] Módulo Gestão de Equipe + férias + escala de plantões (~40k tokens)
 - [ ] Módulo Perito Judicial / Gestão de ARTs e Laudos (~50k tokens)
-- [ ] Ata CIPA via Jarvis (~20k tokens) — modelo analisado
 
 ### Jarvis / Integrações
+- [ ] Jarvis abrindo sites por voz — popup blocker Chrome bloqueando (~5k tokens)
 - [ ] Integração TK Mobile com Jarvis — fluxo base: Fluxo 1 - TAC Mobile (~20k tokens)
 - [ ] Fluxo Sênior — consulta HE em tempo real via Jarvis (~15k tokens)
 - [ ] Lista de clientes — endereços memorizados no Jarvis (~5k tokens)
@@ -291,15 +321,14 @@ Sequência:
 - [ ] TTS streaming / melhorar latência (~20k tokens)
 - [ ] Whisper local — substituir Deepgram (~15k tokens)
 - [ ] Memória permanente de fatos + aumentar limite para 50 msgs (~10k tokens)
-- [ ] Autentique: assinatura automática via API (opcional)
+- [ ] Autentique: assinatura automática via API (~10k tokens)
 
 ### Hub / App / Visual
 - [ ] Hub 3D estilo Obsidian (~30k tokens)
 - [ ] Tela de login futurista (~15k tokens)
 - [ ] PWA — transformar GN Gestão em app instalável (~8k tokens)
-- [ ] Rebrand: remover menções Zona Vip (~3k tokens)
 - [ ] Rebrand Jarvis → Ultron: nome, wake word, visual (~3k tokens) — Gabriel ainda decidindo
 
 ### Segurança / Infra
 - [ ] Senha mestra antes do login (~10k tokens)
-- [ ] Rotacionar API keys e tokens expostos
+- [ ] Rotacionar API keys e tokens expostos (~2k tokens)
