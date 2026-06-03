@@ -4,11 +4,13 @@
 Sistema de gestão operacional pessoal e profissional de Gabriel Nascimento, gestor de manutenção de elevadores da ThyssenKrupp em Recife-PE. Inclui app web, automações n8n e assistente de voz inteligente chamado Jarvis.
 
 ## INFRAESTRUTURA
-- VPS: Hostinger, IP 187.127.26.136, Ubuntu 24.04
-- n8n: https://n8n.srv1610251.hstgr.cloud (container n8n-n8n-1)
+- VPS: Hostinger, IP 187.127.26.136, Ubuntu 24.04 — **reinstalada em 03/06/2026 (tudo reconfigurado do zero)**
+- n8n: https://n8n.srv1610251.hstgr.cloud (Docker, funcionando)
+- n8n encryptionKey: f8H8OM+uM7ktt7iUygzgW8YHlwNdy+yJ — **NUNCA apagar manualmente**
+- Kokoro TTS: porta 5050 (Docker, funcionando)
+- Evolution API v1.7.4: porta 8081 (Docker, gn-whatsapp conectado no 5581982381146)
 - App: https://gngestao.github.io/gn-gestao/
 - GitHub: github.com/GNgestao/gn-gestao (arquivo principal: index.html, ~9700+ linhas)
-- Evolution API (WhatsApp): http://187.127.26.136:8081, instância gn-whatsapp, apikey gn-evolution-2026, número 5581982381146
 - SSH: ssh root@187.127.26.136
 - GitHub token (sem expiração): ghp_*** (ver com Gabriel)
 
@@ -297,14 +299,36 @@ Sequência:
 - Hub centralizado com tamanho correto
 
 ## SERVIÇOS VPS ATIVOS (187.127.26.136)
-- **autentique-api.service** (porta 5052) — /root/autentique-api.js, systemd, restart automático
-- **jarvis-restart-api** (porta 5051) — restart do Jarvis via webhook
-- **Kokoro TTS** (porta 5050) — /usr/local/bin/jarvis-tts-server.py
-- **n8n** (Docker) — https://n8n.srv1610251.hstgr.cloud
+> ⚠️ VPS reinstalada em 03/06/2026 — serviços abaixo são os confirmados funcionando após reconfiguração
+- **n8n** (Docker) — https://n8n.srv1610251.hstgr.cloud (funcionando)
+- **Kokoro TTS** (Docker, porta 5050) — funcionando
+- **Evolution API v1.7.4** (Docker, porta 8081) — gn-whatsapp conectado no 5581982381146
+- **autentique-api.service** (porta 5052) — /root/autentique-api.js, systemd — **a reconfigurar**
+- **jarvis-restart-api** (porta 5051) — restart do Jarvis via webhook — **a reconfigurar**
 
 ## INFRA VPS — Instalações (26-27/05/2026)
 - wkhtmltopdf instalado para conversão HTML→PDF (Autentique)
 - node-fetch@2 instalado para Autentique API (/root/autentique-api.js)
+
+## STATUS RECENTE — 03/06/2026
+
+### VPS reinstalada do zero
+Toda a infraestrutura foi perdida e reconfigurada do zero em 03/06/2026.
+
+**Serviços reconfigurados e funcionando:**
+- n8n: https://n8n.srv1610251.hstgr.cloud (Docker)
+- Kokoro TTS: porta 5050 (Docker)
+- Evolution API v1.7.4: porta 8081 (Docker, gn-whatsapp conectado no 5581982381146)
+- encryptionKey n8n: `f8H8OM+uM7ktt7iUygzgW8YHlwNdy+yJ` — **NUNCA apagar manualmente**
+
+### Fluxos n8n a recriar (todos perdidos)
+- [ ] GN Assistente Inteligente
+- [ ] GN Text to Speech
+- [ ] Fluxo 2 — Autorização HE Sênior
+- [ ] Fluxo 3 — Relatório Semanal HE
+- [ ] Fluxo 1 — TAC Mobile
+- [ ] GN Documentos
+- [ ] GN Assinatura
 
 ## PENDÊNCIAS GERAIS
 
