@@ -310,25 +310,37 @@ Sequência:
 - wkhtmltopdf instalado para conversão HTML→PDF (Autentique)
 - node-fetch@2 instalado para Autentique API (/root/autentique-api.js)
 
-## STATUS RECENTE — 03/06/2026
+## STATUS RECENTE — 04/06/2026
 
-### VPS reinstalada do zero
-Toda a infraestrutura foi perdida e reconfigurada do zero em 03/06/2026.
+### VPS reinstalada do zero em 03/06/2026 — Totalmente restaurada em 04/06/2026
 
-**Serviços reconfigurados e funcionando:**
+**Serviços funcionando:**
 - n8n: https://n8n.srv1610251.hstgr.cloud (Docker)
 - Kokoro TTS: porta 5050 (Docker)
 - Evolution API v1.7.4: porta 8081 (Docker, gn-whatsapp conectado no 5581982381146)
 - encryptionKey n8n: `f8H8OM+uM7ktt7iUygzgW8YHlwNdy+yJ` — **NUNCA apagar manualmente**
+- PostgreSQL: container `n8n-postgres-1` na rede n8n_default (host: n8n-postgres-1, db: evolution, user: postgres, senha: evo123)
+- Tabela `jarvis_memoria` criada e funcionando
+- wkhtmltopdf instalado no host VPS
+- autentique-api.service (porta 5052) — /root/autentique-api.js — rodando
+- jarvis-restart-api (porta 5051) — /root/jarvis-restart-api.js — rodando
+- node_modules em /root (express, node-fetch@2, form-data)
 
-### Fluxos n8n a recriar (todos perdidos)
-- [ ] GN Assistente Inteligente
-- [ ] GN Text to Speech
-- [ ] Fluxo 2 — Autorização HE Sênior
-- [ ] Fluxo 3 — Relatório Semanal HE
-- [ ] Fluxo 1 — TAC Mobile
-- [ ] GN Documentos
-- [ ] GN Assinatura
+### Fluxos n8n restaurados (todos ativos)
+- [x] GN Assistente Inteligente — ID: mVZ1RyggUw9mnVgF
+- [x] GN Text to Speech — ID: CeXOWX6ob1j49nNq
+- [x] Fluxo 2 — Autorização HE Sênior — ID: 1OsiYhDQKmzsyFB1 (cron: seg-sex 8h)
+- [x] Fluxo 3 — Relatório Semanal HE — ID: BeMZTNpQPwhP53JP (cron: sexta 14h)
+- [x] Fluxo 1 — TAC Mobile — ID: LrwvcCowtAmztJIH (cron: a cada 30min, envia para 5581982381146)
+- [x] GN Documentos — ID: 5KgsFjzHjpAJHtXk
+- [x] GN Assinatura — ID: XU0S0i1FZUZSIG9x
+
+### Credencial PostgreSQL n8n
+- Nome: Conta Postgres
+- ID: 0KDK2a9qvNkGe601
+
+### Scripts de recriação dos fluxos
+Salvos em /scripts/ no repositório GitHub para uso futuro em caso de nova reinstalação.
 
 ## PENDÊNCIAS GERAIS
 
