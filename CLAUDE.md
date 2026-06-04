@@ -357,7 +357,6 @@ Salvos em /scripts/ no repositório GitHub para uso futuro em caso de nova reins
 - [ ] TTS streaming / melhorar latência (~20k tokens)
 - [ ] Whisper local — substituir Deepgram (~15k tokens)
 - [ ] Memória permanente de fatos + aumentar limite para 50 msgs (~10k tokens)
-- [ ] Autentique: assinatura automática via API (~10k tokens)
 
 ### Hub / App / Visual
 - [ ] Hub 3D estilo Obsidian (~30k tokens)
