@@ -125,6 +125,17 @@ Sequência:
 
 ## FLUXOS N8N
 
+### Fluxo 1 — TAC Mobile
+- Cron: */30 * * * * (a cada 30 minutos)
+- Login: POST https://mobile.br.tkelevator.com/TKEMobile/Default.aspx/EfetuarLogin
+- Usuário TK Mobile: PE2158 (em base64: UEUyMTU4) / Senha: Initpass1* (em base64: SW5pdHBhc3MxKg==)
+- Autenticação via cookies (ASP.NET_SessionId, LOGIN, TKEMobile, USER)
+- Busca chamados: POST https://mobile.br.tkelevator.com/TKEMobile/FormOSAberta.aspx/BuscarOsAberta
+- Body: {"filial": 5008, "zonas": [3]}
+- Resposta: {"d": "{"Response": [...], "Success": true}"}
+- Envia para WhatsApp 5581982381146 sempre (com OS ou "Nenhuma OS aberta no momento.")
+- Inclui: número OS, status, condomínio, elevador, técnico, prioridade, horário
+
 ### Fluxo 2 — Autorização Automática HE Sênior
 - Cron: 0 8 * * 1-5 (seg-sex 8h)
 - Login: POST https://platform.senior.com.br/auth/LoginServlet
@@ -331,7 +342,7 @@ Sequência:
 - [x] GN Text to Speech — ID: CeXOWX6ob1j49nNq
 - [x] Fluxo 2 — Autorização HE Sênior — ID: 1OsiYhDQKmzsyFB1 (cron: seg-sex 8h)
 - [x] Fluxo 3 — Relatório Semanal HE — ID: BeMZTNpQPwhP53JP (cron: sexta 14h)
-- [x] Fluxo 1 — TAC Mobile — ID: LrwvcCowtAmztJIH (cron: a cada 30min, envia para 5581982381146)
+- [x] Fluxo 1 — TAC Mobile — ID: HL37sGAYpiHg4IlY (cron: a cada 30min, envia para 5581982381146, envia mesmo quando vazio, inclui número do elevador)
 - [x] GN Documentos — ID: 5KgsFjzHjpAJHtXk
 - [x] GN Assinatura — ID: XU0S0i1FZUZSIG9x
 
