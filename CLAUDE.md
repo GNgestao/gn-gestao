@@ -126,10 +126,13 @@ Sequência:
 ## FLUXOS N8N
 
 ### Fluxo 1 — TAC Mobile
+- ID: egsKZ2811VPbqLZu
 - Cron: */30 * * * * (a cada 30 minutos)
 - Login: POST https://mobile.br.tkelevator.com/TKEMobile/Default.aspx/EfetuarLogin
 - Usuário TK Mobile: PE2158 (em base64: UEUyMTU4) / Senha: Initpass1* (em base64: SW5pdHBhc3MxKg==)
 - Autenticação via cookies (ASP.NET_SessionId, LOGIN, TKEMobile, USER)
+- **Cookie USER truncado**: n8n trunca cookies >2000 chars — por isso usa serviço local tac-api.js
+- Serviço local: GET http://187.127.26.136:5053/tac (tac-api.js, porta 5053, systemd tac-api.service)
 - Busca chamados: POST https://mobile.br.tkelevator.com/TKEMobile/FormOSAberta.aspx/BuscarOsAberta
 - Body: {"filial": 5008, "zonas": [3]}
 - Resposta: {"d": "{"Response": [...], "Success": true}"}
@@ -137,11 +140,18 @@ Sequência:
 - Inclui: número OS, status, condomínio, elevador, técnico, prioridade, horário
 
 ### Fluxo 2 — Autorização Automática HE Sênior
+- ID: TBRd8vtv0k6iZNCK
 - Cron: 0 8 * * 1-5 (seg-sex 8h)
-- Login: POST https://platform.senior.com.br/auth/LoginServlet
-- Usuário: 10583194@thyssenkrupp.com / Senha: Initpass*1
+- Serviço local: GET http://187.127.26.136:5054/he (he-api.js, porta 5054, systemd he-api.service)
+- **Nova autenticação (3 etapas):**
+  1. POST platform.senior.com.br/login → access_token
+  2. POST web25.seniorcloud.com.br:31601/gestaoponto-backend/api/senior/auth/g7 com header `token: access_token` → JWT assertion
+  3. Usar header `assertion` em todas as chamadas subsequentes
+- Usuário: 10583194@thyssenkrupp.com / Senha Sênior: Initpass1*
 - Empresa: 8550-1, codigoCalculo: 1370
+- **Período de ponto:** se dia >= 11 → dataInicial = dia 11 do mês atual; se dia < 11 → dataInicial = dia 11 do mês anterior; dataFinal = ontem
 - Autoriza HE ≤ 2h, códigos 613→663, 614→664
+- **Estagiários NÃO incluídos no fluxo HE:** 55020261 Rodrigo Nascimento e 55020770 Weston Cardoso
 - IMPORTANTE: funciona apenas em horário comercial
 
 ### Fluxo 3 — Saldo Banco de Horas
@@ -154,6 +164,7 @@ Sequência:
 55016328: ALISSON MENDES CHAGAS
 55007813: ANTONIO AMARO BARRETO FILHO
 55006085: BRUNO DANILO FIRMINO DA SILVA
+55019788: DIEGO ASSIS SANTOS DA ROCHA
 55004902: DURVAL SILVA DE LIMA
 55010850: EDVALDO WILSON TEIXEIRA DE LIMA
 55016383: ELENILDO TEOFILO DE JESUS
@@ -167,7 +178,6 @@ Sequência:
 55012128: LAERCIO SIMIAO LUPERCINIO
 55012623: LUCIANO FELIX DOS SANTOS
 55015003: MARCELO DE BARROS ALMEIDA
-55000153: MOISES SEVERINO DA SILVA
 55015783: PAULO ANDRE LAURENTINO DE OLIVEIRA
 55000585: RODOLFO MARTINIANO DE S CAMPOS
 55012352: RODRIGO DE OLIVEIRA CUNHA
@@ -183,6 +193,7 @@ Sequência:
 - Testes do Fluxo 2 apenas em horário comercial
 - TTS agora via Kokoro na VPS (porta 5050) — ElevenLabs descontinuado
 - No n8n expressões dentro de campos Raw: usar {{ }} SEM o = antes
+- Claude Code: versão fixada em 2.1.100 (versão 2.1.167 quebra cópia no terminal Hostinger)
 
 ## INFORMAÇÕES PESSOAIS DO GABRIEL
 - Nome completo: Gabriel Nascimento
@@ -194,6 +205,9 @@ Sequência:
 - Localização: Recife-PE, mora no Janga em Paulista-PE
 - WhatsApp pessoal: 5581997818685
 - Email: gabrielnascimento1995@gmail.com
+
+## MÓDULO PLANO DE AÇÃO 5W1H — NOTAS
+- Rodapé: apenas "TK Elevator" — sem "GN Gestão", sem "Gerado em...", sem data/hora do browser
 
 ## MÓDULO DOCUMENTAÇÃO — STATUS ATUAL ✅
 
@@ -316,6 +330,8 @@ Sequência:
 - **Evolution API v1.7.4** (Docker, porta 8081) — gn-whatsapp conectado no 5581982381146
 - **autentique-api.service** (porta 5052) — /root/autentique-api.js, systemd — **a reconfigurar**
 - **jarvis-restart-api** (porta 5051) — restart do Jarvis via webhook — **a reconfigurar**
+- **tac-api.service** (porta 5053) — /root/tac-api.js, systemd
+- **he-api.service** (porta 5054) — /root/he-api.js, systemd
 
 ## INFRA VPS — Instalações (26-27/05/2026)
 - wkhtmltopdf instalado para conversão HTML→PDF (Autentique)
@@ -335,14 +351,16 @@ Sequência:
 - wkhtmltopdf instalado no host VPS
 - autentique-api.service (porta 5052) — /root/autentique-api.js — rodando
 - jarvis-restart-api (porta 5051) — /root/jarvis-restart-api.js — rodando
+- tac-api.service (porta 5053) — /root/tac-api.js — rodando
+- he-api.service (porta 5054) — /root/he-api.js — rodando
 - node_modules em /root (express, node-fetch@2, form-data)
 
 ### Fluxos n8n restaurados (todos ativos)
 - [x] GN Assistente Inteligente — ID: mVZ1RyggUw9mnVgF
 - [x] GN Text to Speech — ID: CeXOWX6ob1j49nNq
-- [x] Fluxo 2 — Autorização HE Sênior — ID: 1OsiYhDQKmzsyFB1 (cron: seg-sex 8h)
+- [x] Fluxo 2 — Autorização HE Sênior — ID: TBRd8vtv0k6iZNCK (cron: seg-sex 8h)
 - [x] Fluxo 3 — Relatório Semanal HE — ID: BeMZTNpQPwhP53JP (cron: sexta 14h)
-- [x] Fluxo 1 — TAC Mobile — ID: HL37sGAYpiHg4IlY (cron: a cada 30min, envia para 5581982381146, envia mesmo quando vazio, inclui número do elevador)
+- [x] Fluxo 1 — TAC Mobile — ID: egsKZ2811VPbqLZu (cron: a cada 30min, envia para 5581982381146, envia mesmo quando vazio, inclui número do elevador)
 - [x] GN Documentos — ID: 5KgsFjzHjpAJHtXk
 - [x] GN Assinatura — ID: XU0S0i1FZUZSIG9x
 
