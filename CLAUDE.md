@@ -154,9 +154,9 @@ Sequência:
 - **Estagiários NÃO incluídos no fluxo HE:** 55020261 Rodrigo Nascimento e 55020770 Weston Cardoso
 - IMPORTANTE: funciona apenas em horário comercial
 
-### Fluxo 3 — Saldo Banco de Horas
-- Cron: 0 14 * * 5 (toda sexta 14h)
-- Busca saldo via /bancos-horas/saldo-mensal
+### Fluxo 3 — Banco de Horas Diário
+- Cron: seg-sex 8h
+- Banco de Horas diário 8h seg-sex, serviço bh-api.js porta 5055, ID v6hwWcWGsScfDdEX
 
 ## 24 TÉCNICOS (matrícula: nome)
 55007445: ADRIANO FRANCISCO DA SILVA
@@ -359,7 +359,7 @@ Sequência:
 - [x] GN Assistente Inteligente — ID: mVZ1RyggUw9mnVgF
 - [x] GN Text to Speech — ID: CeXOWX6ob1j49nNq
 - [x] Fluxo 2 — Autorização HE Sênior — ID: TBRd8vtv0k6iZNCK (cron: seg-sex 8h)
-- [x] Fluxo 3 — Relatório Semanal HE — ID: BeMZTNpQPwhP53JP (cron: sexta 14h)
+- [x] Fluxo 3 — Banco de Horas Diário — ID: v6hwWcWGsScfDdEX (cron: seg-sex 8h)
 - [x] Fluxo 1 — TAC Mobile — ID: egsKZ2811VPbqLZu (cron: a cada 30min, envia para 5581982381146, envia mesmo quando vazio, inclui número do elevador)
 - [x] GN Documentos — ID: 5KgsFjzHjpAJHtXk
 - [x] GN Assinatura — ID: XU0S0i1FZUZSIG9x
