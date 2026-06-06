@@ -28,21 +28,29 @@ const TECNICOS = [
   "55021085"
 ];
 
-function getDataInicial() {
-  const d = new Date();
-  d.setDate(d.getDate() - 30);
-  return d.toISOString().split('T')[0];
-}
+function getPeriodoPonto() {
+  const hoje = new Date();
+  const dia = hoje.getDate();
+  let dataInicial, dataFinal;
 
-function getDataFinal() {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  return d.toISOString().split('T')[0];
+  if (dia >= 11) {
+    // Ponto atual: dia 11 do mes atual ate ontem
+    dataInicial = hoje.getFullYear() + '-' + String(hoje.getMonth()+1).padStart(2,'0') + '-11';
+  } else {
+    // Ponto atual: dia 11 do mes anterior ate ontem
+    const mesAnterior = new Date(hoje.getFullYear(), hoje.getMonth()-1, 11);
+    dataInicial = mesAnterior.getFullYear() + '-' + String(mesAnterior.getMonth()+1).padStart(2,'0') + '-11';
+  }
+
+  const ontem = new Date(hoje);
+  ontem.setDate(ontem.getDate() - 1);
+  dataFinal = ontem.getFullYear() + '-' + String(ontem.getMonth()+1).padStart(2,'0') + '-' + String(ontem.getDate()).padStart(2,'0');
+
+  return {dataInicial, dataFinal};
 }
 
 async function processarHE() {
-  const dataInicial = getDataInicial();
-  const dataFinal = getDataFinal();
+  const {dataInicial, dataFinal} = getPeriodoPonto();
 
   const loginBody = JSON.stringify({username:'10583194@thyssenkrupp.com',password:'Initpass1*',tenantName:'thyssenkrupp'});
   const loginR = await httpsReq({
