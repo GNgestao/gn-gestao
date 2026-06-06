@@ -20,7 +20,7 @@ function httpsReq(options, body) {
 }
 
 const TECNICOS = [
-  "55000153","55000585","55001880","55004902","55004915","55005485",
+  "55019788","55000585","55001880","55004902","55004915","55005485",
   "55006085","55007445","55007813","55010850","55012128","55012352",
   "55012621","55012623","55013039","55013040","55013171","55015003",
   "55015783","55015944","55016328","55016383","55018679","55018736",
@@ -28,10 +28,23 @@ const TECNICOS = [
   "55021085"
 ];
 
-async function processarHE() {
-  const hoje = new Date().toISOString().split('T')[0];
+function getDataInicial() {
+  const d = new Date();
+  d.setDate(d.getDate() - 30);
+  return d.toISOString().split('T')[0];
+}
 
-  const loginBody = JSON.stringify({username:'10583194@thyssenkrupp.com',password:'Initpass*1',tenantName:'thyssenkrupp'});
+function getDataFinal() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().split('T')[0];
+}
+
+async function processarHE() {
+  const dataInicial = getDataInicial();
+  const dataFinal = getDataFinal();
+
+  const loginBody = JSON.stringify({username:'10583194@thyssenkrupp.com',password:'Initpass1*',tenantName:'thyssenkrupp'});
   const loginR = await httpsReq({
     hostname:'platform.senior.com.br',
     path:'/t/senior.com.br/bridge/1.0/rest/platform/authentication/actions/login',
@@ -56,48 +69,54 @@ async function processarHE() {
     try {
       const pontoR = await httpsReq({
         hostname:'web25.seniorcloud.com.br',port:31601,
-        path:'/gestaoponto-backend/api/acertoPontoColaboradorPeriodo/colaborador/' + colabId + '?codigoCalculo=1370&dataFinal=' + hoje + '&dataInicial=' + hoje + '&filtraPendencias=GESTOR&gestor=S&orderby=-dataApuracao',
+        path:'/gestaoponto-backend/api/acertoPontoColaboradorPeriodo/colaborador/' + colabId + '?codigoCalculo=1370&dataFinal=' + dataFinal + '&dataInicial=' + dataInicial + '&filtraPendencias=GESTOR&gestor=S&orderby=-dataApuracao',
         method:'GET',
         headers:{'assertion':assertion}
       });
 
       const apuracoes = pontoR.body.apuracao || [];
-      const ap = apuracoes.find(a => a.dataApuracao === hoje);
-      if (!ap) continue;
 
-      const situacoesHE = ap.situacoesApuradas.filter(s => [613,614].includes(s.situacao.codigo));
-      if (!situacoesHE.length) continue;
+      for (const ap of apuracoes) {
+        const situacoesHE = ap.situacoesApuradas.filter(s => [613,614].includes(s.situacao.codigo));
+        if (!situacoesHE.length) continue;
 
-      let temAcima2h = false;
-      for (const s of situacoesHE) {
-        const parts = s.quantidadeHoras.split(':');
-        const mins = parseInt(parts[0])*60 + parseInt(parts[1]);
-        if (mins > 120) { temAcima2h = true; break; }
-      }
-
-      if (temAcima2h) { resultados.push({numCad, status:'IGNORADO >2h'}); continue; }
-
-      const payload = ap.situacoesApuradas.map(s => {
-        const item = JSON.parse(JSON.stringify(s));
-        if (s.situacao.codigo === 613) {
-          item.situacao = {codigo:663,descricao:'Hora Extra 60% Autorizada',excecao:false,id:'663',motivoAcertoObrigatorio:false,obrigatoriedadeAnexo:false};
-        } else if (s.situacao.codigo === 614) {
-          item.situacao = {codigo:664,descricao:'Hora Extra 60% Aut. Not',excecao:false,id:'664',motivoAcertoObrigatorio:false,obrigatoriedadeAnexo:false};
+        let temAcima2h = false;
+        for (const s of situacoesHE) {
+          const parts = s.quantidadeHoras.split(':');
+          const mins = parseInt(parts[0])*60 + parseInt(parts[1]);
+          if (mins > 120) { temAcima2h = true; break; }
         }
-        return item;
-      });
 
-      const hashDB = encodeURIComponent(ap.hashDB);
-      const payloadStr = JSON.stringify(payload);
-      const authR = await httpsReq({
-        hostname:'web25.seniorcloud.com.br',port:31601,
-        path:'/gestaoponto-backend/api/colaboradores/' + colabId + '/apuracoes/' + hoje + '/situacoes-apuradas/lote?codigoCalculo=1370&gestor=S&hashDB=' + hashDB,
-        method:'POST',
-        headers:{'assertion':assertion,'Content-Type':'application/json','Content-Length':Buffer.byteLength(payloadStr)}
-      }, payloadStr);
+        if (temAcima2h) {
+          resultados.push({numCad, status:'IGNORADO >2h', data: ap.dataApuracao});
+          continue;
+        }
 
-      if (authR.status === 200) resultados.push({numCad, status:'AUTORIZADO'});
-      else resultados.push({numCad, status:'ERRO '+authR.status});
+        const payload = ap.situacoesApuradas.map(s => {
+          const item = JSON.parse(JSON.stringify(s));
+          if (s.situacao.codigo === 613) {
+            item.situacao = {codigo:663,descricao:'Hora Extra 60% Autorizada',excecao:false,id:'663',motivoAcertoObrigatorio:false,obrigatoriedadeAnexo:false};
+          } else if (s.situacao.codigo === 614) {
+            item.situacao = {codigo:664,descricao:'Hora Extra 60% Aut. Not',excecao:false,id:'664',motivoAcertoObrigatorio:false,obrigatoriedadeAnexo:false};
+          }
+          return item;
+        });
+
+        const hashDB = encodeURIComponent(ap.hashDB);
+        const payloadStr = JSON.stringify(payload);
+        const authR = await httpsReq({
+          hostname:'web25.seniorcloud.com.br',port:31601,
+          path:'/gestaoponto-backend/api/colaboradores/' + colabId + '/apuracoes/' + ap.dataApuracao + '/situacoes-apuradas/lote?codigoCalculo=1370&gestor=S&hashDB=' + hashDB,
+          method:'POST',
+          headers:{'assertion':assertion,'Content-Type':'application/json','Content-Length':Buffer.byteLength(payloadStr)}
+        }, payloadStr);
+
+        if (authR.status === 200) {
+          resultados.push({numCad, status:'AUTORIZADO', data: ap.dataApuracao});
+        } else {
+          resultados.push({numCad, status:'ERRO '+authR.status, data: ap.dataApuracao});
+        }
+      }
 
     } catch(e) {
       resultados.push({numCad, status:'ERRO: '+e.message});
@@ -108,11 +127,12 @@ async function processarHE() {
   const ign = resultados.filter(r => r.status && r.status.includes('IGNORADO')).length;
   const err = resultados.filter(r => r.status && r.status.includes('ERRO')).length;
 
-  const msg = '\u2705 *HE Autorizacao \u2014 GN Gestao*\n' + hoje + '\n\n' +
+  const msg = '\u2705 *HE Autorizacao \u2014 GN Gestao*\n' +
+    'Periodo: ' + dataInicial + ' a ' + dataFinal + '\n\n' +
     '\u2714\uFE0F Autorizados: ' + aut + '\n' +
     '\u26A0\uFE0F Ignorados (>2h): ' + ign + '\n' +
     (err ? '\u274C Erros: ' + err + '\n' : '') +
-    '\nTotal: ' + resultados.length;
+    '\nTotal processado: ' + resultados.length;
 
   return {mensagem: msg, detalhes: resultados};
 }
