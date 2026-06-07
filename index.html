@@ -7646,7 +7646,7 @@ async function gnExecutar(comando){
     ];
     const _siteAchado = _siteMapa.find(function(s){ return s.chaves.some(function(c){ return cmdLower.includes(c); }); });
     if(_siteAchado){
-      window.location.href = _siteAchado.url;
+      const _novaAba = window.open(_siteAchado.url, '_blank'); if(!_novaAba){ window.location.href = _siteAchado.url; }
       const _msgSite = 'Abrindo ' + _siteAchado.nome + ', Chefe.';
       if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',_msgSite); }
       else if(gnModoVoz){ try{ await gnSpeak(_msgSite); }catch(e){} }
@@ -7657,7 +7657,7 @@ async function gnExecutar(comando){
     _aberturaGatilhos.forEach(function(g){ _dominioTexto = _dominioTexto.replace(g, ' '); });
     _dominioTexto = _dominioTexto.replace(/\b(o|a|do|da|site|página|pagina|meu|minha)\b/g, '').trim();
     if(_dominioTexto.length > 2){
-      window.location.href = 'https://www.google.com/search?q=' + encodeURIComponent(_dominioTexto.trim());
+      const _novaAbaG = window.open('https://www.google.com/search?q=' + encodeURIComponent(_dominioTexto.trim()), '_blank'); if(!_novaAbaG){ window.location.href = 'https://www.google.com/search?q=' + encodeURIComponent(_dominioTexto.trim()); }
       const _msgGen = 'Buscando ' + _dominioTexto.trim() + ' no Google, Chefe.';
       if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',_msgGen); }
       else if(gnModoVoz){ try{ await gnSpeak(_msgGen); }catch(e){} }
