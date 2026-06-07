@@ -9628,6 +9628,8 @@ async function cipaEnviarAssinatura(){
       }
     }
     if(typeof gnExecutar === 'function'){
+      gnCommandSource = 'text';
+      gnTextTargetEl = document.querySelector('#globalJarvisChat .gj-msgs') || document.getElementById('globalJarvisChatResp');
       await gnExecutar(texto);
       window._gjModoTexto = false;
       return;
