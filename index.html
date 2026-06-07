@@ -7646,7 +7646,7 @@ async function gnExecutar(comando){
     ];
     const _siteAchado = _siteMapa.find(function(s){ return s.chaves.some(function(c){ return cmdLower.includes(c); }); });
     if(_siteAchado){
-      window.open(_siteAchado.url, '_blank');
+      const _abrirLink = document.createElement('a'); _abrirLink.href = _siteAchado.url; _abrirLink.target = '_blank'; _abrirLink.rel = 'noopener'; document.body.appendChild(_abrirLink); _abrirLink.click(); document.body.removeChild(_abrirLink);
       const _msgSite = 'Abrindo ' + _siteAchado.nome + ', Chefe.';
       if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',_msgSite); }
       else if(gnModoVoz){ try{ await gnSpeak(_msgSite); }catch(e){} }
@@ -7657,7 +7657,7 @@ async function gnExecutar(comando){
     _aberturaGatilhos.forEach(function(g){ _dominioTexto = _dominioTexto.replace(g, ' '); });
     _dominioTexto = _dominioTexto.replace(/\b(o|a|do|da|site|página|pagina|meu|minha)\b/g, '').trim();
     if(_dominioTexto.length > 2){
-      window.open('https://www.google.com/search?q=' + encodeURIComponent(_dominioTexto.trim()), '_blank');
+      const _abrirLinkGoogle = document.createElement('a'); _abrirLinkGoogle.href = 'https://www.google.com/search?q=' + encodeURIComponent(_dominioTexto.trim()); _abrirLinkGoogle.target = '_blank'; _abrirLinkGoogle.rel = 'noopener'; document.body.appendChild(_abrirLinkGoogle); _abrirLinkGoogle.click(); document.body.removeChild(_abrirLinkGoogle);
       const _msgGen = 'Buscando ' + _dominioTexto.trim() + ' no Google, Chefe.';
       if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',_msgGen); }
       else if(gnModoVoz){ try{ await gnSpeak(_msgGen); }catch(e){} }
@@ -7929,7 +7929,7 @@ async function gnExecutar(comando){
       _pesqSiteAchado.chaves.forEach(function(c){ const idx=cmd.indexOf(c); if(idx>_pesqInicio&&idx<_pesqFim) _pesqFim=idx; });
       const _pesqTermo = comando.substring(_pesqInicio, _pesqFim).trim();
       if(_pesqTermo.length > 0){
-        window.open(_pesqSiteAchado.urlBase + encodeURIComponent(_pesqTermo), '_blank');
+        const _abrirLinkPesq = document.createElement('a'); _abrirLinkPesq.href = _pesqSiteAchado.urlBase + encodeURIComponent(_pesqTermo); _abrirLinkPesq.target = '_blank'; _abrirLinkPesq.rel = 'noopener'; document.body.appendChild(_abrirLinkPesq); _abrirLinkPesq.click(); document.body.removeChild(_abrirLinkPesq);
         const _pesqMsg = 'Pesquisando "' + _pesqTermo + '" no ' + _pesqSiteAchado.nome + ', Chefe.';
         if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',_pesqMsg); }
         else if(gnModoVoz){ try{ await gnSpeak(_pesqMsg); }catch(e){} }
