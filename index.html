@@ -7543,7 +7543,7 @@ async function gnTranscrever(blob){
     }
 
     // Modo silêncio — só acorda com "jarvis"
-    if(_eraSilencio && !texto.includes('jarvis')){
+    if(_eraSilencio && !texto.includes('jarvis') && !texto.includes('jabez') && !texto.includes('jalvez') && !texto.includes('jalvis') && !texto.includes('jarvy')){
       gnReiniciar();
       return;
     }
@@ -7560,9 +7560,9 @@ async function gnTranscrever(blob){
       return;
     }
 
-    const temWake = texto.includes('jarvis') || texto.includes('charles') || texto.includes('chaves') || texto.includes('jarves') || texto.includes('jarvi') || texto.includes('javis') || texto.includes('jarvist') || texto.includes('jarvs') || texto.includes('charlis') || texto.includes('jalves') || texto.includes('chalves') || texto.includes('javi');
+    const temWake = texto.includes('jarvis') || texto.includes('charles') || texto.includes('chaves') || texto.includes('jarves') || texto.includes('jarvi') || texto.includes('javis') || texto.includes('jarvist') || texto.includes('jarvs') || texto.includes('charlis') || texto.includes('jalves') || texto.includes('chalves') || texto.includes('javi') || texto.includes('jabez') || texto.includes('jalvez') || texto.includes('jalvis') || texto.includes('jarvy');
     if(gnConversationMode){
-      const comando = temWake ? texto.replace(/.*jarvis[,\s]*/i,'').trim() : texto;
+      const comando = temWake ? texto.replace(/.*(?:jarvis|charles|chaves|jarves|jarvi|javis|jarvist|jarvs|charlis|jalves|chalves|javi|jabez|jalvez|jalvis|jarvy)[,\s]*/i,'').trim() : texto;
       if(comando.length > 2){
         console.log('Comando (conversa):', comando);
         gnExecutar(comando);
@@ -7570,7 +7570,7 @@ async function gnTranscrever(blob){
         gnReiniciar();
       }
     } else if(temWake){
-      const comando = texto.replace(/.*jarvis[,\s]*/i,'').trim();
+      const comando = texto.replace(/.*(?:jarvis|charles|chaves|jarves|jarvi|javis|jarvist|jarvs|charlis|jalves|chalves|javi|jabez|jalvez|jalvis|jarvy)[,\s]*/i,'').trim();
       console.log('Comando (wake):', comando);
       if(comando.length > 2){
         gnExecutar(comando);
