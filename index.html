@@ -7630,7 +7630,7 @@ async function gnExecutar(comando){
   }
 
   // Abertura de sites — executado sincronamente antes de qualquer await para evitar popup blocker
-  const _aberturaGatilhos = ['abre o ','abre ','abrir o ','abrir ','vai para o ','vai para ','acessa o ','acessa ','acessar o ','acessar ','quero ver ','me abre ','pode abrir ','poderia abrir ','me mostra ','mostra o '];
+  const _aberturaGatilhos = ['abri o ','abri ','abre ','abra o ','abra ','entrar no ','entrar na ','entrar em ','navegar para ','navegar no ','navegar na ','abre o ','abrir o ','abrir ','vai para o ','vai para ','acessa o ','acessa ','acessar o ','acessar ','quero ver ','me abre ','pode abrir ','poderia abrir ','me mostra ','mostra o '];
   if(_aberturaGatilhos.some(function(g){ return cmdLower.includes(g); })){
     const _siteMapa = [
       { chaves: ['tk mobile','tke mobile','mobile'], url: 'https://mobile.br.tkelevator.com/TKEMobile/Default.aspx', nome: 'TK Mobile' },
