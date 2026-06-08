@@ -5454,6 +5454,7 @@ function aiGoBack(){
 }
 
 var _laudoText = '';
+var _laudoPdfBase64 = null;
 
 function handleLaudoFile(event){
   var file = event.target.files[0];
@@ -5478,8 +5479,13 @@ function handleLaudoFile(event){
     };
     reader.readAsArrayBuffer(file);
   } else if(file.name.match(/\.pdf$/i)){
-    statusEl.innerHTML = '✅ <strong>'+file.name+'</strong> selecionado. Cole o texto do PDF abaixo ou use "Colar texto".';
-    document.getElementById('aiTextArea').style.display='';
+    var pdfReader = new FileReader();
+    pdfReader.onload = function(e){
+      _laudoPdfBase64 = e.target.result.split(',')[1];
+      _laudoText = '__PDF_BASE64__';
+      statusEl.innerHTML = '✅ <strong>'+file.name+'</strong> carregado. Pronto para análise.';
+    };
+    pdfReader.readAsDataURL(file);
   }
   event.target.value='';
 }
@@ -5537,7 +5543,7 @@ Responda APENAS com JSON válido sem markdown:
       body:JSON.stringify({
         model:'claude-haiku-4-5-20251001',
         max_tokens:4000,
-        messages:[{role:'user',content:prompt}]
+        messages:[{role:'user',content: _laudoPdfBase64 ? [{type:'document',source:{type:'base64',media_type:'application/pdf',data:_laudoPdfBase64}},{type:'text',text:prompt.replace(laudoContent.slice(0,6000),'')}] : prompt}]
       })
     });
     clearInterval(interval);
