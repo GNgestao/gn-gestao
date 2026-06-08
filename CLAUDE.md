@@ -406,6 +406,27 @@ Salvos em /scripts/ no repositório GitHub para uso futuro em caso de nova reins
 - Bloco `_modulosGN` em gnExecutar(): módulos GN abertos antes da lógica de sites externos
 - Wake words: 4 novas variações adicionadas (jabez, jalvez, jalvis, jarvy) — total 16 variações
 
+## STATUS RECENTE — 08/06/2026
+
+### Plano de Ação — importar PDF do laudo ✅ CONCLUÍDO
+- Lê PDF automaticamente via FileReader base64 e envia para API Claude como documento nativo
+- Modelo: claude-sonnet-4-6, max_tokens 8000
+
+### Plano de Ação — campo data de início na análise por IA ✅
+- Campo data de início adicionado no formulário de análise por IA
+- Itens gerados herdam a data de início do plano em vez de ficarem com `start:''`
+
+### Jarvis — abertura de módulos GN Gestão por voz e texto ✅
+- Bloco `_modulosGN` implementado em gnExecutar()
+- Módulos verificados antes do bloco de sites externos (_aberturaGatilhos)
+- Funciona por voz e por texto via globalJarvisSend()
+
+### Jarvis — wake words ✅
+- 16 variações totais incluindo jabez, jalvez, jalvis, jarvy
+
+### Jarvis — abertura de sites ✅
+- window.open() com fallback location.href funcionando por voz e texto (popup blocker resolvido)
+
 ## PENDÊNCIAS GERAIS
 
 ### Módulos novos
