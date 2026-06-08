@@ -5511,9 +5511,13 @@ async function runAiAnalysis(){
     if(el) el.textContent=msgs[mi];
   },2000);
 
+  var start = document.getElementById('ail-start').value;
+  var end = document.getElementById('ail-end').value;
+
   var prompt = `Você é um especialista em manutenção de elevadores da TK Elevator. Analise o laudo técnico abaixo e crie um Plano de Ação no formato 5W1H.
 
 CLIENTE: ${client}
+${start ? 'DATA INÍCIO: '+start : ''}${end ? '\nDATA TÉRMINO PREVISTA: '+end : ''}
 
 LAUDO TÉCNICO:
 ${laudoContent.slice(0,6000)}
@@ -5589,12 +5593,13 @@ async function saveAiPlan(){
   var client = document.getElementById('ail-client').value.trim();
   var name = document.getElementById('ail-name').value.trim() || 'Laudo '+new Date().toLocaleDateString('pt-BR');
   var resp = document.getElementById('ail-resp').value.trim();
+  var start = document.getElementById('ail-start').value;
   var end = document.getElementById('ail-end').value;
   if(!client){ alert('Informe o cliente.'); return; }
 
   var plan = {
     id: genId(), client, addr:'', name, resp,
-    start: new Date().toISOString().split('T')[0], end,
+    start: start || new Date().toISOString().split('T')[0], end,
     status: 'Em andamento',
     items: _aiParsedItems.map(function(item){
       return Object.assign({id:genId(),concluido:false,start:'',end:end,howMuch:item.howMuch||null}, item);
@@ -6840,6 +6845,7 @@ function applyRecImport(){
       <div class="form-group"><label>Nome do Plano</label><input type="text" id="ail-name" placeholder="Ex: Torre B — Laudo Vistoria 2025"/></div>
       <div class="form-row">
         <div class="form-group"><label>Responsável</label><input type="text" id="ail-resp" placeholder="Ex: Gabriel Nascimento"/></div>
+        <div class="form-group"><label>Data início</label><input type="date" id="ail-start"/></div>
         <div class="form-group"><label>Data término prevista</label><input type="date" id="ail-end"/></div>
       </div>
 
