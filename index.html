@@ -5602,7 +5602,7 @@ async function saveAiPlan(){
     start: start || new Date().toISOString().split('T')[0], end,
     status: 'Em andamento',
     items: _aiParsedItems.map(function(item){
-      return Object.assign({id:genId(),concluido:false,start:'',end:end,howMuch:item.howMuch||null}, item);
+      return Object.assign({id:genId(),concluido:false,start:start || new Date().toISOString().split('T')[0],end:end,howMuch:item.howMuch||null}, item);
     }),
     _added: Date.now()
   };
