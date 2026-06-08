@@ -7629,6 +7629,34 @@ async function gnExecutar(comando){
     return;
   }
 
+  const _modulosGN = {
+    'manutenção preditiva': () => enterModule('preditiva'),
+    'manutencao preditiva': () => enterModule('preditiva'),
+    'preditiva': () => enterModule('preditiva'),
+    'plano de acao': () => enterPlano(),
+    'plano de ação': () => enterPlano(),
+    'plano': () => enterPlano(),
+    'reconhece': () => enterReconhece(),
+    'reparo': () => enterReparo(),
+    'documentacao': () => { if(typeof enterDocumentacao==='function') enterDocumentacao(); },
+    'documentação': () => { if(typeof enterDocumentacao==='function') enterDocumentacao(); },
+    'cipa': () => { if(typeof enterCIPA==='function') enterCIPA(); },
+    'gestao de equipe': () => { if(typeof enterGestaoEquipe==='function') enterGestaoEquipe(); },
+    'gestão de equipe': () => { if(typeof enterGestaoEquipe==='function') enterGestaoEquipe(); },
+    'hub': () => gnVoltarHub(),
+    'inicio': () => gnVoltarHub(),
+    'voltar': () => gnVoltarHub(),
+  };
+  const _moduloAchado = Object.keys(_modulosGN).find(k => cmdLower.includes(k));
+  if(_moduloAchado){
+    _modulosGN[_moduloAchado]();
+    const _msgMod = 'Abrindo ' + _moduloAchado + ', Chefe.';
+    if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot',_msgMod); }
+    else if(gnModoVoz){ try{ await gnSpeak(_msgMod); }catch(e){} }
+    gnExecutando = false;
+    return;
+  }
+
   // Abertura de sites — executado sincronamente antes de qualquer await para evitar popup blocker
   const _aberturaGatilhos = ['abri o ','abri ','abre ','abra o ','abra ','entrar no ','entrar na ','entrar em ','navegar para ','navegar no ','navegar na ','abre o ','abrir o ','abrir ','vai para o ','vai para ','acessa o ','acessa ','acessar o ','acessar ','quero ver ','me abre ','pode abrir ','poderia abrir ','me mostra ','mostra o '];
   if(_aberturaGatilhos.some(function(g){ return cmdLower.includes(g); })){
