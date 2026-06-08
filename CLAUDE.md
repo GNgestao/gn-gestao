@@ -43,7 +43,7 @@ Rede neural animada. GN no centro, módulos ao redor flutuando. Fundo estrelado 
 ## JARVIS — ASSISTENTE DE VOZ
 
 ### Configuração atual:
-- Wake words reconhecidas: jarvis, charles, chaves, jarves, jarvi
+- Wake words reconhecidas (16 variações): jarvis, charles, chaves, jarves, jarvi, jabez, jalvez, jalvis, jarvy + demais variações
 - Chama Gabriel de "Chefe" ou "Senhor" (alterna aleatoriamente)
 - Webhook principal: POST https://n8n.srv1610251.hstgr.cloud/webhook/gn-assistente (body: {comando: texto})
 - Webhook TTS: POST https://n8n.srv1610251.hstgr.cloud/webhook/gn-tts (body: {texto: resposta})
@@ -102,19 +102,30 @@ Rede neural animada. GN no centro, módulos ao redor flutuando. Fundo estrelado 
 - Quando detectado, faz busca antes de chamar o Claude e injeta resultado no contexto
 - Endpoint: https://google.serper.dev/search
 
+### MEMÓRIA SEMÂNTICA — PGVECTOR + VOYAGE AI
+- Tabela: `jarvis_memoria_v2` no PostgreSQL com embeddings de 1024 dimensões (pgvector)
+- Serviço: `memoria-api.service` na porta 5056 — /root/memoria-api.js
+- API Key Voyage AI: pa-ETTEm-tehUgEhdHqfyuTGP8BJoHJqyTIlp56M2UQ9Rc
+- Conta Voyage AI: dashboard.voyageai.com, organização GN Gestão
+- Endpoint buscar: POST http://187.127.26.136:5056/buscar (body: {query: texto})
+- Endpoint salvar: POST http://187.127.26.136:5056/salvar (body: {conversa: texto})
+
 ### CÉREBRO — CLAUDE API
 - Modelo: claude-sonnet-4-5
 - API Key: no nó API Claude do n8n (x-api-key)
-- Fluxo n8n: Webhook → Buscar Memória → Código JS → API Claude → Responder ao Webhook + Salvar Memória
+- Fluxo n8n: Webhook → Buscar Memória → Buscar Fatos → Montar Prompt → API Claude → Extrair Resposta → Responder + Salvar Memória + Salvar Memória Semântica
 
 ### FLUXO N8N — GN Assistente Inteligente
 Sequência:
 1. Webhook recebe {comando: texto}
 2. Buscar Memória: SELECT role, conteudo FROM jarvis_memoria ORDER BY criado_em DESC LIMIT 20
-3. Código JS: monta system prompt com histórico + mensagem atual
-4. API Claude: chama https://api.anthropic.com/v1/messages
-5. Responder ao Webhook: retorna {resposta: texto}
-6. Salvar Memória: INSERT INTO jarvis_memoria (role, conteudo) VALUES (user, comando), (assistant, resposta)
+3. Buscar Fatos: POST http://187.127.26.136:5056/buscar com {query: comando} — retorna memórias semânticas relevantes
+4. Montar Prompt: Código JS monta system prompt com histórico + fatos semânticos + mensagem atual
+5. API Claude: chama https://api.anthropic.com/v1/messages
+6. Extrair Resposta: extrai texto da resposta Claude
+7. Responder ao Webhook: retorna {resposta: texto}
+8. Salvar Memória: INSERT INTO jarvis_memoria (role, conteudo)
+9. Salvar Memória Semântica: POST http://187.127.26.136:5056/salvar com conversa
 
 ### FLUXO N8N — GN Texto para Fala
 - Webhook recebe {texto: resposta}
@@ -280,11 +291,19 @@ Sequência:
 
 ### Abertura de sites e pesquisa ✅
 - Abertura por voz/texto: "abrir X", "abre o X", "vai para X", "acessa X"
+- Implementação: window.open() com fallback para location.href (resolve popup blocker do Chrome)
 - Sites mapeados: TK Mobile (https://mobile.br.tkelevator.com/TKEMobile/Default.aspx), Gmail, YouTube, WhatsApp, Google, n8n, GitHub, Autentique, ChatGPT, Claude
 - Sites não mapeados: extrai domínio e tenta https://dominio.com
 - Pesquisa em sites: "pesquisar X no YouTube/Google/Spotify/Maps" com encodeURIComponent
 - Limpeza de XML nas respostas: 5 passes de regex (function_calls, invoke, trigger, url, tags genéricas)
 - Detecção em gnExecutar() (voz) e globalJarvisSend() (texto), antes do webhook
+
+### Abertura de módulos GN Gestão ✅
+- Bloco `_modulosGN` em gnExecutar(): verifica comandos de módulo ANTES do bloco _aberturaGatilhos (sites externos)
+- Módulos mapeados: manutenção preditiva, preditiva, plano, reconhece, reparo, documentação, cipa, gestão de equipe, hub, voltar
+- Suporta variações com e sem acento (ex: "documentacao" e "documentação")
+- Funciona por voz e por texto via globalJarvisSend()
+- Responde: "Abrindo [módulo], Chefe." antes de navegar
 
 ### Memória e API ✅
 - Memória permanente funcionando: conversas salvas no PostgreSQL
@@ -332,6 +351,7 @@ Sequência:
 - **jarvis-restart-api** (porta 5051) — restart do Jarvis via webhook — **a reconfigurar**
 - **tac-api.service** (porta 5053) — /root/tac-api.js, systemd
 - **he-api.service** (porta 5054) — /root/he-api.js, systemd
+- **memoria-api.service** (porta 5056) — /root/memoria-api.js, systemd — memória semântica pgvector
 
 ## INFRA VPS — Instalações (26-27/05/2026)
 - wkhtmltopdf instalado para conversão HTML→PDF (Autentique)
@@ -353,6 +373,7 @@ Sequência:
 - jarvis-restart-api (porta 5051) — /root/jarvis-restart-api.js — rodando
 - tac-api.service (porta 5053) — /root/tac-api.js — rodando
 - he-api.service (porta 5054) — /root/he-api.js — rodando
+- memoria-api.service (porta 5056) — /root/memoria-api.js — rodando (memória semântica pgvector)
 - node_modules em /root (express, node-fetch@2, form-data)
 
 ### Fluxos n8n restaurados (todos ativos)
@@ -371,6 +392,20 @@ Sequência:
 ### Scripts de recriação dos fluxos
 Salvos em /scripts/ no repositório GitHub para uso futuro em caso de nova reinstalação.
 
+## STATUS RECENTE — 07/06/2026
+
+### Memória semântica implementada ✅
+- pgvector instalado no PostgreSQL (container evolution-postgres)
+- Tabela `jarvis_memoria_v2` com embeddings 1024 dimensões (modelo voyage-3-lite)
+- memoria-api.service (porta 5056) rodando com /root/memoria-api.js
+- Fluxo n8n atualizado: adicionados nós "Buscar Fatos" e "Salvar Memória Semântica"
+- Voyage AI: conta criada em dashboard.voyageai.com, organização GN Gestão
+
+### Jarvis — melhorias ✅
+- Abertura de sites por voz e texto funcionando: window.open() com fallback location.href (popup blocker resolvido)
+- Bloco `_modulosGN` em gnExecutar(): módulos GN abertos antes da lógica de sites externos
+- Wake words: 4 novas variações adicionadas (jabez, jalvez, jalvis, jarvy) — total 16 variações
+
 ## PENDÊNCIAS GERAIS
 
 ### Módulos novos
@@ -378,14 +413,14 @@ Salvos em /scripts/ no repositório GitHub para uso futuro em caso de nova reins
 - [ ] Módulo Perito Judicial / Gestão de ARTs e Laudos (~50k tokens)
 
 ### Jarvis / Integrações
-- [ ] Jarvis abrindo sites por voz — popup blocker Chrome bloqueando (~5k tokens)
 - [ ] Integração TK Mobile com Jarvis — fluxo base: Fluxo 1 - TAC Mobile (~20k tokens)
 - [ ] Fluxo Sênior — consulta HE em tempo real via Jarvis (~15k tokens)
 - [ ] Lista de clientes — endereços memorizados no Jarvis (~5k tokens)
 - [ ] Integração Gmail + Google Calendar (~40k tokens)
 - [ ] TTS streaming / melhorar latência (~20k tokens)
 - [ ] Whisper local — substituir Deepgram (~15k tokens)
-- [ ] Memória permanente de fatos + aumentar limite para 50 msgs (~10k tokens)
+- [x] Memória semântica de fatos implementada via pgvector + Voyage AI (07/06/2026)
+- [ ] Aumentar limite de memória convencional para 50 msgs (~5k tokens)
 
 ### Hub / App / Visual
 - [ ] Hub 3D estilo Obsidian (~30k tokens)
