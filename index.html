@@ -9767,7 +9767,7 @@ var GE_CORES = {laranja:'#E84A1A', azul:'#2563eb', verde:'#16a34a', fixo:'#6b728
 
 var GE_MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 
-function enterGestaoEquipe(){
+window.enterGestaoEquipe = function enterGestaoEquipe(){
   document.querySelectorAll('[id^="screen"]').forEach(function(s){ s.style.display='none'; });
   document.getElementById('hubScreen').style.display='none';
   document.getElementById('screenGestaoEquipe').style.display='block';
@@ -9776,12 +9776,12 @@ function enterGestaoEquipe(){
   geRenderFerias();
 }
 
-function gestaoEquipeVoltar(){
+window.gestaoEquipeVoltar = function gestaoEquipeVoltar(){
   document.getElementById('screenGestaoEquipe').style.display='none';
   if(typeof gnVoltarHub==='function') gnVoltarHub(); else document.getElementById('hubScreen').style.display='block';
 }
 
-function geTabFerias(){
+window.geTabFerias = function geTabFerias(){
   document.getElementById('geAbaFerias').style.display='block';
   document.getElementById('geAbaEscala').style.display='none';
   document.getElementById('btnTabFerias').style.background='#7B2FBE';
@@ -9790,7 +9790,7 @@ function geTabFerias(){
   document.getElementById('btnTabEscala').style.color='#aaa';
 }
 
-function geTabEscala(){
+window.geTabEscala = function geTabEscala(){
   document.getElementById('geAbaFerias').style.display='none';
   document.getElementById('geAbaEscala').style.display='block';
   document.getElementById('btnTabEscala').style.background='#7B2FBE';
@@ -9800,7 +9800,7 @@ function geTabEscala(){
   geGerarEscala();
 }
 
-function geRenderFerias(){
+window.geRenderFerias = function geRenderFerias(){
   var ano = parseInt(document.getElementById('geAnoFerias').value);
   var grid = document.getElementById('geGridFerias');
 
@@ -9850,7 +9850,7 @@ function geRenderFerias(){
   grid.innerHTML = html;
 }
 
-function geAbrirModalFerias(id){
+window.geAbrirModalFerias = function geAbrirModalFerias(id){
   var modal = document.getElementById('geModalFerias');
   var sel = document.getElementById('geFeriasNome');
   sel.innerHTML = GE_TECNICOS.map(function(t){ return '<option value="'+t.nome+'">'+t.nome+'</option>'; }).join('');
@@ -9872,12 +9872,12 @@ function geAbrirModalFerias(id){
   modal.style.display = 'flex';
 }
 
-function geFecharModalFerias(){
+window.geFecharModalFerias = function geFecharModalFerias(){
   document.getElementById('geModalFerias').style.display = 'none';
   _geEditandoFerias = null;
 }
 
-function geSalvarFerias(){
+window.geSalvarFerias = function geSalvarFerias(){
   var nome = document.getElementById('geFeriasNome').value;
   var inicio = document.getElementById('geFeriasInicio').value;
   var fim = document.getElementById('geFeirasFim').value;
@@ -9903,7 +9903,7 @@ function geTecnicoEmFerias(nome, data){
 }
 
 // Gerador de Escala
-function geGerarEscala(){
+window.geGerarEscala = function geGerarEscala(){
   var ano = parseInt(document.getElementById('geAnoEscala').value);
   var semanas = [];
 
@@ -10091,7 +10091,7 @@ function geRenderEscala(semanas, ano){
   grid.innerHTML = html;
 }
 
-function geExportarEscalaPDF(){
+window.geExportarEscalaPDF = function geExportarEscalaPDF(){
   alert('Exportar PDF da escala — em desenvolvimento.');
 }
 
