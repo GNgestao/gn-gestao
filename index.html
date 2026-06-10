@@ -9856,7 +9856,7 @@ var _GE_API = 'http://187.127.26.136:5057';
 
 async function geGetFerias(ano){
   try{
-    var res = await fetch(_GE_API+'/ferias?ano='+ano);
+    var res = await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-ferias-get?ano='+ano);
     if(!res.ok) throw new Error('HTTP '+res.status);
     var data = await res.json();
     return Array.isArray(data) ? data : [];
