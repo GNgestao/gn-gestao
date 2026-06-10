@@ -34,8 +34,8 @@ Single-page HTML/CSS/JS puro. Tema escuro roxo/laranja, fontes Syne + DM Sans.
 - Documentação — Carta Técnica ✅ concluída; Ata de Reunião ✅ concluída
 - CIPA ✅ — Ata CIPA completa; formulário, PDF, envio Autentique, integração Jarvis
 
-### Módulos futuros:
-- Gestão da Equipe
+### Módulos em desenvolvimento:
+- Gestão de Equipe (aba Férias + aba Escala de Plantões)
 
 ### Hub:
 Rede neural animada. GN no centro, módulos ao redor flutuando. Fundo estrelado global.
@@ -427,10 +427,35 @@ Salvos em /scripts/ no repositório GitHub para uso futuro em caso de nova reins
 ### Jarvis — abertura de sites ✅
 - window.open() com fallback location.href funcionando por voz e texto (popup blocker resolvido)
 
+## STATUS 08/06/2026 — Módulo Gestão de Equipe (em desenvolvimento)
+
+- Módulo criado e acessível pelo hub orbital e pelo Jarvis (voz/texto)
+- **Aba Férias:** tabela por mês (linhas=meses, células=técnicos), adicionar/editar/deletar férias por técnico, dados salvos no localStorage (`ge_ferias`)
+- **Aba Escala:** gerador automático 2x1, respeita férias, grupos laranja/azul/verde/fixo
+- PENDENTE: layout das férias precisa ser melhorado para ficar igual ao modelo de referência
+- PENDENTE: escala precisa de revisão e ajustes de regras de negócio
+
+### Grupos da equipe:
+- **Laranja:** Giliard, Humberto, Klebson Ramos, Elenildo, Klebson Andrade, Charlington, Rodrigo
+- **Azul:** Evaldo, Wellington, Alisson, Adriano Fran, Joaz, Tone
+- **Verde:** Bruno, Diego, Paulo Andre, Rodolfo, George, Durval
+- **Fixos:** Laercio, Marcelo, Adriano Rog
+
+### Regras de escala:
+- Grupos coloridos: 2x1 (trabalha 2 fins de semana, folga 1)
+- Fixos: trabalham todos os sábados 4h
+- SRM sáb: Bruno 08-17h, Humberto 13-22h
+- SBV: Paulo André (sub: Alisson, Giliard, Charlington)
+- SPO sáb/dom: Wellington e Klebson Ramos alternados
+- ERM: Adriano Rog (fixo) 08-12h
+- TRF: Laercio 08-12h, Marcelo 12-17h (fixos)
+- Noturno Filial dom: Rodrigo 22-07h (a cada 4 semanas)
+- Domingos: Klebson Andrade (SRM/SPO), George (RHP/SPO), Adriano Fran (SRM/SPO/RHP)
+
 ## PENDÊNCIAS GERAIS
 
 ### Módulos novos
-- [ ] Módulo Gestão de Equipe + férias + escala de plantões (~40k tokens)
+- [ ] Módulo Gestão de Equipe — em desenvolvimento (ver seção STATUS 08/06/2026 acima)
 - [ ] Módulo Perito Judicial / Gestão de ARTs e Laudos (~50k tokens)
 
 ### Jarvis / Integrações
