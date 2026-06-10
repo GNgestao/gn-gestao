@@ -7640,7 +7640,7 @@ async function gnProgramarFerias(cmdLower, textoOriginal){
     var dI=match[2], dF=match[3];
     if(res.ok){
       if(typeof window._geAnoAtual !== 'undefined') delete _geFeriasCache[ano];
-      fetch('http://187.127.26.136:5056/salvar', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({conteudo:'Férias de '+nome+' programadas de '+inicio+' até '+fim, tipo:'ferias'})});
+      fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-ferias-memoria', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({conteudo:'Férias de '+nome+' programadas de '+inicio+' até '+fim, tipo:'ferias'})});
       return 'Férias de '+nome+' programadas de '+dI+' até '+dF+', Chefe.';
     }
     return 'Não consegui programar as férias de '+nome+'. Servidor retornou erro '+res.status+'.';
