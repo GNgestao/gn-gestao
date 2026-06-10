@@ -1,0 +1,71 @@
+
+<!-- ==================== GESTÃO DE EQUIPE ==================== -->
+<div id="screenGestaoEquipe" style="display:none;position:fixed;inset:0;background:#12082a;z-index:100;overflow-y:auto;font-family:'DM Sans',sans-serif;">
+  <div style="max-width:1400px;margin:0 auto;padding:1.5rem;">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid #7B2FBE;">
+      <button onclick="gestaoEquipeVoltar()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;font-size:.9rem;">← GN Gestão</button>
+      <h1 style="color:#fff;font-size:1.5rem;font-weight:700;margin:0;">👥 Gestão de Equipe</h1>
+      <div style="margin-left:auto;display:flex;gap:.5rem;">
+        <button onclick="geTabFerias()" id="btnTabFerias" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">📅 Férias</button>
+        <button onclick="geTabEscala()" id="btnTabEscala" style="background:#2a1a4e;color:#aaa;border:1px solid #7B2FBE;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">📋 Escala</button>
+      </div>
+    </div>
+
+    <!-- ABA FÉRIAS -->
+    <div id="geAbaFerias">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h2 style="color:#E84A1A;font-size:1.1rem;margin:0;">Férias 2026</h2>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+          <select id="geAnoFerias" onchange="geRenderFerias()" style="background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.3rem .6rem;">
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+          <button onclick="geAbrirModalFerias(null)" style="background:#E84A1A;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">+ Adicionar Férias</button>
+        </div>
+      </div>
+      <div id="geGridFerias" style="overflow-x:auto;"></div>
+    </div>
+
+    <!-- ABA ESCALA -->
+    <div id="geAbaEscala" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+        <h2 style="color:#E84A1A;font-size:1.1rem;margin:0;">Escala de Plantões</h2>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+          <select id="geAnoEscala" onchange="geGerarEscala()" style="background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.3rem .6rem;">
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+          <button onclick="geGerarEscala()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">🔄 Gerar Escala</button>
+          <button onclick="geExportarEscalaPDF()" style="background:#E84A1A;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">📄 Exportar PDF</button>
+        </div>
+      </div>
+      <div id="geGridEscala" style="overflow-x:auto;"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal Férias -->
+<div id="geModalFerias" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center;">
+  <div style="background:#1a0f35;border:1px solid #7B2FBE;border-radius:12px;padding:1.5rem;min-width:320px;max-width:400px;width:90%;">
+    <h3 style="color:#fff;margin:0 0 1rem;font-size:1.1rem;">📅 Férias</h3>
+    <div style="margin-bottom:.8rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Técnico</label>
+      <select id="geFeriasNome" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;"></select>
+    </div>
+    <div style="margin-bottom:.8rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Data Início</label>
+      <input type="date" id="geFeriasInicio" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;box-sizing:border-box;"/>
+    </div>
+    <div style="margin-bottom:1rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Data Fim</label>
+      <input type="date" id="geFeirasFim" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;box-sizing:border-box;"/>
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+      <button onclick="geFecharModalFerias()" style="background:#2a1a4e;color:#aaa;border:1px solid #555;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">Cancelar</button>
+      <button onclick="geSalvarFerias()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">Salvar</button>
+    </div>
+  </div>
+</div>
