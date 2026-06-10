@@ -7640,6 +7640,7 @@ async function gnProgramarFerias(cmdLower, textoOriginal){
     var dI=match[2], dF=match[3];
     if(res.ok){
       if(typeof window._geAnoAtual !== 'undefined') delete _geFeriasCache[ano];
+      fetch('http://187.127.26.136:5056/salvar', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({conteudo:'Férias de '+nome+' programadas de '+inicio+' até '+fim, tipo:'ferias'})});
       return 'Férias de '+nome+' programadas de '+dI+' até '+dF+', Chefe.';
     }
     return 'Não consegui programar as férias de '+nome+'. Servidor retornou erro '+res.status+'.';
@@ -9909,7 +9910,6 @@ window.geRenderFerias = async function geRenderFerias(){
   if(title) title.textContent = 'Férias ' + _geAnoAtual;
   grid.innerHTML = '<div style="padding:2rem;text-align:center;color:rgba(196,181,253,.55);font-size:.85rem;">Carregando férias...</div>';
   var ferias = await geGetFerias(_geAnoAtual);
-  _geFeriasCache[_geAnoAtual] = ferias;
   var ano = _geAnoAtual;
 
   var thB = 'background:#241050;';
