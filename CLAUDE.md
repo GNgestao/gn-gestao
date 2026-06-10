@@ -352,6 +352,7 @@ Sequência:
 - **tac-api.service** (porta 5053) — /root/tac-api.js, systemd
 - **he-api.service** (porta 5054) — /root/he-api.js, systemd
 - **memoria-api.service** (porta 5056) — /root/memoria-api.js, systemd — memória semântica pgvector
+- **ferias-api.service** (porta 5057) — /root/ferias-api.js — API férias PostgreSQL
 
 ## INFRA VPS — Instalações (26-27/05/2026)
 - wkhtmltopdf instalado para conversão HTML→PDF (Autentique)
@@ -451,6 +452,20 @@ Salvos em /scripts/ no repositório GitHub para uso futuro em caso de nova reins
 - TRF: Laercio 08-12h, Marcelo 12-17h (fixos)
 - Noturno Filial dom: Rodrigo 22-07h (a cada 4 semanas)
 - Domingos: Klebson Andrade (SRM/SPO), George (RHP/SPO), Adriano Fran (SRM/SPO/RHP)
+
+## STATUS 10/06/2026 — Módulo Gestão de Equipe continuação
+
+1. Tabela `gestao_ferias` criada no PostgreSQL (n8n-postgres-1, db evolution)
+2. Serviço `ferias-api.service` criado na porta 5057 (/root/ferias-api.js)
+3. Férias 2026 pré-populadas no banco com 22 técnicos
+4. Fluxos n8n criados:
+   - **GN Ferias** (ID: x5CHodNojPR73nIV) — POST webhook/gn-ferias — salva férias
+   - **GN Ferias GET** (ID: 51HGqebHl422nAxM) — GET webhook/gn-ferias-get — busca férias
+   - **GN Ferias Memoria** (ID: nEsQxUuPQmdk1fWt) — POST webhook/gn-ferias-memoria — salva na memória semântica
+5. Jarvis consegue programar férias por voz/texto: "programe férias de X para DD/MM/YYYY até DD/MM/YYYY"
+6. App busca férias via HTTPS (webhook n8n) para evitar mixed content
+7. Cache do browser desativado via meta tags
+8. Jarvis NÃO deve inventar respostas — se não sabe fazer algo deve informar
 
 ## PENDÊNCIAS GERAIS
 
