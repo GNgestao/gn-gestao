@@ -7633,7 +7633,7 @@ async function gnProgramarFerias(cmdLower, textoOriginal){
   var fim = parseData(match[3]);
   var ano = parseInt(inicio.split('-')[0]);
   try{
-    var res = await fetch('http://187.127.26.136:5057/ferias/jarvis', {
+    var res = await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-ferias', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({nome:nome, inicio:inicio, fim:fim, ano:ano})
     });
