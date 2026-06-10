@@ -8474,7 +8474,7 @@ async function gnSpeak(texto){
       {id:'plano',        label:'Plano de\nAção',        theta:180, baseY: 30, action:()=>enterPlano(),                                                          roles:['superadmin','admin','viewer']},
       {id:'documentacao', label:'Documentação',          theta:240, baseY:-16, action:()=>enterDocumentacao(),                                                       roles:['superadmin','admin']},
       {id:'cipa',         label:'CIPA',                  theta:225, baseY: 12, action:()=>enterCIPA(),                                                             roles:['superadmin','admin']},
-      {id:'gestaoEquipe', label:'Gestão de\nEquipe',     theta:300, baseY:  8, action:null,                                                                       roles:['superadmin','admin']},
+      {id:'gestaoEquipe', label:'Gestão de\nEquipe',     theta:300, baseY:  8, action:()=>enterGestaoEquipe(),                                                  roles:['superadmin','admin']},
       {id:'github',       label:'GitHub',                theta:210, baseY: 26, action:()=>window.open('https://github.com/GNgestao/gn-gestao','_blank'),           roles:['superadmin']},
       {id:'firebase',     label:'Firebase',              theta:255, baseY:-20, action:()=>window.open('https://console.firebase.google.com','_blank'),             roles:['superadmin']},
       {id:'vps',          label:'VPS',                   theta:270, baseY: 14, action:()=>window.open('https://hpanel.hostinger.com','_blank'),                    roles:['superadmin']},
