@@ -9804,41 +9804,50 @@ window.geRenderFerias = function geRenderFerias(){
   var ano = parseInt(document.getElementById('geAnoFerias').value);
   var grid = document.getElementById('geGridFerias');
 
-  var html = '<table style="border-collapse:collapse;width:100%;min-width:900px;font-size:.8rem;">';
-  html += '<thead><tr><th style="background:#2a1a4e;color:#fff;padding:.5rem .7rem;text-align:left;position:sticky;left:0;z-index:2;min-width:130px;">Técnico</th>';
-  GE_MESES.forEach(function(m){ html += '<th style="background:#2a1a4e;color:#aaa;padding:.5rem .7rem;text-align:center;min-width:90px;">'+m+'/'+String(ano).slice(2)+'</th>'; });
+  var thBase = 'padding:.45rem .5rem;text-align:center;font-size:.75rem;font-weight:700;border:1px solid #c0c0c0;white-space:nowrap;';
+  var html = '<div style="overflow-x:auto;">';
+  html += '<table style="border-collapse:collapse;width:100%;min-width:900px;font-size:.78rem;background:#fff;">';
+  html += '<thead><tr>';
+  html += '<th style="'+thBase+'background:#d9e1f2;color:#1f3864;text-align:left;min-width:140px;position:sticky;left:0;z-index:2;">Técnico</th>';
+  GE_MESES.forEach(function(m){
+    html += '<th style="'+thBase+'background:#d9e1f2;color:#1f3864;min-width:80px;">'+m+'/'+String(ano).slice(2)+'</th>';
+  });
   html += '</tr></thead><tbody>';
 
-  GE_TECNICOS.forEach(function(tec){
-    var cor = GE_CORES[tec.grupo];
+  GE_TECNICOS.forEach(function(tec, idx){
+    var rowBg = idx % 2 === 0 ? '#ffffff' : '#f2f2f2';
     html += '<tr>';
-    html += '<td style="background:#1a0f35;color:'+cor+';font-weight:600;padding:.4rem .7rem;position:sticky;left:0;border-bottom:1px solid #2a1a4e;">'+tec.nome+'</td>';
+    html += '<td style="background:#ffffff;color:#1a1a1a;font-weight:600;font-size:.78rem;padding:.4rem .6rem;border:1px solid #c0c0c0;position:sticky;left:0;white-space:nowrap;">'+tec.nome+'</td>';
 
     for(var m=0; m<12; m++){
       var feriasDoMes = _geFerias.filter(function(f){
         if(f.nome !== tec.nome) return false;
-        var ini = new Date(f.inicio);
-        var fim = new Date(f.fim);
+        var ini = new Date(f.inicio+'T00:00:00');
+        var fim = new Date(f.fim+'T00:00:00');
         var mesIni = new Date(ano, m, 1);
         var mesFim = new Date(ano, m+1, 0);
         return ini <= mesFim && fim >= mesIni;
       });
 
-      var cell = '<td style="background:#12082a;padding:.3rem .5rem;text-align:center;border-bottom:1px solid #1a0f35;border-left:1px solid #1a0f35;">';
+      var tdStyle = 'background:'+rowBg+';padding:.25rem .3rem;text-align:center;border:1px solid #c0c0c0;vertical-align:middle;cursor:pointer;';
+      var cellId = 'gecell_'+tec.nome.replace(/\s/g,'_')+'_'+m;
+      var cell = '<td style="'+tdStyle+'" title="Clique para adicionar férias" onclick="geAbrirModalFerias(null,\''+tec.nome+'\','+ano+','+(m+1)+')">';
+
       if(feriasDoMes.length > 0){
         feriasDoMes.forEach(function(f){
-          var ini = new Date(f.inicio);
-          var fim = new Date(f.fim);
-          var dIni = String(ini.getDate()).padStart(2,'0')+'/'+String(ini.getMonth()+1).padStart(2,'0');
-          var dFim = String(fim.getDate()).padStart(2,'0')+'/'+String(fim.getMonth()+1).padStart(2,'0');
-          cell += '<div onclick="geAbrirModalFerias(\'' + f.id + '\')" style="cursor:pointer;display:inline-block;background:'+cor+'22;border:1px solid '+cor+';border-radius:4px;padding:.1rem .3rem;margin:.1rem;">';
-          cell += '<span style="color:#22C55E;font-size:.75rem;">'+dIni+'</span>';
-          cell += '<span style="color:#aaa;font-size:.7rem;"> até </span>';
-          cell += '<span style="color:#E84A1A;font-size:.75rem;">'+dFim+'</span>';
+          var ini = new Date(f.inicio+'T00:00:00');
+          var fim = new Date(f.fim+'T00:00:00');
+          var dIni = String(ini.getDate()).padStart(2,'0')+'-'+String(ini.getMonth()+1).padStart(2,'0');
+          var dFim = String(fim.getDate()).padStart(2,'0')+'-'+String(fim.getMonth()+1).padStart(2,'0');
+          cell += '<div style="display:flex;align-items:center;justify-content:center;gap:2px;background:#fff3cd;border:1px solid #ffc107;border-radius:3px;padding:.1rem .25rem;margin:.1rem 0;position:relative;" onclick="event.stopPropagation();geAbrirModalFerias(\''+f.id+'\')">';
+          cell += '<span style="color:#c0392b;font-weight:700;font-size:.72rem;cursor:pointer;">'+dIni+'</span>';
+          cell += '<span style="color:#555;font-size:.68rem;">→</span>';
+          cell += '<span style="color:#1a7a1a;font-weight:700;font-size:.72rem;cursor:pointer;">'+dFim+'</span>';
+          cell += '<span onclick="event.stopPropagation();geDeletarFerias(\''+f.id+'\')" style="margin-left:3px;color:#999;font-size:.65rem;cursor:pointer;line-height:1;padding:0 2px;border-radius:2px;background:#e0e0e0;" title="Remover">×</span>';
           cell += '</div>';
         });
       } else {
-        cell += '<span style="color:#333;">—</span>';
+        cell += '<span style="color:#c8c8c8;font-size:.72rem;">+</span>';
       }
       cell += '</td>';
       html += cell;
@@ -9846,11 +9855,11 @@ window.geRenderFerias = function geRenderFerias(){
     html += '</tr>';
   });
 
-  html += '</tbody></table>';
+  html += '</tbody></table></div>';
   grid.innerHTML = html;
 }
 
-window.geAbrirModalFerias = function geAbrirModalFerias(id){
+window.geAbrirModalFerias = function geAbrirModalFerias(id, nomePresel, anoPresel, mesPresel){
   var modal = document.getElementById('geModalFerias');
   var sel = document.getElementById('geFeriasNome');
   sel.innerHTML = GE_TECNICOS.map(function(t){ return '<option value="'+t.nome+'">'+t.nome+'</option>'; }).join('');
@@ -9864,12 +9873,26 @@ window.geAbrirModalFerias = function geAbrirModalFerias(id){
       _geEditandoFerias = id;
     }
   } else {
-    sel.value = GE_TECNICOS[0].nome;
-    document.getElementById('geFeriasInicio').value = '';
-    document.getElementById('geFeirasFim').value = '';
+    if(nomePresel) sel.value = nomePresel;
+    else sel.value = GE_TECNICOS[0].nome;
+    if(anoPresel && mesPresel){
+      var mm = String(mesPresel).padStart(2,'0');
+      document.getElementById('geFeriasInicio').value = anoPresel+'-'+mm+'-01';
+      document.getElementById('geFeirasFim').value = '';
+    } else {
+      document.getElementById('geFeriasInicio').value = '';
+      document.getElementById('geFeirasFim').value = '';
+    }
     _geEditandoFerias = null;
   }
   modal.style.display = 'flex';
+}
+
+window.geDeletarFerias = function geDeletarFerias(id){
+  if(!confirm('Remover este período de férias?')) return;
+  _geFerias = _geFerias.filter(function(f){ return f.id !== id; });
+  geCarregarFerias();
+  geRenderFerias();
 }
 
 window.geFecharModalFerias = function geFecharModalFerias(){
