@@ -9731,41 +9731,89 @@ async function cipaEnviarAssinatura(){
 
 // ==================== GESTÃO DE EQUIPE JS ====================
 
-var _geFerias = JSON.parse(localStorage.getItem('ge_ferias') || '[]');
-var _geEditandoFerias = null;
+var GE_MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 
 var GE_TECNICOS = [
-  // Laranja
-  {nome:'Giliard', grupo:'laranja', matricula:'55018679'},
-  {nome:'Humberto', grupo:'laranja', matricula:'55013171'},
-  {nome:'Klebson Ramos', grupo:'laranja', matricula:'55012621'},
-  {nome:'Elenildo', grupo:'laranja', matricula:'55016383'},
-  {nome:'Klebson Andrade', grupo:'laranja', matricula:'55001880'},
-  {nome:'Charlington', grupo:'laranja', matricula:'55018937'},
-  {nome:'Rodrigo', grupo:'laranja', matricula:'55012352'},
-  // Azul
-  {nome:'Evaldo', grupo:'azul', matricula:'55010850'},
-  {nome:'Wellington', grupo:'azul', matricula:'55013039'},
-  {nome:'Alisson', grupo:'azul', matricula:'55016328'},
-  {nome:'Adriano Fran', grupo:'azul', matricula:'55007813'},
-  {nome:'Joaz', grupo:'azul', matricula:'55004915'},
-  {nome:'Tone', grupo:'azul', matricula:'55021085'},
-  // Verde
-  {nome:'Bruno', grupo:'verde', matricula:'55007445'},
-  {nome:'Diego', grupo:'verde', matricula:'55019788'},
-  {nome:'Paulo Andre', grupo:'verde', matricula:'55015783'},
-  {nome:'Rodolfo', grupo:'verde', matricula:'55000585'},
-  {nome:'George', grupo:'verde', matricula:'55015944'},
-  {nome:'Durval', grupo:'verde', matricula:'55004902'},
-  // Fixos
-  {nome:'Laercio', grupo:'fixo', matricula:'55012128'},
-  {nome:'Marcelo', grupo:'fixo', matricula:'55015003'},
-  {nome:'Adriano Rog', grupo:'fixo', matricula:'55013039'},
+  {nome:'Giliard',          grupo:'laranja', matricula:'55018679'},
+  {nome:'Humberto',         grupo:'laranja', matricula:'55013171'},
+  {nome:'Klebson Ramos',    grupo:'laranja', matricula:'55012621'},
+  {nome:'Elenildo',         grupo:'laranja', matricula:'55016383'},
+  {nome:'Klebson Andrade',  grupo:'laranja', matricula:'55001880'},
+  {nome:'Charlington',      grupo:'laranja', matricula:'55018937'},
+  {nome:'Rodrigo',          grupo:'laranja', matricula:'55012352'},
+  {nome:'Evaldo',           grupo:'azul',    matricula:'55010850'},
+  {nome:'Wellington',       grupo:'azul',    matricula:'55013039'},
+  {nome:'Alisson',          grupo:'azul',    matricula:'55016328'},
+  {nome:'Adriano Fran',     grupo:'azul',    matricula:'55007813'},
+  {nome:'Joaz',             grupo:'azul',    matricula:'55004915'},
+  {nome:'Tone',             grupo:'azul',    matricula:'55021085'},
+  {nome:'Bruno',            grupo:'verde',   matricula:'55007445'},
+  {nome:'Diego',            grupo:'verde',   matricula:'55019788'},
+  {nome:'Paulo Andre',      grupo:'verde',   matricula:'55015783'},
+  {nome:'Rodolfo',          grupo:'verde',   matricula:'55000585'},
+  {nome:'George',           grupo:'verde',   matricula:'55015944'},
+  {nome:'Durval',           grupo:'verde',   matricula:'55004902'},
+  {nome:'Laercio',          grupo:'fixo',    matricula:'55012128'},
+  {nome:'Marcelo',          grupo:'fixo',    matricula:'55015003'},
+  {nome:'Adriano Rog',      grupo:'fixo',    matricula:'55013039'},
 ];
 
 var GE_CORES = {laranja:'#E84A1A', azul:'#2563eb', verde:'#16a34a', fixo:'#6b7280'};
 
-var GE_MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+// Ordered list for the vacation table (includes all names from vacation data)
+var GE_FERIAS_TECNICOS = [
+  'Giliard','Humberto','Klebson Ramos','Elenildo','Klebson Andrade','Charlington','Rodrigo','Antonio Amaro',
+  'Evaldo','Wellington','Alisson','Adriano Francisco','Joaz','Tone','Edvaldo',
+  'Bruno','Diego','Paulo Andre','Rodolfo','George','Durval',
+  'Laercio','Marcelo','Adriano Rogerio',
+  'Gabriel','Luciano'
+];
+
+// Pre-loaded 2026 vacation data
+var GE_DEFAULT_2026 = [
+  {id:'d1',  nome:'Bruno',             inicio:'2026-01-06', fim:'2026-02-04', mesHint:1},
+  {id:'d2',  nome:'Klebson Andrade',   inicio:'2026-02-03', fim:'2026-03-04', mesHint:2},
+  {id:'d3',  nome:'Wellington',        inicio:'2026-02-10', fim:'2026-03-01', mesHint:2},
+  {id:'d4',  nome:'Charlington',       inicio:'2026-02-10', fim:'2026-03-01', mesHint:2},
+  {id:'d5',  nome:'Antonio Amaro',     inicio:'2026-03-10', fim:'2026-03-29', mesHint:3},
+  {id:'d6',  nome:'Rodrigo',           inicio:'2026-03-10', fim:'2026-03-29', mesHint:3},
+  {id:'d7',  nome:'George',            inicio:'2026-04-01', fim:'2026-04-30', mesHint:4},
+  {id:'d8',  nome:'Giliard',           inicio:'2026-04-09', fim:'2026-04-28', mesHint:4},
+  {id:'d9',  nome:'Adriano Rogerio',   inicio:'2026-05-05', fim:'2026-05-24', mesHint:5},
+  {id:'d10', nome:'Elenildo',          inicio:'2026-05-12', fim:'2026-05-31', mesHint:5},
+  {id:'d11', nome:'Gabriel',           inicio:'2026-06-09', fim:'2026-06-29', mesHint:6},
+  {id:'d12', nome:'Humberto',          inicio:'2026-06-02', fim:'2026-07-01', mesHint:6},
+  {id:'d13', nome:'Joaz',              inicio:'2026-07-06', fim:'2026-07-26', mesHint:7},
+  {id:'d14', nome:'Paulo Andre',       inicio:null, fim:null, mesHint:8},
+  {id:'d15', nome:'Adriano Francisco', inicio:'2026-09-01', fim:'2026-09-30', mesHint:9},
+  {id:'d16', nome:'Edvaldo',           inicio:'2026-09-01', fim:'2026-09-30', mesHint:9},
+  {id:'d17', nome:'Klebson Ramos',     inicio:null, fim:null, mesHint:10},
+  {id:'d18', nome:'Luciano',           inicio:null, fim:null, mesHint:10},
+  {id:'d19', nome:'Alisson',           inicio:null, fim:null, mesHint:11},
+  {id:'d20', nome:'Diego',             inicio:null, fim:null, mesHint:11},
+  {id:'d21', nome:'Durval',            inicio:null, fim:null, mesHint:12},
+  {id:'d22', nome:'Laercio',           inicio:null, fim:null, mesHint:12},
+];
+
+function geGetFerias(ano){
+  var key = 'ge_ferias_'+ano;
+  var raw = localStorage.getItem(key);
+  if(raw !== null) return JSON.parse(raw);
+  if(ano === 2026){
+    var seed = JSON.parse(JSON.stringify(GE_DEFAULT_2026));
+    localStorage.setItem(key, JSON.stringify(seed));
+    return seed;
+  }
+  return [];
+}
+
+function geSaveFerias(ano, data){
+  localStorage.setItem('ge_ferias_'+ano, JSON.stringify(data));
+}
+
+var _geFeriasCache = {};
+var _geEditandoFerias = null;
+var _geAnoAtual = 2026;
 
 window.enterGestaoEquipe = function enterGestaoEquipe(){
   document.querySelectorAll('[id^="screen"]').forEach(function(s){ s.style.display='none'; });
@@ -9784,86 +9832,84 @@ window.gestaoEquipeVoltar = function gestaoEquipeVoltar(){
 window.geTabFerias = function geTabFerias(){
   document.getElementById('geAbaFerias').style.display='block';
   document.getElementById('geAbaEscala').style.display='none';
-  document.getElementById('btnTabFerias').style.background='#7B2FBE';
-  document.getElementById('btnTabFerias').style.color='#fff';
-  document.getElementById('btnTabEscala').style.background='#2a1a4e';
-  document.getElementById('btnTabEscala').style.color='#aaa';
+  var a=document.getElementById('btnTabFerias'), b=document.getElementById('btnTabEscala');
+  a.style.cssText='background:rgba(255,98,0,.2);color:#FF6200;border:1px solid rgba(255,98,0,.5);border-radius:8px;padding:.4rem .9rem;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:.82rem;font-weight:600;';
+  b.style.cssText='background:transparent;color:rgba(245,240,255,.55);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:.4rem .9rem;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:.82rem;';
 }
 
 window.geTabEscala = function geTabEscala(){
   document.getElementById('geAbaFerias').style.display='none';
   document.getElementById('geAbaEscala').style.display='block';
-  document.getElementById('btnTabEscala').style.background='#7B2FBE';
-  document.getElementById('btnTabEscala').style.color='#fff';
-  document.getElementById('btnTabFerias').style.background='#2a1a4e';
-  document.getElementById('btnTabFerias').style.color='#aaa';
+  var a=document.getElementById('btnTabEscala'), b=document.getElementById('btnTabFerias');
+  a.style.cssText='background:rgba(255,98,0,.2);color:#FF6200;border:1px solid rgba(255,98,0,.5);border-radius:8px;padding:.4rem .9rem;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:.82rem;font-weight:600;';
+  b.style.cssText='background:transparent;color:rgba(245,240,255,.55);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:.4rem .9rem;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:.82rem;';
   geGerarEscala();
 }
 
 window.geRenderFerias = function geRenderFerias(){
   var anoEl = document.getElementById('geAnoFerias');
-  var ano = parseInt(anoEl.value);
-  var grid = document.getElementById('geGridFerias');
+  _geAnoAtual = parseInt(anoEl.value);
+  if(!_geFeriasCache[_geAnoAtual]) _geFeriasCache[_geAnoAtual] = geGetFerias(_geAnoAtual);
+  var ferias = _geFeriasCache[_geAnoAtual];
   var title = document.getElementById('geFeriasTitle');
-  if(title) title.textContent = 'Férias ' + ano;
+  if(title) title.textContent = 'Férias ' + _geAnoAtual;
+  var grid = document.getElementById('geGridFerias');
+  var ano = _geAnoAtual;
 
-  var thS = 'background:#1a0f35;color:#FF6200;font-size:.72rem;font-weight:700;padding:.45rem .5rem;border:1px solid #3a2a6e;white-space:nowrap;text-align:center;';
-  var thNameS = 'background:#1a0f35;color:#FF6200;font-size:.72rem;font-weight:700;padding:.45rem .7rem;border:1px solid #3a2a6e;text-align:left;position:sticky;left:0;z-index:2;min-width:120px;';
+  var thB = 'background:#241050;';
+  var thS = thB+'color:#FF6200;font-size:.7rem;font-weight:700;padding:.5rem .3rem;border:1px solid rgba(255,98,0,.18);white-space:nowrap;text-align:center;position:sticky;top:0;z-index:3;';
+  var thNS = thB+'color:#FF6200;font-size:.7rem;font-weight:700;padding:.5rem .9rem;border:1px solid rgba(255,98,0,.18);text-align:left;position:sticky;left:0;top:0;z-index:4;min-width:138px;';
 
   var html = '<table style="border-collapse:collapse;width:100%;font-size:.75rem;">';
   html += '<thead><tr>';
-  html += '<th style="'+thNameS+'">Técnico</th>';
-  GE_MESES.forEach(function(mes){
-    html += '<th style="'+thS+'">'+mes.toUpperCase()+'</th>';
-  });
-  html += '<th style="'+thS+'min-width:36px;"></th>';
+  html += '<th style="'+thNS+'">Técnico</th>';
+  GE_MESES.forEach(function(mes){ html += '<th style="'+thS+'">'+mes.toUpperCase()+'<br><span style="font-size:.6rem;font-weight:400;color:rgba(196,181,253,.5);">/'+String(ano).slice(2)+'</span></th>'; });
+  html += '<th style="'+thS+'min-width:34px;padding:.5rem .1rem;"></th>';
   html += '</tr></thead><tbody>';
 
-  GE_TECNICOS.forEach(function(tec, ti){
-    var cor = GE_CORES[tec.grupo];
-    var rowBg = ti % 2 === 0 ? '#12082a' : '#160d30';
+  GE_FERIAS_TECNICOS.forEach(function(nome, ti){
+    var rowBg = ti%2===0 ? 'rgba(26,15,53,.9)' : 'rgba(36,20,75,.7)';
     html += '<tr style="background:'+rowBg+';">';
+    html += '<td style="background:#1e1040;color:#F5F0FF;font-weight:600;font-size:.78rem;padding:.42rem .9rem;border:1px solid rgba(255,98,0,.12);position:sticky;left:0;white-space:nowrap;">'+nome+'</td>';
 
-    // Célula nome do técnico
-    html += '<td style="background:#1a0f35;color:'+cor+';font-weight:700;font-size:.78rem;padding:.4rem .7rem;border:1px solid #3a2a6e;position:sticky;left:0;white-space:nowrap;">'+tec.nome+'</td>';
-
-    // Células dos meses
     GE_MESES.forEach(function(mes, m){
-      var feriasDoMes = _geFerias.filter(function(f){
-        if(f.nome !== tec.nome) return false;
-        var ini = new Date(f.inicio+'T00:00:00');
-        var fim = new Date(f.fim+'T00:00:00');
-        var mesIni = new Date(ano, m, 1);
-        var mesFim = new Date(ano, m+1, 0);
-        return ini <= mesFim && fim >= mesIni;
+      var mesNum = m+1;
+      var fm = ferias.filter(function(f){
+        if(f.nome!==nome) return false;
+        if(f.inicio && f.fim){
+          var ini=new Date(f.inicio+'T00:00:00'), fim=new Date(f.fim+'T00:00:00');
+          var mI=new Date(ano,m,1), mF=new Date(ano,m+1,0);
+          return ini<=mF && fim>=mI;
+        }
+        return f.mesHint===mesNum;
       });
 
-      html += '<td style="padding:.3rem .4rem;border:1px solid #3a2a6e;text-align:center;vertical-align:middle;min-width:72px;">';
-      if(feriasDoMes.length > 0){
-        feriasDoMes.forEach(function(f){
-          var ini = new Date(f.inicio+'T00:00:00');
-          var fim = new Date(f.fim+'T00:00:00');
-          var dIni = String(ini.getDate()).padStart(2,'0')+'/'+String(ini.getMonth()+1).padStart(2,'0');
-          var dFim = String(fim.getDate()).padStart(2,'0')+'/'+String(fim.getMonth()+1).padStart(2,'0');
-          html += '<div onclick="geAbrirModalFerias(\''+f.id+'\')" style="display:inline-block;background:#1a0f35;border:1px solid '+cor+';border-radius:4px;padding:.15rem .35rem;cursor:pointer;margin:.1rem;">';
-          html += '<span style="color:#c0392b;font-size:.68rem;font-weight:700;">'+dIni+'</span>';
-          html += '<span style="color:#555;font-size:.6rem;">→</span>';
-          html += '<span style="color:#27ae60;font-size:.68rem;font-weight:700;">'+dFim+'</span>';
-          html += '<span onclick="event.stopPropagation();geDeletarFerias(\''+f.id+'\')" title="Remover" style="color:#777;font-size:.65rem;cursor:pointer;margin-left:2px;padding:0 2px;background:#2a1a4e;border-radius:2px;">×</span>';
+      html += '<td style="padding:.28rem .25rem;border:1px solid rgba(255,98,0,.1);text-align:center;vertical-align:middle;min-width:76px;cursor:pointer;" onclick="geAbrirModalFerias(null,\''+nome+'\','+ano+','+mesNum+')">';
+      if(fm.length>0){
+        fm.forEach(function(f){
+          html += '<div onclick="event.stopPropagation();geAbrirModalFerias(\''+f.id+'\')" style="display:inline-flex;align-items:center;gap:.18rem;background:rgba(36,16,80,.95);border:1px solid rgba(255,98,0,.3);border-radius:4px;padding:.18rem .32rem;cursor:pointer;margin:.08rem;">';
+          if(f.inicio && f.fim){
+            var i=new Date(f.inicio+'T00:00:00'), fi=new Date(f.fim+'T00:00:00');
+            var dI=String(i.getDate()).padStart(2,'0')+'-'+String(i.getMonth()+1).padStart(2,'0');
+            var dF=String(fi.getDate()).padStart(2,'0')+'-'+String(fi.getMonth()+1).padStart(2,'0');
+            html += '<span style="color:#ef4444;font-size:.68rem;font-weight:700;">'+dI+'</span>';
+            html += '<span style="color:#444;font-size:.58rem;">→</span>';
+            html += '<span style="color:#22c55e;font-size:.68rem;font-weight:700;">'+dF+'</span>';
+          } else {
+            html += '<span style="color:#eab308;font-size:.68rem;font-weight:600;letter-spacing:.01em;">Previsto</span>';
+          }
+          html += '<span onclick="event.stopPropagation();geDeletarFerias(\''+f.id+'\')" title="Remover" style="color:#555;font-size:.6rem;cursor:pointer;margin-left:3px;padding:0 2px;background:rgba(0,0,0,.4);border-radius:2px;">×</span>';
           html += '</div>';
         });
       } else {
-        html += '<button onclick="geAbrirModalFerias(null,\''+tec.nome+'\','+ano+','+(m+1)+')" style="background:transparent;color:#3a2a6e;border:1px dashed #3a2a6e;border-radius:4px;padding:.1rem .4rem;cursor:pointer;font-size:.8rem;line-height:1.4;" title="Adicionar férias para '+tec.nome+' em '+mes+'">+</button>';
+        html += '<span style="color:rgba(255,98,0,.18);font-size:.75rem;pointer-events:none;">+</span>';
       }
       html += '</td>';
     });
 
-    // Botão + geral da linha
-    html += '<td style="padding:.3rem .4rem;border:1px solid #3a2a6e;text-align:center;vertical-align:middle;">';
-    html += '<button onclick="geAbrirModalFerias(null,\''+tec.nome+'\','+ano+',null)" style="background:#7B2FBE;color:#fff;border:none;border-radius:4px;padding:.15rem .45rem;cursor:pointer;font-size:.82rem;line-height:1.4;" title="Adicionar férias">+</button>';
-    html += '</td>';
-
-    html += '</tr>';
+    html += '<td style="padding:.28rem .3rem;border:1px solid rgba(255,98,0,.1);text-align:center;vertical-align:middle;">';
+    html += '<button onclick="event.stopPropagation();geAbrirModalFerias(null,\''+nome+'\','+ano+',null)" style="background:rgba(255,98,0,.12);color:#FF6200;border:1px solid rgba(255,98,0,.3);border-radius:4px;padding:.12rem .42rem;cursor:pointer;font-size:.8rem;line-height:1.4;font-family:\'DM Sans\',sans-serif;" title="Adicionar férias">+</button>';
+    html += '</td></tr>';
   });
 
   html += '</tbody></table>';
@@ -9873,26 +9919,29 @@ window.geRenderFerias = function geRenderFerias(){
 window.geAbrirModalFerias = function geAbrirModalFerias(id, nomePresel, anoPresel, mesPresel){
   var modal = document.getElementById('geModalFerias');
   var sel = document.getElementById('geFeriasNome');
-  sel.innerHTML = GE_TECNICOS.map(function(t){ return '<option value="'+t.nome+'">'+t.nome+'</option>'; }).join('');
+  sel.innerHTML = GE_FERIAS_TECNICOS.map(function(n){ return '<option value="'+n+'">'+n+'</option>'; }).join('');
 
   if(id){
-    var f = _geFerias.find(function(x){ return x.id===id; });
+    var ferias = _geFeriasCache[_geAnoAtual] || [];
+    var f = ferias.find(function(x){ return x.id===id; });
     if(f){
       sel.value = f.nome;
-      document.getElementById('geFeriasInicio').value = f.inicio;
-      document.getElementById('geFeirasFim').value = f.fim;
+      document.getElementById('geFeriasInicio').value = f.inicio || '';
+      document.getElementById('geFeirasFim').value = f.fim || '';
+      document.getElementById('geFeriasMesHint').value = f.mesHint || '';
       _geEditandoFerias = id;
     }
   } else {
-    if(nomePresel) sel.value = nomePresel;
-    else sel.value = GE_TECNICOS[0].nome;
+    sel.value = nomePresel || GE_FERIAS_TECNICOS[0];
     if(anoPresel && mesPresel){
       var mm = String(mesPresel).padStart(2,'0');
       document.getElementById('geFeriasInicio').value = anoPresel+'-'+mm+'-01';
       document.getElementById('geFeirasFim').value = '';
+      document.getElementById('geFeriasMesHint').value = mesPresel;
     } else {
       document.getElementById('geFeriasInicio').value = '';
       document.getElementById('geFeirasFim').value = '';
+      document.getElementById('geFeriasMesHint').value = '';
     }
     _geEditandoFerias = null;
   }
@@ -9901,15 +9950,16 @@ window.geAbrirModalFerias = function geAbrirModalFerias(id, nomePresel, anoPrese
 
 window.geDeletarFerias = function geDeletarFerias(id){
   if(!confirm('Remover este período de férias?')) return;
-  _geFerias = _geFerias.filter(function(f){ return f.id !== id; });
-  localStorage.setItem('ge_ferias', JSON.stringify(_geFerias));
+  var ferias = _geFeriasCache[_geAnoAtual] || [];
+  _geFeriasCache[_geAnoAtual] = ferias.filter(function(f){ return f.id!==id; });
+  geSaveFerias(_geAnoAtual, _geFeriasCache[_geAnoAtual]);
   geRenderFerias();
 }
 
 window.geAdicionarAno = function geAdicionarAno(){
   var sel = document.getElementById('geAnoFerias');
   var anos = Array.from(sel.options).map(function(o){ return parseInt(o.value); });
-  var novo = Math.max.apply(null, anos) + 1;
+  var novo = Math.max.apply(null, anos)+1;
   var opt = document.createElement('option');
   opt.value = novo; opt.textContent = novo;
   sel.appendChild(opt);
@@ -9924,26 +9974,35 @@ window.geFecharModalFerias = function geFecharModalFerias(){
 
 window.geSalvarFerias = function geSalvarFerias(){
   var nome = document.getElementById('geFeriasNome').value;
-  var inicio = document.getElementById('geFeriasInicio').value;
-  var fim = document.getElementById('geFeirasFim').value;
-  if(!inicio || !fim){ alert('Informe início e fim das férias.'); return; }
-  if(inicio > fim){ alert('Data início deve ser anterior ao fim.'); return; }
+  var inicio = document.getElementById('geFeriasInicio').value || null;
+  var fim = document.getElementById('geFeirasFim').value || null;
+  var mesHintRaw = document.getElementById('geFeriasMesHint').value;
+  var mesHint = mesHintRaw ? parseInt(mesHintRaw) : null;
 
+  if(!nome){ alert('Selecione o técnico.'); return; }
+  if(inicio && fim && inicio>fim){ alert('Data início deve ser anterior ao fim.'); return; }
+  if(!inicio && !mesHint){ alert('Informe as datas ou selecione o mês previsto.'); return; }
+
+  var ferias = _geFeriasCache[_geAnoAtual] || [];
   if(_geEditandoFerias){
-    var idx = _geFerias.findIndex(function(x){ return x.id===_geEditandoFerias; });
-    if(idx>=0) _geFerias[idx] = {id:_geEditandoFerias, nome:nome, inicio:inicio, fim:fim};
+    ferias = ferias.map(function(f){
+      return f.id===_geEditandoFerias ? {id:f.id, nome:nome, inicio:inicio, fim:fim, mesHint:mesHint} : f;
+    });
   } else {
-    _geFerias.push({id:'fe_'+Date.now(), nome:nome, inicio:inicio, fim:fim});
+    ferias.push({id:'f'+Date.now(), nome:nome, inicio:inicio, fim:fim, mesHint:mesHint});
   }
-  localStorage.setItem('ge_ferias', JSON.stringify(_geFerias));
+  _geFeriasCache[_geAnoAtual] = ferias;
+  geSaveFerias(_geAnoAtual, ferias);
   geFecharModalFerias();
   geRenderFerias();
 }
 
 function geTecnicoEmFerias(nome, data){
   var d = new Date(data);
-  return _geFerias.some(function(f){
-    return f.nome===nome && new Date(f.inicio)<=d && new Date(f.fim)>=d;
+  var ferias = geGetFerias(d.getFullYear());
+  return ferias.some(function(f){
+    if(!f.inicio || !f.fim) return false;
+    return f.nome===nome && new Date(f.inicio+'T00:00:00')<=d && new Date(f.fim+'T00:00:00')>=d;
   });
 }
 
@@ -10144,47 +10203,54 @@ window.geExportarEscalaPDF = function geExportarEscalaPDF(){
 </script>
 
 <!-- ==================== GESTÃO DE EQUIPE ==================== -->
-<div id="screenGestaoEquipe" style="display:none;position:fixed;inset:0;background:#12082a;z-index:100;overflow-y:auto;font-family:'DM Sans',sans-serif;">
-  <!-- Header -->
-  <div style="background:linear-gradient(135deg,#321d65 0%,#5B21B6 50%,#c44a00 80%,#FF6200 100%);padding:.9rem 2rem;display:flex;align-items:center;gap:1rem;justify-content:space-between;position:sticky;top:0;z-index:101;border-bottom:1px solid rgba(255,98,0,.2);">
+<div id="screenGestaoEquipe" style="display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto;font-family:'DM Sans',sans-serif;">
+
+  <!-- HEADER STICKY -->
+  <div style="background:linear-gradient(135deg,#321d65 0%,#5B21B6 40%,#c44a00 75%,#FF6200 100%);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,98,0,.2);">
     <div style="display:flex;align-items:center;gap:1rem;">
-      <button onclick="gestaoEquipeVoltar()" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:.5rem 1rem;cursor:pointer;font-size:.9rem;">← GN Gestão</button>
-      <h1 style="color:#fff;font-size:1.3rem;font-weight:700;margin:0;">👥 Gestão de Equipe</h1>
+      <button onclick="gestaoEquipeVoltar()" style="background:rgba(255,98,0,.1);border:1px solid rgba(255,98,0,.25);color:#FF6200;border-radius:8px;padding:.35rem .75rem;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;">⬅ GN Gestão</button>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;letter-spacing:-.01em;">Gestão de <span style="color:#FF6200;">Equipe</span> <span style="font-weight:400;font-size:.82rem;color:rgba(196,181,253,.6);margin-left:.4rem;">/ GN Gestão</span></div>
     </div>
-    <div style="display:flex;gap:.5rem;">
-      <button onclick="geTabFerias()" id="btnTabFerias" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:.5rem 1rem;cursor:pointer;">📅 Férias</button>
-      <button onclick="geTabEscala()" id="btnTabEscala" style="background:rgba(0,0,0,.2);color:#ddd;border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:.5rem 1rem;cursor:pointer;">📋 Escala</button>
+    <div style="display:flex;align-items:center;gap:.5rem;">
+      <button onclick="geTabFerias()" id="btnTabFerias" style="background:rgba(255,98,0,.2);color:#FF6200;border:1px solid rgba(255,98,0,.5);border-radius:8px;padding:.4rem .9rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;">📅 Férias</button>
+      <button onclick="geTabEscala()" id="btnTabEscala" style="background:transparent;color:rgba(245,240,255,.55);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:.4rem .9rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;">📋 Escala</button>
     </div>
   </div>
-  <div style="max-width:1400px;margin:0 auto;padding:1.5rem;">
+
+  <!-- CONTEÚDO -->
+  <div style="max-width:1400px;margin:0 auto;padding:2rem;">
 
     <!-- ABA FÉRIAS -->
     <div id="geAbaFerias">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
-        <h2 id="geFeriasTitle" style="color:#E84A1A;font-size:1.1rem;margin:0;">Férias 2026</h2>
-        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
-          <select id="geAnoFerias" onchange="geRenderFerias()" style="background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.3rem .6rem;">
-            <option value="2026">2026</option>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem;">
+        <div>
+          <h2 id="geFeriasTitle" style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;color:#F5F0FF;letter-spacing:-.02em;margin:0;">Férias 2026</h2>
+          <p style="color:rgba(196,181,253,.6);font-size:.78rem;margin:.2rem 0 0;">Clique em uma célula para adicionar ou editar férias</p>
+        </div>
+        <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
+          <select id="geAnoFerias" onchange="geRenderFerias()" style="background:rgba(58,34,112,.8);color:#F5F0FF;border:1px solid rgba(255,98,0,.25);border-radius:8px;padding:.4rem .7rem;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;">
+            <option value="2025">2025</option>
+            <option value="2026" selected>2026</option>
             <option value="2027">2027</option>
             <option value="2028">2028</option>
           </select>
-          <button onclick="geAdicionarAno()" style="background:#2a1a4e;color:#7B2FBE;border:1px solid #7B2FBE;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">+ Ano</button>
+          <button onclick="geAdicionarAno()" style="background:rgba(58,34,112,.8);color:rgba(196,181,253,.8);border:1px solid rgba(255,98,0,.25);border-radius:8px;padding:.4rem .85rem;cursor:pointer;font-size:.82rem;font-family:'DM Sans',sans-serif;">+ Ano</button>
         </div>
       </div>
-      <div id="geGridFerias" style="overflow-x:auto;"></div>
+      <div id="geGridFerias" style="overflow-x:auto;border-radius:10px;border:1px solid rgba(255,98,0,.15);"></div>
     </div>
 
     <!-- ABA ESCALA -->
     <div id="geAbaEscala" style="display:none;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
-        <h2 style="color:#E84A1A;font-size:1.1rem;margin:0;">Escala de Plantões</h2>
-        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
-          <select id="geAnoEscala" onchange="geGerarEscala()" style="background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.3rem .6rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem;">
+        <h2 style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;color:#F5F0FF;letter-spacing:-.02em;margin:0;">Escala de Plantões</h2>
+        <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
+          <select id="geAnoEscala" onchange="geGerarEscala()" style="background:rgba(58,34,112,.8);color:#F5F0FF;border:1px solid rgba(255,98,0,.25);border-radius:8px;padding:.4rem .7rem;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;">
             <option value="2026">2026</option>
             <option value="2027">2027</option>
           </select>
-          <button onclick="geGerarEscala()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">🔄 Gerar Escala</button>
-          <button onclick="geExportarEscalaPDF()" style="background:#E84A1A;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">📄 Exportar PDF</button>
+          <button onclick="geGerarEscala()" style="background:rgba(255,98,0,.15);color:#FF6200;border:1px solid rgba(255,98,0,.35);border-radius:8px;padding:.4rem .85rem;cursor:pointer;font-size:.82rem;font-family:'DM Sans',sans-serif;">🔄 Gerar Escala</button>
+          <button onclick="geExportarEscalaPDF()" style="background:var(--orange);color:#fff;border:none;border-radius:8px;padding:.4rem .85rem;cursor:pointer;font-size:.82rem;font-family:'DM Sans',sans-serif;font-weight:600;">📄 Exportar PDF</button>
         </div>
       </div>
       <div id="geGridEscala" style="overflow-x:auto;"></div>
@@ -10194,24 +10260,34 @@ window.geExportarEscalaPDF = function geExportarEscalaPDF(){
 </div>
 
 <!-- Modal Férias -->
-<div id="geModalFerias" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center;">
-  <div style="background:#1a0f35;border:1px solid #7B2FBE;border-radius:12px;padding:1.5rem;min-width:320px;max-width:400px;width:90%;">
-    <h3 style="color:#fff;margin:0 0 1rem;font-size:1.1rem;">📅 Férias</h3>
-    <div style="margin-bottom:.8rem;">
-      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Técnico</label>
-      <select id="geFeriasNome" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;"></select>
+<div id="geModalFerias" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:20000;align-items:center;justify-content:center;">
+  <div style="background:#1e1040;border:1px solid rgba(255,98,0,.3);border-radius:14px;padding:1.75rem;min-width:340px;max-width:420px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,.6);">
+    <h3 style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;color:#F5F0FF;margin:0 0 1.25rem;">📅 Férias / Ausência</h3>
+    <div style="margin-bottom:.9rem;">
+      <label style="color:rgba(196,181,253,.7);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:.35rem;">Técnico</label>
+      <select id="geFeriasNome" style="width:100%;background:rgba(50,29,101,.6);color:#F5F0FF;border:1px solid rgba(255,98,0,.25);border-radius:8px;padding:.5rem .7rem;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;"></select>
     </div>
-    <div style="margin-bottom:.8rem;">
-      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Data Início</label>
-      <input type="date" id="geFeriasInicio" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;box-sizing:border-box;"/>
+    <div style="margin-bottom:.9rem;">
+      <label style="color:rgba(196,181,253,.7);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:.35rem;">Data Início <span style="color:rgba(196,181,253,.4);font-weight:400;text-transform:none;">(opcional)</span></label>
+      <input type="date" id="geFeriasInicio" style="width:100%;background:rgba(50,29,101,.6);color:#F5F0FF;border:1px solid rgba(255,98,0,.25);border-radius:8px;padding:.5rem .7rem;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;box-sizing:border-box;"/>
     </div>
-    <div style="margin-bottom:1rem;">
-      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Data Fim</label>
-      <input type="date" id="geFeirasFim" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;box-sizing:border-box;"/>
+    <div style="margin-bottom:.9rem;">
+      <label style="color:rgba(196,181,253,.7);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:.35rem;">Data Fim <span style="color:rgba(196,181,253,.4);font-weight:400;text-transform:none;">(opcional)</span></label>
+      <input type="date" id="geFeirasFim" style="width:100%;background:rgba(50,29,101,.6);color:#F5F0FF;border:1px solid rgba(255,98,0,.25);border-radius:8px;padding:.5rem .7rem;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;box-sizing:border-box;"/>
     </div>
-    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
-      <button onclick="geFecharModalFerias()" style="background:#2a1a4e;color:#aaa;border:1px solid #555;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">Cancelar</button>
-      <button onclick="geSalvarFerias()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">Salvar</button>
+    <div style="margin-bottom:1.25rem;">
+      <label style="color:rgba(196,181,253,.7);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:.35rem;">Mês Previsto <span style="color:rgba(196,181,253,.4);font-weight:400;text-transform:none;">(quando sem data definida)</span></label>
+      <select id="geFeriasMesHint" style="width:100%;background:rgba(50,29,101,.6);color:#F5F0FF;border:1px solid rgba(255,98,0,.25);border-radius:8px;padding:.5rem .7rem;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;">
+        <option value="">—</option>
+        <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+        <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+        <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+        <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:.6rem;justify-content:flex-end;">
+      <button onclick="geFecharModalFerias()" style="background:rgba(58,34,112,.6);color:rgba(196,181,253,.8);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:.5rem 1.1rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;">Cancelar</button>
+      <button onclick="geSalvarFerias()" style="background:var(--orange);color:#fff;border:none;border-radius:8px;padding:.5rem 1.25rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;">Salvar</button>
     </div>
   </div>
 </div>
