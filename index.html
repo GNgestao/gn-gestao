@@ -1858,7 +1858,79 @@ function sendElevatorNotif(){
     +'<th style="padding:.5rem .6rem;text-align:left">Status</th>'
     +'</tr></thead><tbody>'+rows+'</tbody></table>'
     +'<p style="margin-top:1.5rem;font-size:.78rem;color:#999">GN Gestão — Manutenção Preditiva de Elevadores</p>'
-    +'</body></html>';
+    +'
+<!-- ==================== GESTÃO DE EQUIPE ==================== -->
+<div id="screenGestaoEquipe" style="display:none;position:fixed;inset:0;background:#12082a;z-index:100;overflow-y:auto;font-family:'DM Sans',sans-serif;">
+  <div style="max-width:1400px;margin:0 auto;padding:1.5rem;">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid #7B2FBE;">
+      <button onclick="gestaoEquipeVoltar()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;font-size:.9rem;">← GN Gestão</button>
+      <h1 style="color:#fff;font-size:1.5rem;font-weight:700;margin:0;">👥 Gestão de Equipe</h1>
+      <div style="margin-left:auto;display:flex;gap:.5rem;">
+        <button onclick="geTabFerias()" id="btnTabFerias" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">📅 Férias</button>
+        <button onclick="geTabEscala()" id="btnTabEscala" style="background:#2a1a4e;color:#aaa;border:1px solid #7B2FBE;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">📋 Escala</button>
+      </div>
+    </div>
+
+    <!-- ABA FÉRIAS -->
+    <div id="geAbaFerias">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h2 style="color:#E84A1A;font-size:1.1rem;margin:0;">Férias 2026</h2>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+          <select id="geAnoFerias" onchange="geRenderFerias()" style="background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.3rem .6rem;">
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+          <button onclick="geAbrirModalFerias(null)" style="background:#E84A1A;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">+ Adicionar Férias</button>
+        </div>
+      </div>
+      <div id="geGridFerias" style="overflow-x:auto;"></div>
+    </div>
+
+    <!-- ABA ESCALA -->
+    <div id="geAbaEscala" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+        <h2 style="color:#E84A1A;font-size:1.1rem;margin:0;">Escala de Plantões</h2>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+          <select id="geAnoEscala" onchange="geGerarEscala()" style="background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.3rem .6rem;">
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+          <button onclick="geGerarEscala()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">🔄 Gerar Escala</button>
+          <button onclick="geExportarEscalaPDF()" style="background:#E84A1A;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">📄 Exportar PDF</button>
+        </div>
+      </div>
+      <div id="geGridEscala" style="overflow-x:auto;"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal Férias -->
+<div id="geModalFerias" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center;">
+  <div style="background:#1a0f35;border:1px solid #7B2FBE;border-radius:12px;padding:1.5rem;min-width:320px;max-width:400px;width:90%;">
+    <h3 style="color:#fff;margin:0 0 1rem;font-size:1.1rem;">📅 Férias</h3>
+    <div style="margin-bottom:.8rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Técnico</label>
+      <select id="geFeriasNome" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;"></select>
+    </div>
+    <div style="margin-bottom:.8rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Data Início</label>
+      <input type="date" id="geFeriasInicio" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;box-sizing:border-box;"/>
+    </div>
+    <div style="margin-bottom:1rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Data Fim</label>
+      <input type="date" id="geFeirasFim" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;box-sizing:border-box;"/>
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+      <button onclick="geFecharModalFerias()" style="background:#2a1a4e;color:#aaa;border:1px solid #555;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">Cancelar</button>
+      <button onclick="geSalvarFerias()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">Salvar</button>
+    </div>
+  </div>
+</div>
+
+</body></html>';
 
   // Check EmailJS config
   var cfg = loadEmailjsConfig();
@@ -2717,7 +2789,79 @@ function exportPDF(){
     +'<tbody>'+rows+'</tbody>'
     +'</table>'
     +'<div class="footer">GN Gestão · Manutenção Preditiva de Elevadores</div>'
-    +'</body></html>';
+    +'
+<!-- ==================== GESTÃO DE EQUIPE ==================== -->
+<div id="screenGestaoEquipe" style="display:none;position:fixed;inset:0;background:#12082a;z-index:100;overflow-y:auto;font-family:'DM Sans',sans-serif;">
+  <div style="max-width:1400px;margin:0 auto;padding:1.5rem;">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid #7B2FBE;">
+      <button onclick="gestaoEquipeVoltar()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;font-size:.9rem;">← GN Gestão</button>
+      <h1 style="color:#fff;font-size:1.5rem;font-weight:700;margin:0;">👥 Gestão de Equipe</h1>
+      <div style="margin-left:auto;display:flex;gap:.5rem;">
+        <button onclick="geTabFerias()" id="btnTabFerias" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">📅 Férias</button>
+        <button onclick="geTabEscala()" id="btnTabEscala" style="background:#2a1a4e;color:#aaa;border:1px solid #7B2FBE;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">📋 Escala</button>
+      </div>
+    </div>
+
+    <!-- ABA FÉRIAS -->
+    <div id="geAbaFerias">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h2 style="color:#E84A1A;font-size:1.1rem;margin:0;">Férias 2026</h2>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+          <select id="geAnoFerias" onchange="geRenderFerias()" style="background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.3rem .6rem;">
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+          <button onclick="geAbrirModalFerias(null)" style="background:#E84A1A;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">+ Adicionar Férias</button>
+        </div>
+      </div>
+      <div id="geGridFerias" style="overflow-x:auto;"></div>
+    </div>
+
+    <!-- ABA ESCALA -->
+    <div id="geAbaEscala" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+        <h2 style="color:#E84A1A;font-size:1.1rem;margin:0;">Escala de Plantões</h2>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+          <select id="geAnoEscala" onchange="geGerarEscala()" style="background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.3rem .6rem;">
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+          <button onclick="geGerarEscala()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">🔄 Gerar Escala</button>
+          <button onclick="geExportarEscalaPDF()" style="background:#E84A1A;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">📄 Exportar PDF</button>
+        </div>
+      </div>
+      <div id="geGridEscala" style="overflow-x:auto;"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal Férias -->
+<div id="geModalFerias" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center;">
+  <div style="background:#1a0f35;border:1px solid #7B2FBE;border-radius:12px;padding:1.5rem;min-width:320px;max-width:400px;width:90%;">
+    <h3 style="color:#fff;margin:0 0 1rem;font-size:1.1rem;">📅 Férias</h3>
+    <div style="margin-bottom:.8rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Técnico</label>
+      <select id="geFeriasNome" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;"></select>
+    </div>
+    <div style="margin-bottom:.8rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Data Início</label>
+      <input type="date" id="geFeriasInicio" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;box-sizing:border-box;"/>
+    </div>
+    <div style="margin-bottom:1rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Data Fim</label>
+      <input type="date" id="geFeirasFim" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;box-sizing:border-box;"/>
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+      <button onclick="geFecharModalFerias()" style="background:#2a1a4e;color:#aaa;border:1px solid #555;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">Cancelar</button>
+      <button onclick="geSalvarFerias()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">Salvar</button>
+    </div>
+  </div>
+</div>
+
+</body></html>';
 
   // Download as HTML then print
   var win = window.open('','_blank','width=1100,height=750');
@@ -5634,7 +5778,79 @@ function exportPlanoPDF(){
   // Progress bar percentage for sidebar
   var progressColor = pct===100?'#22C55E':'#7C3AED';
 
-  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'    +'<title>Plano de Ação TKE — '+p.client+'</title>'    +'<style>'    +'*{box-sizing:border-box;margin:0;padding:0}'    +'body{font-family:Calibri,Arial,sans-serif;padding:1cm;color:#111;font-size:10pt;background:#f5f3ff}'    +'/* Title row */'    +'.tke-title{background:linear-gradient(135deg,#321d65 0%,#5B21B6 50%,#FF6200 100%);color:#fff;font-size:14pt;font-weight:700;padding:8px 12px;letter-spacing:.01em;display:flex;justify-content:space-between;align-items:center}'    +'.tke-logo{font-size:18pt;font-weight:900;color:#fff;letter-spacing:.05em;font-family:Arial Black,Arial,sans-serif}'    +'/* Info block below title */'    +'.tke-info{background:#1a1040;color:#fff;padding:6px 12px;font-size:9pt;display:flex;gap:24px;flex-wrap:wrap;margin-bottom:0}'    +'.tke-info span{white-space:nowrap}'    +'.tke-info strong{color:#fff}'    +'/* Main layout: table + sidebar */'    +'.tke-layout{display:flex;gap:12px;margin-top:10px;align-items:flex-start}'    +'.tke-table-wrap{flex:1;min-width:0}'    +'.tke-sidebar{width:130px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px}'    +'/* Sidebar progress */'    +'.tke-progress-title{font-size:8pt;font-weight:700;color:#44546A;text-align:center;text-transform:uppercase;letter-spacing:.05em}'    +'.tke-donut-wrap{position:relative;width:100px;height:100px}'    +'.tke-donut-wrap svg{width:100px;height:100px}'    +'.tke-donut-pct{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14pt;font-weight:900;color:#44546A;text-align:center;line-height:1}'    +'.tke-donut-label{font-size:7pt;color:#888;text-align:center;margin-top:-4px}'    +'.tke-stat{background:#EBF3FB;border:1px solid #9DC3E6;border-radius:4px;padding:4px 8px;text-align:center;width:100%}'    +'.tke-stat .sv{font-size:14pt;font-weight:900;color:#44546A;display:block}'    +'.tke-stat .sl{font-size:7pt;color:#666;text-transform:uppercase;letter-spacing:.04em}'    +'.tke-stat.green .sv{color:#70AD47}'    +'.tke-stat.orange .sv{color:#ED7D31}'    +'/* Table */'    +'table{width:100%;border-collapse:collapse}'    +'.th-blue{background:#1a1040;color:#fff;padding:5px 6px;text-align:center;font-size:9pt;font-weight:700;border:1px solid #2E3E4E;word-wrap:break-word}'    +'.th-blue-light{background:#2a1860;color:#fff;padding:5px 6px;text-align:center;font-size:8pt;font-weight:700;border:1px solid #2E3E4E}'    +'td{vertical-align:middle}'    +'/* Why col merged label */'    +'.why-cell{background:#D9E2EC;border:1px solid #9DC3E6;padding:4px 6px;font-size:8pt;color:#2E3E4E;vertical-align:top;word-wrap:break-word}'    +'/* Footer */'    +'.tke-footer{display:flex;justify-content:space-between;margin-top:8px;padding-top:6px;border-top:2px solid #5B21B6;font-size:8pt;color:#666}'    +'@page{size:A4 landscape;margin:1cm;margin-top:0;margin-bottom:0}'+'@media print{head,header,footer{display:none}}'    +'@media print{body{padding:0;margin:0}.tke-layout{margin-top:8px}}'    +'</style></head><body>'    +'<div class="tke-title">'    +'<span>Plano de Ação TKE — '+p.client+'</span>'    +'<span class="tke-logo">TKE</span>'    +'</div>'    +'<div class="tke-info">'    +'<span>Plano: <strong>'+p.name+'</strong></span>'    +(p.addr?'<span>Endereço: <strong>'+p.addr+'</strong></span>':'')    +'<span>Responsável: <strong>'+p.resp+'</strong></span>'    +'<span>Início: <strong>'+fmtDate(p.start)+'</strong></span>'    +'<span>Término: <strong>'+fmtDate(p.end)+'</strong></span>'    +'<span>Status: <strong>'+p.status+'</strong></span>'    +'</div>'    +(whyGlobal?'<div style="background:#EBF3FB;border:1px solid #9DC3E6;padding:5px 12px;font-size:9pt;margin-top:6px"><strong style="color:#44546A">Por quê:</strong> '+whyGlobal+'</div>':'')    +'<div class="tke-layout">'    +'<div class="tke-table-wrap">'    +'<table>'    +'<thead>'    +'<tr>'    +'<th class="th-blue" style="width:16%">Why?<br><span style="font-size:8pt;font-weight:400">(Por que?)</span></th>'    +'<th class="th-blue" style="width:18%">What?<br><span style="font-size:8pt;font-weight:400">( o que?)</span></th>'    +'<th class="th-blue" style="width:22%">How?<br><span style="font-size:8pt;font-weight:400">(Como?)</span></th>'    +'<th class="th-blue" style="width:8%">Who?<br><span style="font-size:8pt;font-weight:400">(Quem?)</span></th>'    +'<th class="th-blue" style="width:13%">Where?<br><span style="font-size:8pt;font-weight:400">(Onde?)</span></th>'    +'<th class="th-blue-light" style="width:8%" colspan="2">When? (Quando?)</th>'    +'<th class="th-blue" style="width:6%">Check</th>'    +'</tr>'    +'<tr>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light">Início</th>'    +'<th class="th-blue-light">Fim</th>'    +'<th class="th-blue-light"></th>'    +'</tr>'    +'</thead>'    +'<tbody>'+rows+'</tbody>'    +'</table>'    +'</div>'    +'<div class="tke-sidebar">'    +'<div class="tke-progress-title">Progresso Geral</div>'    +'<div class="tke-donut-wrap">'    +'<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'    +'<circle cx="50" cy="50" r="40" fill="none" stroke="#E7E6E6" stroke-width="14"/>'    +'<circle cx="50" cy="50" r="40" fill="none" stroke="'+progressColor+'" stroke-width="14" stroke-dasharray="'+(2*Math.PI*40)+'" stroke-dashoffset="'+(2*Math.PI*40*(1-pct/100))+'" stroke-linecap="butt" transform="rotate(-90 50 50)"/>'    +'</svg>'    +'<div class="tke-donut-pct">'+pct+'%</div>'    +'</div>'    +'<div class="tke-donut-label">Concluído</div>'    +'<div class="tke-stat"><span class="sv">'+items.length+'</span><span class="sl">Total</span></div>'    +'<div class="tke-stat green"><span class="sv">'+done+'</span><span class="sl">Completo</span></div>'    +'<div class="tke-stat orange"><span class="sv">'+pendentes+'</span><span class="sl">Pendente</span></div>'    +'</div>'    +'</div>'    +'<div class="tke-footer">'    +'<span>'+p.client+' &nbsp;|&nbsp; '+p.name+'</span>'    +'<span>TK Elevadores</span>'    +'<span></span>'    +'</div>'    +'</body></html>';
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'    +'<title>Plano de Ação TKE — '+p.client+'</title>'    +'<style>'    +'*{box-sizing:border-box;margin:0;padding:0}'    +'body{font-family:Calibri,Arial,sans-serif;padding:1cm;color:#111;font-size:10pt;background:#f5f3ff}'    +'/* Title row */'    +'.tke-title{background:linear-gradient(135deg,#321d65 0%,#5B21B6 50%,#FF6200 100%);color:#fff;font-size:14pt;font-weight:700;padding:8px 12px;letter-spacing:.01em;display:flex;justify-content:space-between;align-items:center}'    +'.tke-logo{font-size:18pt;font-weight:900;color:#fff;letter-spacing:.05em;font-family:Arial Black,Arial,sans-serif}'    +'/* Info block below title */'    +'.tke-info{background:#1a1040;color:#fff;padding:6px 12px;font-size:9pt;display:flex;gap:24px;flex-wrap:wrap;margin-bottom:0}'    +'.tke-info span{white-space:nowrap}'    +'.tke-info strong{color:#fff}'    +'/* Main layout: table + sidebar */'    +'.tke-layout{display:flex;gap:12px;margin-top:10px;align-items:flex-start}'    +'.tke-table-wrap{flex:1;min-width:0}'    +'.tke-sidebar{width:130px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px}'    +'/* Sidebar progress */'    +'.tke-progress-title{font-size:8pt;font-weight:700;color:#44546A;text-align:center;text-transform:uppercase;letter-spacing:.05em}'    +'.tke-donut-wrap{position:relative;width:100px;height:100px}'    +'.tke-donut-wrap svg{width:100px;height:100px}'    +'.tke-donut-pct{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14pt;font-weight:900;color:#44546A;text-align:center;line-height:1}'    +'.tke-donut-label{font-size:7pt;color:#888;text-align:center;margin-top:-4px}'    +'.tke-stat{background:#EBF3FB;border:1px solid #9DC3E6;border-radius:4px;padding:4px 8px;text-align:center;width:100%}'    +'.tke-stat .sv{font-size:14pt;font-weight:900;color:#44546A;display:block}'    +'.tke-stat .sl{font-size:7pt;color:#666;text-transform:uppercase;letter-spacing:.04em}'    +'.tke-stat.green .sv{color:#70AD47}'    +'.tke-stat.orange .sv{color:#ED7D31}'    +'/* Table */'    +'table{width:100%;border-collapse:collapse}'    +'.th-blue{background:#1a1040;color:#fff;padding:5px 6px;text-align:center;font-size:9pt;font-weight:700;border:1px solid #2E3E4E;word-wrap:break-word}'    +'.th-blue-light{background:#2a1860;color:#fff;padding:5px 6px;text-align:center;font-size:8pt;font-weight:700;border:1px solid #2E3E4E}'    +'td{vertical-align:middle}'    +'/* Why col merged label */'    +'.why-cell{background:#D9E2EC;border:1px solid #9DC3E6;padding:4px 6px;font-size:8pt;color:#2E3E4E;vertical-align:top;word-wrap:break-word}'    +'/* Footer */'    +'.tke-footer{display:flex;justify-content:space-between;margin-top:8px;padding-top:6px;border-top:2px solid #5B21B6;font-size:8pt;color:#666}'    +'@page{size:A4 landscape;margin:1cm;margin-top:0;margin-bottom:0}'+'@media print{head,header,footer{display:none}}'    +'@media print{body{padding:0;margin:0}.tke-layout{margin-top:8px}}'    +'</style></head><body>'    +'<div class="tke-title">'    +'<span>Plano de Ação TKE — '+p.client+'</span>'    +'<span class="tke-logo">TKE</span>'    +'</div>'    +'<div class="tke-info">'    +'<span>Plano: <strong>'+p.name+'</strong></span>'    +(p.addr?'<span>Endereço: <strong>'+p.addr+'</strong></span>':'')    +'<span>Responsável: <strong>'+p.resp+'</strong></span>'    +'<span>Início: <strong>'+fmtDate(p.start)+'</strong></span>'    +'<span>Término: <strong>'+fmtDate(p.end)+'</strong></span>'    +'<span>Status: <strong>'+p.status+'</strong></span>'    +'</div>'    +(whyGlobal?'<div style="background:#EBF3FB;border:1px solid #9DC3E6;padding:5px 12px;font-size:9pt;margin-top:6px"><strong style="color:#44546A">Por quê:</strong> '+whyGlobal+'</div>':'')    +'<div class="tke-layout">'    +'<div class="tke-table-wrap">'    +'<table>'    +'<thead>'    +'<tr>'    +'<th class="th-blue" style="width:16%">Why?<br><span style="font-size:8pt;font-weight:400">(Por que?)</span></th>'    +'<th class="th-blue" style="width:18%">What?<br><span style="font-size:8pt;font-weight:400">( o que?)</span></th>'    +'<th class="th-blue" style="width:22%">How?<br><span style="font-size:8pt;font-weight:400">(Como?)</span></th>'    +'<th class="th-blue" style="width:8%">Who?<br><span style="font-size:8pt;font-weight:400">(Quem?)</span></th>'    +'<th class="th-blue" style="width:13%">Where?<br><span style="font-size:8pt;font-weight:400">(Onde?)</span></th>'    +'<th class="th-blue-light" style="width:8%" colspan="2">When? (Quando?)</th>'    +'<th class="th-blue" style="width:6%">Check</th>'    +'</tr>'    +'<tr>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light"></th>'    +'<th class="th-blue-light">Início</th>'    +'<th class="th-blue-light">Fim</th>'    +'<th class="th-blue-light"></th>'    +'</tr>'    +'</thead>'    +'<tbody>'+rows+'</tbody>'    +'</table>'    +'</div>'    +'<div class="tke-sidebar">'    +'<div class="tke-progress-title">Progresso Geral</div>'    +'<div class="tke-donut-wrap">'    +'<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'    +'<circle cx="50" cy="50" r="40" fill="none" stroke="#E7E6E6" stroke-width="14"/>'    +'<circle cx="50" cy="50" r="40" fill="none" stroke="'+progressColor+'" stroke-width="14" stroke-dasharray="'+(2*Math.PI*40)+'" stroke-dashoffset="'+(2*Math.PI*40*(1-pct/100))+'" stroke-linecap="butt" transform="rotate(-90 50 50)"/>'    +'</svg>'    +'<div class="tke-donut-pct">'+pct+'%</div>'    +'</div>'    +'<div class="tke-donut-label">Concluído</div>'    +'<div class="tke-stat"><span class="sv">'+items.length+'</span><span class="sl">Total</span></div>'    +'<div class="tke-stat green"><span class="sv">'+done+'</span><span class="sl">Completo</span></div>'    +'<div class="tke-stat orange"><span class="sv">'+pendentes+'</span><span class="sl">Pendente</span></div>'    +'</div>'    +'</div>'    +'<div class="tke-footer">'    +'<span>'+p.client+' &nbsp;|&nbsp; '+p.name+'</span>'    +'<span>TK Elevadores</span>'    +'<span></span>'    +'</div>'    +'
+<!-- ==================== GESTÃO DE EQUIPE ==================== -->
+<div id="screenGestaoEquipe" style="display:none;position:fixed;inset:0;background:#12082a;z-index:100;overflow-y:auto;font-family:'DM Sans',sans-serif;">
+  <div style="max-width:1400px;margin:0 auto;padding:1.5rem;">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid #7B2FBE;">
+      <button onclick="gestaoEquipeVoltar()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;font-size:.9rem;">← GN Gestão</button>
+      <h1 style="color:#fff;font-size:1.5rem;font-weight:700;margin:0;">👥 Gestão de Equipe</h1>
+      <div style="margin-left:auto;display:flex;gap:.5rem;">
+        <button onclick="geTabFerias()" id="btnTabFerias" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">📅 Férias</button>
+        <button onclick="geTabEscala()" id="btnTabEscala" style="background:#2a1a4e;color:#aaa;border:1px solid #7B2FBE;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">📋 Escala</button>
+      </div>
+    </div>
+
+    <!-- ABA FÉRIAS -->
+    <div id="geAbaFerias">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h2 style="color:#E84A1A;font-size:1.1rem;margin:0;">Férias 2026</h2>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+          <select id="geAnoFerias" onchange="geRenderFerias()" style="background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.3rem .6rem;">
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+          <button onclick="geAbrirModalFerias(null)" style="background:#E84A1A;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">+ Adicionar Férias</button>
+        </div>
+      </div>
+      <div id="geGridFerias" style="overflow-x:auto;"></div>
+    </div>
+
+    <!-- ABA ESCALA -->
+    <div id="geAbaEscala" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+        <h2 style="color:#E84A1A;font-size:1.1rem;margin:0;">Escala de Plantões</h2>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+          <select id="geAnoEscala" onchange="geGerarEscala()" style="background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.3rem .6rem;">
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+          <button onclick="geGerarEscala()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">🔄 Gerar Escala</button>
+          <button onclick="geExportarEscalaPDF()" style="background:#E84A1A;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">📄 Exportar PDF</button>
+        </div>
+      </div>
+      <div id="geGridEscala" style="overflow-x:auto;"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal Férias -->
+<div id="geModalFerias" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center;">
+  <div style="background:#1a0f35;border:1px solid #7B2FBE;border-radius:12px;padding:1.5rem;min-width:320px;max-width:400px;width:90%;">
+    <h3 style="color:#fff;margin:0 0 1rem;font-size:1.1rem;">📅 Férias</h3>
+    <div style="margin-bottom:.8rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Técnico</label>
+      <select id="geFeriasNome" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;"></select>
+    </div>
+    <div style="margin-bottom:.8rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Data Início</label>
+      <input type="date" id="geFeriasInicio" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;box-sizing:border-box;"/>
+    </div>
+    <div style="margin-bottom:1rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Data Fim</label>
+      <input type="date" id="geFeirasFim" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;box-sizing:border-box;"/>
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+      <button onclick="geFecharModalFerias()" style="background:#2a1a4e;color:#aaa;border:1px solid #555;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">Cancelar</button>
+      <button onclick="geSalvarFerias()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">Salvar</button>
+    </div>
+  </div>
+</div>
+
+</body></html>';
 
   var win = window.open('','_blank');
   if(!win){ alert('⚠️ Permita pop-ups no navegador para gerar o PDF.'); return; }
@@ -9065,7 +9281,79 @@ function salvarDocPDF(tipo){
     const cartaBody = _buildCartaHTML(d, false);
     const html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Carta Técnica — TK Elevator</title>'
       +'<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:2cm;color:#111;font-size:11pt;background:#fff}@page{size:A4;margin:1.5cm}@media print{body{padding:0}}</style>'
-      +'</head><body>'+cartaBody+'</body></html>';
+      +'</head><body>'+cartaBody+'
+<!-- ==================== GESTÃO DE EQUIPE ==================== -->
+<div id="screenGestaoEquipe" style="display:none;position:fixed;inset:0;background:#12082a;z-index:100;overflow-y:auto;font-family:'DM Sans',sans-serif;">
+  <div style="max-width:1400px;margin:0 auto;padding:1.5rem;">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid #7B2FBE;">
+      <button onclick="gestaoEquipeVoltar()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;font-size:.9rem;">← GN Gestão</button>
+      <h1 style="color:#fff;font-size:1.5rem;font-weight:700;margin:0;">👥 Gestão de Equipe</h1>
+      <div style="margin-left:auto;display:flex;gap:.5rem;">
+        <button onclick="geTabFerias()" id="btnTabFerias" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">📅 Férias</button>
+        <button onclick="geTabEscala()" id="btnTabEscala" style="background:#2a1a4e;color:#aaa;border:1px solid #7B2FBE;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">📋 Escala</button>
+      </div>
+    </div>
+
+    <!-- ABA FÉRIAS -->
+    <div id="geAbaFerias">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h2 style="color:#E84A1A;font-size:1.1rem;margin:0;">Férias 2026</h2>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+          <select id="geAnoFerias" onchange="geRenderFerias()" style="background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.3rem .6rem;">
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+          <button onclick="geAbrirModalFerias(null)" style="background:#E84A1A;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">+ Adicionar Férias</button>
+        </div>
+      </div>
+      <div id="geGridFerias" style="overflow-x:auto;"></div>
+    </div>
+
+    <!-- ABA ESCALA -->
+    <div id="geAbaEscala" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+        <h2 style="color:#E84A1A;font-size:1.1rem;margin:0;">Escala de Plantões</h2>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+          <select id="geAnoEscala" onchange="geGerarEscala()" style="background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.3rem .6rem;">
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+          <button onclick="geGerarEscala()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">🔄 Gerar Escala</button>
+          <button onclick="geExportarEscalaPDF()" style="background:#E84A1A;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">📄 Exportar PDF</button>
+        </div>
+      </div>
+      <div id="geGridEscala" style="overflow-x:auto;"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal Férias -->
+<div id="geModalFerias" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center;">
+  <div style="background:#1a0f35;border:1px solid #7B2FBE;border-radius:12px;padding:1.5rem;min-width:320px;max-width:400px;width:90%;">
+    <h3 style="color:#fff;margin:0 0 1rem;font-size:1.1rem;">📅 Férias</h3>
+    <div style="margin-bottom:.8rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Técnico</label>
+      <select id="geFeriasNome" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;"></select>
+    </div>
+    <div style="margin-bottom:.8rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Data Início</label>
+      <input type="date" id="geFeriasInicio" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;box-sizing:border-box;"/>
+    </div>
+    <div style="margin-bottom:1rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Data Fim</label>
+      <input type="date" id="geFeirasFim" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;box-sizing:border-box;"/>
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+      <button onclick="geFecharModalFerias()" style="background:#2a1a4e;color:#aaa;border:1px solid #555;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">Cancelar</button>
+      <button onclick="geSalvarFerias()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">Salvar</button>
+    </div>
+  </div>
+</div>
+
+</body></html>';
     const w=window.open('','_blank','width=800,height=900');
     if(w){ w.document.write(html); w.document.close(); setTimeout(function(){ w.print(); },600); }
     return;
@@ -9073,7 +9361,79 @@ function salvarDocPDF(tipo){
   const ataBody = _buildAtaHTML(d, false);
   const html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Ata de Reunião — TK Elevator</title>'
     +'<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:2cm;color:#111;font-size:11pt;background:#fff}@page{size:A4;margin:1.5cm}@media print{body{padding:0}}</style>'
-    +'</head><body>'+ataBody+'</body></html>';
+    +'</head><body>'+ataBody+'
+<!-- ==================== GESTÃO DE EQUIPE ==================== -->
+<div id="screenGestaoEquipe" style="display:none;position:fixed;inset:0;background:#12082a;z-index:100;overflow-y:auto;font-family:'DM Sans',sans-serif;">
+  <div style="max-width:1400px;margin:0 auto;padding:1.5rem;">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid #7B2FBE;">
+      <button onclick="gestaoEquipeVoltar()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;font-size:.9rem;">← GN Gestão</button>
+      <h1 style="color:#fff;font-size:1.5rem;font-weight:700;margin:0;">👥 Gestão de Equipe</h1>
+      <div style="margin-left:auto;display:flex;gap:.5rem;">
+        <button onclick="geTabFerias()" id="btnTabFerias" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">📅 Férias</button>
+        <button onclick="geTabEscala()" id="btnTabEscala" style="background:#2a1a4e;color:#aaa;border:1px solid #7B2FBE;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">📋 Escala</button>
+      </div>
+    </div>
+
+    <!-- ABA FÉRIAS -->
+    <div id="geAbaFerias">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h2 style="color:#E84A1A;font-size:1.1rem;margin:0;">Férias 2026</h2>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+          <select id="geAnoFerias" onchange="geRenderFerias()" style="background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.3rem .6rem;">
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+          <button onclick="geAbrirModalFerias(null)" style="background:#E84A1A;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">+ Adicionar Férias</button>
+        </div>
+      </div>
+      <div id="geGridFerias" style="overflow-x:auto;"></div>
+    </div>
+
+    <!-- ABA ESCALA -->
+    <div id="geAbaEscala" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+        <h2 style="color:#E84A1A;font-size:1.1rem;margin:0;">Escala de Plantões</h2>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+          <select id="geAnoEscala" onchange="geGerarEscala()" style="background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.3rem .6rem;">
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+          <button onclick="geGerarEscala()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">🔄 Gerar Escala</button>
+          <button onclick="geExportarEscalaPDF()" style="background:#E84A1A;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">📄 Exportar PDF</button>
+        </div>
+      </div>
+      <div id="geGridEscala" style="overflow-x:auto;"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal Férias -->
+<div id="geModalFerias" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center;">
+  <div style="background:#1a0f35;border:1px solid #7B2FBE;border-radius:12px;padding:1.5rem;min-width:320px;max-width:400px;width:90%;">
+    <h3 style="color:#fff;margin:0 0 1rem;font-size:1.1rem;">📅 Férias</h3>
+    <div style="margin-bottom:.8rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Técnico</label>
+      <select id="geFeriasNome" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;"></select>
+    </div>
+    <div style="margin-bottom:.8rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Data Início</label>
+      <input type="date" id="geFeriasInicio" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;box-sizing:border-box;"/>
+    </div>
+    <div style="margin-bottom:1rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Data Fim</label>
+      <input type="date" id="geFeirasFim" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;box-sizing:border-box;"/>
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+      <button onclick="geFecharModalFerias()" style="background:#2a1a4e;color:#aaa;border:1px solid #555;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">Cancelar</button>
+      <button onclick="geSalvarFerias()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">Salvar</button>
+    </div>
+  </div>
+</div>
+
+</body></html>';
   const w=window.open('','_blank','width=800,height=900');
   if(w){ w.document.write(html); w.document.close(); setTimeout(function(){ w.print(); },600); }
 }
@@ -9383,7 +9743,79 @@ function cipaSalvarPDF(){
   var d=window._docCipaData; if(!d){ alert('Gere a ata primeiro.'); return; }
   var html='<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Ata CIPA — TK Elevator</title>'
     +'<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:2cm;color:#111;font-size:11pt;background:#fff}@page{size:A4;margin:1.5cm}@media print{body{padding:0}}</style>'
-    +'</head><body>'+_buildCipaAtaHTML(d,false)+'</body></html>';
+    +'</head><body>'+_buildCipaAtaHTML(d,false)+'
+<!-- ==================== GESTÃO DE EQUIPE ==================== -->
+<div id="screenGestaoEquipe" style="display:none;position:fixed;inset:0;background:#12082a;z-index:100;overflow-y:auto;font-family:'DM Sans',sans-serif;">
+  <div style="max-width:1400px;margin:0 auto;padding:1.5rem;">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid #7B2FBE;">
+      <button onclick="gestaoEquipeVoltar()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;font-size:.9rem;">← GN Gestão</button>
+      <h1 style="color:#fff;font-size:1.5rem;font-weight:700;margin:0;">👥 Gestão de Equipe</h1>
+      <div style="margin-left:auto;display:flex;gap:.5rem;">
+        <button onclick="geTabFerias()" id="btnTabFerias" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">📅 Férias</button>
+        <button onclick="geTabEscala()" id="btnTabEscala" style="background:#2a1a4e;color:#aaa;border:1px solid #7B2FBE;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">📋 Escala</button>
+      </div>
+    </div>
+
+    <!-- ABA FÉRIAS -->
+    <div id="geAbaFerias">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h2 style="color:#E84A1A;font-size:1.1rem;margin:0;">Férias 2026</h2>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+          <select id="geAnoFerias" onchange="geRenderFerias()" style="background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.3rem .6rem;">
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+          <button onclick="geAbrirModalFerias(null)" style="background:#E84A1A;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">+ Adicionar Férias</button>
+        </div>
+      </div>
+      <div id="geGridFerias" style="overflow-x:auto;"></div>
+    </div>
+
+    <!-- ABA ESCALA -->
+    <div id="geAbaEscala" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+        <h2 style="color:#E84A1A;font-size:1.1rem;margin:0;">Escala de Plantões</h2>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+          <select id="geAnoEscala" onchange="geGerarEscala()" style="background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.3rem .6rem;">
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+          <button onclick="geGerarEscala()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">🔄 Gerar Escala</button>
+          <button onclick="geExportarEscalaPDF()" style="background:#E84A1A;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">📄 Exportar PDF</button>
+        </div>
+      </div>
+      <div id="geGridEscala" style="overflow-x:auto;"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal Férias -->
+<div id="geModalFerias" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center;">
+  <div style="background:#1a0f35;border:1px solid #7B2FBE;border-radius:12px;padding:1.5rem;min-width:320px;max-width:400px;width:90%;">
+    <h3 style="color:#fff;margin:0 0 1rem;font-size:1.1rem;">📅 Férias</h3>
+    <div style="margin-bottom:.8rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Técnico</label>
+      <select id="geFeriasNome" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;"></select>
+    </div>
+    <div style="margin-bottom:.8rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Data Início</label>
+      <input type="date" id="geFeriasInicio" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;box-sizing:border-box;"/>
+    </div>
+    <div style="margin-bottom:1rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Data Fim</label>
+      <input type="date" id="geFeirasFim" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;box-sizing:border-box;"/>
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+      <button onclick="geFecharModalFerias()" style="background:#2a1a4e;color:#aaa;border:1px solid #555;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">Cancelar</button>
+      <button onclick="geSalvarFerias()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">Salvar</button>
+    </div>
+  </div>
+</div>
+
+</body></html>';
   var w=window.open('','_blank','width=800,height=900');
   if(w){ w.document.write(html); w.document.close(); setTimeout(function(){ w.print(); },600); }
 }
@@ -9728,7 +10160,446 @@ async function cipaEnviarAssinatura(){
     if(origShow) origShow();
     setTimeout(function(){ initGlobalJarvis(); showGJ(); }, 1200);
   };
+
+// ==================== GESTÃO DE EQUIPE JS ====================
+
+var _geFerias = JSON.parse(localStorage.getItem('ge_ferias') || '[]');
+var _geEditandoFerias = null;
+
+var GE_TECNICOS = [
+  // Laranja
+  {nome:'Giliard', grupo:'laranja', matricula:'55018679'},
+  {nome:'Humberto', grupo:'laranja', matricula:'55013171'},
+  {nome:'Klebson Ramos', grupo:'laranja', matricula:'55012621'},
+  {nome:'Elenildo', grupo:'laranja', matricula:'55016383'},
+  {nome:'Klebson Andrade', grupo:'laranja', matricula:'55001880'},
+  {nome:'Charlington', grupo:'laranja', matricula:'55018937'},
+  {nome:'Rodrigo', grupo:'laranja', matricula:'55012352'},
+  // Azul
+  {nome:'Evaldo', grupo:'azul', matricula:'55010850'},
+  {nome:'Wellington', grupo:'azul', matricula:'55013039'},
+  {nome:'Alisson', grupo:'azul', matricula:'55016328'},
+  {nome:'Adriano Fran', grupo:'azul', matricula:'55007813'},
+  {nome:'Joaz', grupo:'azul', matricula:'55004915'},
+  {nome:'Tone', grupo:'azul', matricula:'55021085'},
+  // Verde
+  {nome:'Bruno', grupo:'verde', matricula:'55007445'},
+  {nome:'Diego', grupo:'verde', matricula:'55019788'},
+  {nome:'Paulo Andre', grupo:'verde', matricula:'55015783'},
+  {nome:'Rodolfo', grupo:'verde', matricula:'55000585'},
+  {nome:'George', grupo:'verde', matricula:'55015944'},
+  {nome:'Durval', grupo:'verde', matricula:'55004902'},
+  // Fixos
+  {nome:'Laercio', grupo:'fixo', matricula:'55012128'},
+  {nome:'Marcelo', grupo:'fixo', matricula:'55015003'},
+  {nome:'Adriano Rog', grupo:'fixo', matricula:'55013039'},
+];
+
+var GE_CORES = {laranja:'#E84A1A', azul:'#2563eb', verde:'#16a34a', fixo:'#6b7280'};
+
+var GE_MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+function enterGestaoEquipe(){
+  document.querySelectorAll('[id^="screen"]').forEach(function(s){ s.style.display='none'; });
+  document.getElementById('hubScreen').style.display='none';
+  document.getElementById('screenGestaoEquipe').style.display='block';
+  document.getElementById('appScreen').style.cssText='display:none!important';
+  geTabFerias();
+  geRenderFerias();
+}
+
+function gestaoEquipeVoltar(){
+  document.getElementById('screenGestaoEquipe').style.display='none';
+  if(typeof gnVoltarHub==='function') gnVoltarHub(); else document.getElementById('hubScreen').style.display='block';
+}
+
+function geTabFerias(){
+  document.getElementById('geAbaFerias').style.display='block';
+  document.getElementById('geAbaEscala').style.display='none';
+  document.getElementById('btnTabFerias').style.background='#7B2FBE';
+  document.getElementById('btnTabFerias').style.color='#fff';
+  document.getElementById('btnTabEscala').style.background='#2a1a4e';
+  document.getElementById('btnTabEscala').style.color='#aaa';
+}
+
+function geTabEscala(){
+  document.getElementById('geAbaFerias').style.display='none';
+  document.getElementById('geAbaEscala').style.display='block';
+  document.getElementById('btnTabEscala').style.background='#7B2FBE';
+  document.getElementById('btnTabEscala').style.color='#fff';
+  document.getElementById('btnTabFerias').style.background='#2a1a4e';
+  document.getElementById('btnTabFerias').style.color='#aaa';
+  geGerarEscala();
+}
+
+function geRenderFerias(){
+  var ano = parseInt(document.getElementById('geAnoFerias').value);
+  var grid = document.getElementById('geGridFerias');
+
+  var html = '<table style="border-collapse:collapse;width:100%;min-width:900px;font-size:.8rem;">';
+  html += '<thead><tr><th style="background:#2a1a4e;color:#fff;padding:.5rem .7rem;text-align:left;position:sticky;left:0;z-index:2;min-width:130px;">Técnico</th>';
+  GE_MESES.forEach(function(m){ html += '<th style="background:#2a1a4e;color:#aaa;padding:.5rem .7rem;text-align:center;min-width:90px;">'+m+'/'+String(ano).slice(2)+'</th>'; });
+  html += '</tr></thead><tbody>';
+
+  GE_TECNICOS.forEach(function(tec){
+    var cor = GE_CORES[tec.grupo];
+    html += '<tr>';
+    html += '<td style="background:#1a0f35;color:'+cor+';font-weight:600;padding:.4rem .7rem;position:sticky;left:0;border-bottom:1px solid #2a1a4e;">'+tec.nome+'</td>';
+
+    for(var m=0; m<12; m++){
+      var feriasDoMes = _geFerias.filter(function(f){
+        if(f.nome !== tec.nome) return false;
+        var ini = new Date(f.inicio);
+        var fim = new Date(f.fim);
+        var mesIni = new Date(ano, m, 1);
+        var mesFim = new Date(ano, m+1, 0);
+        return ini <= mesFim && fim >= mesIni;
+      });
+
+      var cell = '<td style="background:#12082a;padding:.3rem .5rem;text-align:center;border-bottom:1px solid #1a0f35;border-left:1px solid #1a0f35;">';
+      if(feriasDoMes.length > 0){
+        feriasDoMes.forEach(function(f){
+          var ini = new Date(f.inicio);
+          var fim = new Date(f.fim);
+          var dIni = String(ini.getDate()).padStart(2,'0')+'/'+String(ini.getMonth()+1).padStart(2,'0');
+          var dFim = String(fim.getDate()).padStart(2,'0')+'/'+String(fim.getMonth()+1).padStart(2,'0');
+          cell += '<div onclick="geAbrirModalFerias(\'' + f.id + '\')" style="cursor:pointer;display:inline-block;background:'+cor+'22;border:1px solid '+cor+';border-radius:4px;padding:.1rem .3rem;margin:.1rem;">';
+          cell += '<span style="color:#22C55E;font-size:.75rem;">'+dIni+'</span>';
+          cell += '<span style="color:#aaa;font-size:.7rem;"> até </span>';
+          cell += '<span style="color:#E84A1A;font-size:.75rem;">'+dFim+'</span>';
+          cell += '</div>';
+        });
+      } else {
+        cell += '<span style="color:#333;">—</span>';
+      }
+      cell += '</td>';
+      html += cell;
+    }
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  grid.innerHTML = html;
+}
+
+function geAbrirModalFerias(id){
+  var modal = document.getElementById('geModalFerias');
+  var sel = document.getElementById('geFeriasNome');
+  sel.innerHTML = GE_TECNICOS.map(function(t){ return '<option value="'+t.nome+'">'+t.nome+'</option>'; }).join('');
+
+  if(id){
+    var f = _geFerias.find(function(x){ return x.id===id; });
+    if(f){
+      sel.value = f.nome;
+      document.getElementById('geFeriasInicio').value = f.inicio;
+      document.getElementById('geFeirasFim').value = f.fim;
+      _geEditandoFerias = id;
+    }
+  } else {
+    sel.value = GE_TECNICOS[0].nome;
+    document.getElementById('geFeriasInicio').value = '';
+    document.getElementById('geFeirasFim').value = '';
+    _geEditandoFerias = null;
+  }
+  modal.style.display = 'flex';
+}
+
+function geFecharModalFerias(){
+  document.getElementById('geModalFerias').style.display = 'none';
+  _geEditandoFerias = null;
+}
+
+function geSalvarFerias(){
+  var nome = document.getElementById('geFeriasNome').value;
+  var inicio = document.getElementById('geFeriasInicio').value;
+  var fim = document.getElementById('geFeirasFim').value;
+  if(!inicio || !fim){ alert('Informe início e fim das férias.'); return; }
+  if(inicio > fim){ alert('Data início deve ser anterior ao fim.'); return; }
+
+  if(_geEditandoFerias){
+    var idx = _geFerias.findIndex(function(x){ return x.id===_geEditandoFerias; });
+    if(idx>=0) _geFerias[idx] = {id:_geEditandoFerias, nome:nome, inicio:inicio, fim:fim};
+  } else {
+    _geFerias.push({id:'fe_'+Date.now(), nome:nome, inicio:inicio, fim:fim});
+  }
+  localStorage.setItem('ge_ferias', JSON.stringify(_geFerias));
+  geFecharModalFerias();
+  geRenderFerias();
+}
+
+function geTecnicoEmFerias(nome, data){
+  var d = new Date(data);
+  return _geFerias.some(function(f){
+    return f.nome===nome && new Date(f.inicio)<=d && new Date(f.fim)>=d;
+  });
+}
+
+// Gerador de Escala
+function geGerarEscala(){
+  var ano = parseInt(document.getElementById('geAnoEscala').value);
+  var semanas = [];
+
+  // Calcular todos os fins de semana do ano
+  var d = new Date(ano, 0, 1);
+  while(d.getDay() !== 6) d.setDate(d.getDate()+1); // primeiro sábado
+
+  var ciclo = {laranja:0, azul:0, verde:0}; // controle 2x1
+
+  while(d.getFullYear() === ano){
+    var sabado = new Date(d);
+    var domingo = new Date(d); domingo.setDate(domingo.getDate()+1);
+    var numSemana = semanas.length + 1;
+
+    var sSab = sabado.toISOString().split('T')[0];
+    var sDom = domingo.toISOString().split('T')[0];
+
+    var semana = {
+      numSemana: numSemana,
+      sabado: sSab,
+      domingo: sDom,
+      plantoes: geAlocarPlantoes(sSab, sDom, ciclo, numSemana)
+    };
+    semanas.push(semana);
+    d.setDate(d.getDate()+7);
+  }
+
+  geRenderEscala(semanas, ano);
+}
+
+function geGrupoDisponivel(grupo, ciclo){
+  // 2x1: trabalha 2 semanas, folga 1
+  var c = ciclo[grupo] % 3;
+  return c < 2; // 0 e 1 trabalha, 2 folga
+}
+
+function geAlocarPlantoes(sSab, sDom, ciclo, numSemana){
+  var plantoes = [];
+
+  // Avançar ciclos dos grupos
+  var trabLaranja = geGrupoDisponivel('laranja', ciclo);
+  var trabAzul = geGrupoDisponivel('azul', ciclo);
+  var trabVerde = geGrupoDisponivel('verde', ciclo);
+
+  // SÁBADO
+  // SRM 1° turno — Bruno (verde) se disponível
+  if(trabVerde && !geTecnicoEmFerias('Bruno', sSab)){
+    plantoes.push({dia:'SAB', setor:'SRM', tecnico:'Bruno', horario:'08:00-17:00'});
+  }
+  // SRM 2° turno — Humberto (laranja)
+  if(trabLaranja && !geTecnicoEmFerias('Humberto', sSab)){
+    plantoes.push({dia:'SAB', setor:'SRM', tecnico:'Humberto', horario:'13:00-22:00'});
+  }
+  // SBV — Paulo André (verde), subs Alisson, Giliard, Charlington
+  var sbvTec = null;
+  if(trabVerde && !geTecnicoEmFerias('Paulo Andre', sSab)) sbvTec='Paulo Andre';
+  else if(trabAzul && !geTecnicoEmFerias('Alisson', sSab)) sbvTec='Alisson';
+  else if(trabLaranja && !geTecnicoEmFerias('Giliard', sSab)) sbvTec='Giliard';
+  else if(trabLaranja && !geTecnicoEmFerias('Charlington', sSab)) sbvTec='Charlington';
+  if(sbvTec) plantoes.push({dia:'SAB', setor:'SBV', tecnico:sbvTec, horario:'08:00-17:00'});
+
+  // SPO sábado — Wellington/Klebson Ramos alternando
+  var spoTec = null;
+  if(numSemana%2===0){
+    if(trabAzul && !geTecnicoEmFerias('Wellington', sSab)) spoTec='Wellington';
+    else if(trabLaranja && !geTecnicoEmFerias('Klebson Ramos', sSab)) spoTec='Klebson Ramos';
+  } else {
+    if(trabLaranja && !geTecnicoEmFerias('Klebson Ramos', sSab)) spoTec='Klebson Ramos';
+    else if(trabAzul && !geTecnicoEmFerias('Wellington', sSab)) spoTec='Wellington';
+  }
+  if(spoTec) plantoes.push({dia:'SAB', setor:'SPO', tecnico:spoTec, horario:'10:00-21:00'});
+
+  // ERM — Adriano Rog (fixo)
+  if(!geTecnicoEmFerias('Adriano Rog', sSab)){
+    plantoes.push({dia:'SAB', setor:'ERM', tecnico:'Adriano Rog', horario:'08:00-12:00'});
+  }
+  // TRF — Laercio e Marcelo (fixos)
+  if(!geTecnicoEmFerias('Laercio', sSab)){
+    plantoes.push({dia:'SAB', setor:'TRF', tecnico:'Laercio', horario:'08:00-12:00'});
+  }
+  if(!geTecnicoEmFerias('Marcelo', sSab)){
+    plantoes.push({dia:'SAB', setor:'TRF', tecnico:'Marcelo', horario:'12:00-17:00'});
+  }
+  // RHP sábado dia — demais disponíveis
+  ['Rodolfo','Durval','Elenildo','Joaz','Tone','Evaldo'].forEach(function(nome){
+    var tec = GE_TECNICOS.find(function(t){ return t.nome===nome; });
+    if(!tec) return;
+    var trab = tec.grupo==='laranja'?trabLaranja:tec.grupo==='azul'?trabAzul:tec.grupo==='verde'?trabVerde:true;
+    if(trab && !geTecnicoEmFerias(nome, sSab)){
+      plantoes.push({dia:'SAB', setor:'RHP', tecnico:nome, horario:'07:00-19:00'});
+    }
+  });
+
+  // DOMINGO
+  // SRM dom — Klebson Andrade
+  if(trabLaranja && !geTecnicoEmFerias('Klebson Andrade', sDom)){
+    plantoes.push({dia:'DOM', setor:'SRM', tecnico:'Klebson Andrade', horario:'10:00-21:20'});
+  }
+  // RHP dom — George
+  if(trabVerde && !geTecnicoEmFerias('George', sDom)){
+    plantoes.push({dia:'DOM', setor:'RHP', tecnico:'George', horario:'07:00-19:00'});
+  }
+  // SPO dom — Adriano Francisco
+  if(trabAzul && !geTecnicoEmFerias('Adriano Fran', sDom)){
+    plantoes.push({dia:'DOM', setor:'SPO', tecnico:'Adriano Fran', horario:'10:00-21:00'});
+  }
+  // SBV dom — Paulo André (se disponível)
+  if(trabVerde && !geTecnicoEmFerias('Paulo Andre', sDom)){
+    plantoes.push({dia:'DOM', setor:'SBV', tecnico:'Paulo Andre', horario:'08:00-17:00'});
+  }
+  // Noturno Filial dom — Rodrigo (a cada 4 semanas)
+  if(numSemana%4===0){
+    if(!geTecnicoEmFerias('Rodrigo', sDom)){
+      plantoes.push({dia:'DOM', setor:'NTF', tecnico:'Rodrigo', horario:'22:00-07:00'});
+    }
+  }
+
+  // Avançar ciclos
+  ciclo.laranja = (ciclo.laranja+1)%3;
+  ciclo.azul = (ciclo.azul+1)%3;
+  ciclo.verde = (ciclo.verde+1)%3;
+
+  return plantoes;
+}
+
+function geRenderEscala(semanas, ano){
+  var grid = document.getElementById('geGridEscala');
+  var setores = ['SRM','RHP','ERM','SPO','SBV','TRF','NTF'];
+  var coresSetor = {SRM:'#7B2FBE',RHP:'#2563eb',ERM:'#16a34a',SPO:'#E84A1A',SBV:'#d97706',TRF:'#6b7280',NTF:'#1e293b'};
+
+  var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1rem;">';
+
+  semanas.forEach(function(sem){
+    var dSab = new Date(sem.sabado);
+    var dDom = new Date(sem.domingo);
+    var fmtSab = dSab.getDate()+'/'+(dSab.getMonth()+1);
+    var fmtDom = dDom.getDate()+'/'+(dDom.getMonth()+1);
+
+    html += '<div style="background:#1a0f35;border:1px solid #2a1a4e;border-radius:8px;overflow:hidden;">';
+    html += '<div style="background:#2a1a4e;padding:.4rem .7rem;font-size:.8rem;color:#fff;font-weight:600;">Semana '+sem.numSemana+' — '+fmtSab+' e '+fmtDom+'/'+String(ano).slice(2)+'</div>';
+
+    // Sábado
+    var sabPlantoes = sem.plantoes.filter(function(p){ return p.dia==='SAB'; });
+    html += '<div style="padding:.4rem .7rem;border-bottom:1px solid #2a1a4e;">';
+    html += '<div style="color:#E84A1A;font-size:.75rem;font-weight:700;margin-bottom:.3rem;">SÁBADO</div>';
+    setores.forEach(function(s){
+      var ps = sabPlantoes.filter(function(p){ return p.setor===s; });
+      if(ps.length===0) return;
+      html += '<div style="display:flex;align-items:flex-start;gap:.4rem;margin-bottom:.2rem;">';
+      html += '<span style="background:'+coresSetor[s]+';color:#fff;border-radius:3px;padding:.1rem .3rem;font-size:.68rem;font-weight:700;min-width:30px;text-align:center;">'+s+'</span>';
+      html += '<div>';
+      ps.forEach(function(p){
+        var tec = GE_TECNICOS.find(function(t){ return t.nome===p.tecnico; });
+        var cor = tec ? GE_CORES[tec.grupo] : '#fff';
+        html += '<div style="color:'+cor+';font-size:.75rem;">'+p.tecnico+' <span style="color:#666;">'+p.horario+'</span></div>';
+      });
+      html += '</div></div>';
+    });
+    html += '</div>';
+
+    // Domingo
+    var domPlantoes = sem.plantoes.filter(function(p){ return p.dia==='DOM'; });
+    if(domPlantoes.length > 0){
+      html += '<div style="padding:.4rem .7rem;">';
+      html += '<div style="color:#7B2FBE;font-size:.75rem;font-weight:700;margin-bottom:.3rem;">DOMINGO</div>';
+      setores.forEach(function(s){
+        var ps = domPlantoes.filter(function(p){ return p.setor===s; });
+        if(ps.length===0) return;
+        html += '<div style="display:flex;align-items:flex-start;gap:.4rem;margin-bottom:.2rem;">';
+        html += '<span style="background:'+coresSetor[s]+';color:#fff;border-radius:3px;padding:.1rem .3rem;font-size:.68rem;font-weight:700;min-width:30px;text-align:center;">'+s+'</span>';
+        html += '<div>';
+        ps.forEach(function(p){
+          var tec = GE_TECNICOS.find(function(t){ return t.nome===p.tecnico; });
+          var cor = tec ? GE_CORES[tec.grupo] : '#fff';
+          html += '<div style="color:'+cor+';font-size:.75rem;">'+p.tecnico+' <span style="color:#666;">'+p.horario+'</span></div>';
+        });
+        html += '</div></div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+
+  html += '</div>';
+  grid.innerHTML = html;
+}
+
+function geExportarEscalaPDF(){
+  alert('Exportar PDF da escala — em desenvolvimento.');
+}
+
 })();
 </script>
+
+<!-- ==================== GESTÃO DE EQUIPE ==================== -->
+<div id="screenGestaoEquipe" style="display:none;position:fixed;inset:0;background:#12082a;z-index:100;overflow-y:auto;font-family:'DM Sans',sans-serif;">
+  <div style="max-width:1400px;margin:0 auto;padding:1.5rem;">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid #7B2FBE;">
+      <button onclick="gestaoEquipeVoltar()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;font-size:.9rem;">← GN Gestão</button>
+      <h1 style="color:#fff;font-size:1.5rem;font-weight:700;margin:0;">👥 Gestão de Equipe</h1>
+      <div style="margin-left:auto;display:flex;gap:.5rem;">
+        <button onclick="geTabFerias()" id="btnTabFerias" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">📅 Férias</button>
+        <button onclick="geTabEscala()" id="btnTabEscala" style="background:#2a1a4e;color:#aaa;border:1px solid #7B2FBE;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">📋 Escala</button>
+      </div>
+    </div>
+
+    <!-- ABA FÉRIAS -->
+    <div id="geAbaFerias">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h2 style="color:#E84A1A;font-size:1.1rem;margin:0;">Férias 2026</h2>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+          <select id="geAnoFerias" onchange="geRenderFerias()" style="background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.3rem .6rem;">
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+          <button onclick="geAbrirModalFerias(null)" style="background:#E84A1A;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">+ Adicionar Férias</button>
+        </div>
+      </div>
+      <div id="geGridFerias" style="overflow-x:auto;"></div>
+    </div>
+
+    <!-- ABA ESCALA -->
+    <div id="geAbaEscala" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+        <h2 style="color:#E84A1A;font-size:1.1rem;margin:0;">Escala de Plantões</h2>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+          <select id="geAnoEscala" onchange="geGerarEscala()" style="background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.3rem .6rem;">
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+          <button onclick="geGerarEscala()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">🔄 Gerar Escala</button>
+          <button onclick="geExportarEscalaPDF()" style="background:#E84A1A;color:#fff;border:none;border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.85rem;">📄 Exportar PDF</button>
+        </div>
+      </div>
+      <div id="geGridEscala" style="overflow-x:auto;"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal Férias -->
+<div id="geModalFerias" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center;">
+  <div style="background:#1a0f35;border:1px solid #7B2FBE;border-radius:12px;padding:1.5rem;min-width:320px;max-width:400px;width:90%;">
+    <h3 style="color:#fff;margin:0 0 1rem;font-size:1.1rem;">📅 Férias</h3>
+    <div style="margin-bottom:.8rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Técnico</label>
+      <select id="geFeriasNome" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;"></select>
+    </div>
+    <div style="margin-bottom:.8rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Data Início</label>
+      <input type="date" id="geFeriasInicio" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;box-sizing:border-box;"/>
+    </div>
+    <div style="margin-bottom:1rem;">
+      <label style="color:#aaa;font-size:.85rem;display:block;margin-bottom:.3rem;">Data Fim</label>
+      <input type="date" id="geFeirasFim" style="width:100%;background:#2a1a4e;color:#fff;border:1px solid #7B2FBE;border-radius:6px;padding:.5rem;box-sizing:border-box;"/>
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+      <button onclick="geFecharModalFerias()" style="background:#2a1a4e;color:#aaa;border:1px solid #555;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">Cancelar</button>
+      <button onclick="geSalvarFerias()" style="background:#7B2FBE;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;cursor:pointer;">Salvar</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
