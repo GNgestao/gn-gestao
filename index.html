@@ -7613,6 +7613,41 @@ function gnReiniciar(){
   }, 300);
 }
 
+async function gnProgramarFerias(cmdLower, textoOriginal){
+  // Detecta: "férias de/do X de DD/MM[/YYYY] até DD/MM[/YYYY]"
+  // ou: "programe/agendar férias de/do X para DD/MM até DD/MM"
+  var re = /f[eé]rias\s+(?:do?|da?|de|para)\s+(.+?)\s+(?:de|para|a\s+partir\s+de?|in[ií]cio|começa(?:ndo)?)\s+(\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)\s+(?:at[eé]|a|até|fim|t[eé]rmino)\s+(\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?)/i;
+  var match = cmdLower.match(re);
+  if(!match) return null;
+  var nome = match[1].trim().replace(/\b(do|da|de|para)\b/g,'').trim();
+  // Capitaliza cada palavra do nome
+  nome = nome.replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+  function parseData(s){
+    var p = s.split(/[\/\-]/);
+    var d = (p[0]||'1').padStart(2,'0');
+    var m = (p[1]||'1').padStart(2,'0');
+    var y = p[2] ? (p[2].length===2?'20'+p[2]:p[2]) : '2026';
+    return y+'-'+m+'-'+d;
+  }
+  var inicio = parseData(match[2]);
+  var fim = parseData(match[3]);
+  var ano = parseInt(inicio.split('-')[0]);
+  try{
+    var res = await fetch('http://187.127.26.136:5057/ferias/jarvis', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({nome:nome, inicio:inicio, fim:fim, ano:ano})
+    });
+    var dI=match[2], dF=match[3];
+    if(res.ok){
+      if(typeof window._geAnoAtual !== 'undefined') delete _geFeriasCache[ano];
+      return 'Férias de '+nome+' programadas de '+dI+' até '+dF+', Chefe.';
+    }
+    return 'Não consegui programar as férias de '+nome+'. Servidor retornou erro '+res.status+'.';
+  }catch(e){
+    return 'Erro ao programar férias: '+e.message;
+  }
+}
+
 async function gnExecutar(comando){
   const cmdLower = comando.toLowerCase().trim();
   const _silTermos = ['silêncio', 'silencio', 'stop', 'cala boca', 'cale-se', 'cala', 'basta'];
@@ -8003,6 +8038,18 @@ async function gnExecutar(comando){
     if(gnModoVoz){ await gnSpeak(respostaFixa.resposta); } else { var hc=document.getElementById('hubJarvisChatResp'); if(hc){hc.style.display='block';hc.textContent=respostaFixa.resposta;} }
     gnExecutando = false;
     return;
+  }
+  // Reconhecimento de férias — detecta antes de enviar ao webhook
+  if(lowerComando.includes('férias') || lowerComando.includes('ferias')){
+    var _ferRes = await gnProgramarFerias(lowerComando, comando);
+    if(_ferRes){
+      gnCurrentResposta = _ferRes;
+      if(gnModoVoz){ try{ await gnSpeak(_ferRes); }catch(e){} }
+      if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot', _ferRes);
+      else { var hc2=document.getElementById('hubJarvisChatResp'); if(hc2){hc2.style.display='block';hc2.textContent=_ferRes;} }
+      gnExecutando = false;
+      return;
+    }
   }
   try{
     console.log('gnExecutar - comando enviado:', comando);
@@ -9667,6 +9714,15 @@ async function cipaEnviarAssinatura(){
         return;
       }
     }
+    // Reconhecimento de férias no chat do Jarvis global
+    if(_gjCmd.includes('férias') || _gjCmd.includes('ferias')){
+      var _gjFerRes = await gnProgramarFerias(_gjCmd, texto);
+      if(_gjFerRes){
+        if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot', _gjFerRes);
+        window._gjModoTexto = false;
+        return;
+      }
+    }
     if(typeof gnExecutar === 'function'){
       gnCommandSource = 'text';
       gnTextTargetEl = document.querySelector('#globalJarvisChat .gj-msgs') || document.getElementById('globalJarvisChatResp');
@@ -9795,20 +9851,18 @@ var GE_DEFAULT_2026 = [
   {id:'d22', nome:'Laercio',           inicio:null, fim:null, mesHint:12},
 ];
 
-function geGetFerias(ano){
-  var key = 'ge_ferias_'+ano;
-  var raw = localStorage.getItem(key);
-  if(raw !== null) return JSON.parse(raw);
-  if(ano === 2026){
-    var seed = JSON.parse(JSON.stringify(GE_DEFAULT_2026));
-    localStorage.setItem(key, JSON.stringify(seed));
-    return seed;
-  }
-  return [];
-}
+var _GE_API = 'http://187.127.26.136:5057';
 
-function geSaveFerias(ano, data){
-  localStorage.setItem('ge_ferias_'+ano, JSON.stringify(data));
+async function geGetFerias(ano){
+  try{
+    var res = await fetch(_GE_API+'/ferias?ano='+ano);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    var data = await res.json();
+    return Array.isArray(data) ? data : [];
+  }catch(e){
+    console.error('[GE] Erro ao buscar férias:', e);
+    return [];
+  }
 }
 
 var _geFeriasCache = {};
@@ -9829,31 +9883,33 @@ window.gestaoEquipeVoltar = function gestaoEquipeVoltar(){
   if(typeof gnVoltarHub==='function') gnVoltarHub(); else document.getElementById('hubScreen').style.display='block';
 }
 
+var _GE_TAB_ATIVO   = 'background:#FF6200;color:#fff;border:2px solid #FF6200;border-radius:8px;padding:.55rem 1.25rem;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:.92rem;font-weight:700;';
+var _GE_TAB_INATIVO = 'background:transparent;color:#fff;border:2px solid rgba(255,98,0,.45);border-radius:8px;padding:.55rem 1.25rem;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:.92rem;font-weight:500;';
+
 window.geTabFerias = function geTabFerias(){
   document.getElementById('geAbaFerias').style.display='block';
   document.getElementById('geAbaEscala').style.display='none';
-  var a=document.getElementById('btnTabFerias'), b=document.getElementById('btnTabEscala');
-  a.style.cssText='background:rgba(255,98,0,.2);color:#FF6200;border:1px solid rgba(255,98,0,.5);border-radius:8px;padding:.4rem .9rem;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:.82rem;font-weight:600;';
-  b.style.cssText='background:transparent;color:rgba(245,240,255,.55);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:.4rem .9rem;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:.82rem;';
+  document.getElementById('btnTabFerias').style.cssText = _GE_TAB_ATIVO;
+  document.getElementById('btnTabEscala').style.cssText = _GE_TAB_INATIVO;
 }
 
 window.geTabEscala = function geTabEscala(){
   document.getElementById('geAbaFerias').style.display='none';
   document.getElementById('geAbaEscala').style.display='block';
-  var a=document.getElementById('btnTabEscala'), b=document.getElementById('btnTabFerias');
-  a.style.cssText='background:rgba(255,98,0,.2);color:#FF6200;border:1px solid rgba(255,98,0,.5);border-radius:8px;padding:.4rem .9rem;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:.82rem;font-weight:600;';
-  b.style.cssText='background:transparent;color:rgba(245,240,255,.55);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:.4rem .9rem;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:.82rem;';
+  document.getElementById('btnTabEscala').style.cssText = _GE_TAB_ATIVO;
+  document.getElementById('btnTabFerias').style.cssText = _GE_TAB_INATIVO;
   geGerarEscala();
 }
 
-window.geRenderFerias = function geRenderFerias(){
+window.geRenderFerias = async function geRenderFerias(){
   var anoEl = document.getElementById('geAnoFerias');
   _geAnoAtual = parseInt(anoEl.value);
-  if(!_geFeriasCache[_geAnoAtual]) _geFeriasCache[_geAnoAtual] = geGetFerias(_geAnoAtual);
-  var ferias = _geFeriasCache[_geAnoAtual];
+  var grid = document.getElementById('geGridFerias');
   var title = document.getElementById('geFeriasTitle');
   if(title) title.textContent = 'Férias ' + _geAnoAtual;
-  var grid = document.getElementById('geGridFerias');
+  grid.innerHTML = '<div style="padding:2rem;text-align:center;color:rgba(196,181,253,.55);font-size:.85rem;">Carregando férias...</div>';
+  var ferias = await geGetFerias(_geAnoAtual);
+  _geFeriasCache[_geAnoAtual] = ferias;
   var ano = _geAnoAtual;
 
   var thB = 'background:#241050;';
@@ -9948,12 +10004,17 @@ window.geAbrirModalFerias = function geAbrirModalFerias(id, nomePresel, anoPrese
   modal.style.display = 'flex';
 }
 
-window.geDeletarFerias = function geDeletarFerias(id){
+window.geDeletarFerias = async function geDeletarFerias(id){
   if(!confirm('Remover este período de férias?')) return;
-  var ferias = _geFeriasCache[_geAnoAtual] || [];
-  _geFeriasCache[_geAnoAtual] = ferias.filter(function(f){ return f.id!==id; });
-  geSaveFerias(_geAnoAtual, _geFeriasCache[_geAnoAtual]);
-  geRenderFerias();
+  try{
+    await fetch(_GE_API+'/ferias', {
+      method:'DELETE',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id:id})
+    });
+  }catch(e){ console.error('[GE] Erro ao deletar férias:', e); alert('Erro ao remover. Verifique a conexão.'); return; }
+  delete _geFeriasCache[_geAnoAtual];
+  await geRenderFerias();
 }
 
 window.geAdicionarAno = function geAdicionarAno(){
@@ -9972,7 +10033,7 @@ window.geFecharModalFerias = function geFecharModalFerias(){
   _geEditandoFerias = null;
 }
 
-window.geSalvarFerias = function geSalvarFerias(){
+window.geSalvarFerias = async function geSalvarFerias(){
   var nome = document.getElementById('geFeriasNome').value;
   var inicio = document.getElementById('geFeriasInicio').value || null;
   var fim = document.getElementById('geFeirasFim').value || null;
@@ -9983,18 +10044,21 @@ window.geSalvarFerias = function geSalvarFerias(){
   if(inicio && fim && inicio>fim){ alert('Data início deve ser anterior ao fim.'); return; }
   if(!inicio && !mesHint){ alert('Informe as datas ou selecione o mês previsto.'); return; }
 
-  var ferias = _geFeriasCache[_geAnoAtual] || [];
-  if(_geEditandoFerias){
-    ferias = ferias.map(function(f){
-      return f.id===_geEditandoFerias ? {id:f.id, nome:nome, inicio:inicio, fim:fim, mesHint:mesHint} : f;
+  var mes = mesHint || (inicio ? parseInt(inicio.split('-')[1]) : null);
+  var body = {nome:nome, ano:_geAnoAtual, mes:mes, inicio:inicio, fim:fim, previsto:(!inicio||!fim)};
+  if(_geEditandoFerias) body.id = _geEditandoFerias;
+
+  try{
+    var res = await fetch(_GE_API+'/ferias', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)
     });
-  } else {
-    ferias.push({id:'f'+Date.now(), nome:nome, inicio:inicio, fim:fim, mesHint:mesHint});
-  }
-  _geFeriasCache[_geAnoAtual] = ferias;
-  geSaveFerias(_geAnoAtual, ferias);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+  }catch(e){ console.error('[GE] Erro ao salvar férias:', e); alert('Erro ao salvar. Verifique a conexão.'); return; }
   geFecharModalFerias();
-  geRenderFerias();
+  delete _geFeriasCache[_geAnoAtual];
+  await geRenderFerias();
 }
 
 function geTecnicoEmFerias(nome, data){
@@ -10212,8 +10276,8 @@ window.geExportarEscalaPDF = function geExportarEscalaPDF(){
       <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;letter-spacing:-.01em;">Gestão de <span style="color:#FF6200;">Equipe</span> <span style="font-weight:400;font-size:.82rem;color:rgba(196,181,253,.6);margin-left:.4rem;">/ GN Gestão</span></div>
     </div>
     <div style="display:flex;align-items:center;gap:.5rem;">
-      <button onclick="geTabFerias()" id="btnTabFerias" style="background:rgba(255,98,0,.2);color:#FF6200;border:1px solid rgba(255,98,0,.5);border-radius:8px;padding:.4rem .9rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;">📅 Férias</button>
-      <button onclick="geTabEscala()" id="btnTabEscala" style="background:transparent;color:rgba(245,240,255,.55);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:.4rem .9rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;">📋 Escala</button>
+      <button onclick="geTabFerias()" id="btnTabFerias" style="background:#FF6200;color:#fff;border:2px solid #FF6200;border-radius:8px;padding:.55rem 1.25rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:700;">📅 Férias</button>
+      <button onclick="geTabEscala()" id="btnTabEscala" style="background:transparent;color:#fff;border:2px solid rgba(255,98,0,.45);border-radius:8px;padding:.55rem 1.25rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:500;">📋 Escala</button>
     </div>
   </div>
 
