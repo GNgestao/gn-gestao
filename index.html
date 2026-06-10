@@ -9741,7 +9741,7 @@ var GE_TECNICOS = [
   {nome:'Klebson Andrade',  grupo:'laranja', matricula:'55001880'},
   {nome:'Charlington',      grupo:'laranja', matricula:'55018937'},
   {nome:'Rodrigo',          grupo:'laranja', matricula:'55012352'},
-  {nome:'Evaldo',           grupo:'azul',    matricula:'55010850'},
+  {nome:'Edvaldo',          grupo:'azul',    matricula:'55010850'},
   {nome:'Wellington',       grupo:'azul',    matricula:'55013039'},
   {nome:'Alisson',          grupo:'azul',    matricula:'55016328'},
   {nome:'Adriano Fran',     grupo:'azul',    matricula:'55007813'},
@@ -9763,7 +9763,7 @@ var GE_CORES = {laranja:'#E84A1A', azul:'#2563eb', verde:'#16a34a', fixo:'#6b728
 // Ordered list for the vacation table (includes all names from vacation data)
 var GE_FERIAS_TECNICOS = [
   'Giliard','Humberto','Klebson Ramos','Elenildo','Klebson Andrade','Charlington','Rodrigo','Antonio Amaro',
-  'Evaldo','Wellington','Alisson','Adriano Francisco','Joaz','Tone','Edvaldo',
+  'Wellington','Alisson','Adriano Francisco','Joaz','Tone','Edvaldo',
   'Bruno','Diego','Paulo Andre','Rodolfo','George','Durval',
   'Laercio','Marcelo','Adriano Rogerio',
   'Gabriel','Luciano'
@@ -10092,7 +10092,7 @@ function geAlocarPlantoes(sSab, sDom, ciclo, numSemana){
     plantoes.push({dia:'SAB', setor:'TRF', tecnico:'Marcelo', horario:'12:00-17:00'});
   }
   // RHP sábado dia — demais disponíveis
-  ['Rodolfo','Durval','Elenildo','Joaz','Tone','Evaldo'].forEach(function(nome){
+  ['Rodolfo','Durval','Elenildo','Joaz','Tone','Edvaldo'].forEach(function(nome){
     var tec = GE_TECNICOS.find(function(t){ return t.nome===nome; });
     if(!tec) return;
     var trab = tec.grupo==='laranja'?trabLaranja:tec.grupo==='azul'?trabAzul:tec.grupo==='verde'?trabVerde:true;
