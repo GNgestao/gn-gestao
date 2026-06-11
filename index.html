@@ -10084,36 +10084,22 @@ window.geGerarEscala = async function geGerarEscala(){
 
   var semanas = [];
   var d = new Date(ano, 0, 1);
-  while(d.getDay() !== 6) d.setDate(d.getDate()+1); // primeiro sábado
-
-  var ciclo = {laranja:0, azul:0, verde:0}; // controle 2x1
+  while(d.getDay() !== 6) d.setDate(d.getDate()+1);
 
   while(d.getFullYear() === ano){
     var sabado = new Date(d);
     var domingo = new Date(d); domingo.setDate(domingo.getDate()+1);
     var numSemana = semanas.length + 1;
-
     var sSab = sabado.toISOString().split('T')[0];
     var sDom = domingo.toISOString().split('T')[0];
-
-    var semana = {
-      numSemana: numSemana,
-      sabado: sSab,
-      domingo: sDom,
-      plantoes: geAlocarPlantoes(sSab, sDom, ciclo, numSemana, feriasList)
-    };
-    semanas.push(semana);
+    semanas.push({ numSemana: numSemana, sabado: sSab, domingo: sDom, plantoes: [] });
     d.setDate(d.getDate()+7);
   }
 
   geRenderEscala(semanas, ano);
 }
 
-function geGrupoDisponivel(grupo, ciclo){
-  // 2x1: trabalha 2 semanas, folga 1
-  var c = ciclo[grupo] % 3;
-  return c < 2; // 0 e 1 trabalha, 2 folga
-}
+// geGrupoDisponivel — reservado para fase de regras
 
 function geAlocarPlantoes(sSab, sDom, ciclo, numSemana, feriasList){
   var plantoes = [];
@@ -10208,61 +10194,104 @@ function geRenderEscala(semanas, ano){
   var grid = document.getElementById('geGridEscala');
   var setores = ['SRM','RHP','ERM','SPO','SBV','TRF','NTF'];
   var coresSetor = {SRM:'#7B2FBE',RHP:'#2563eb',ERM:'#16a34a',SPO:'#E84A1A',SBV:'#d97706',TRF:'#6b7280',NTF:'#1e293b'};
+  var hoje = new Date();
+  var mesAtual = hoje.getFullYear()===ano ? hoje.getMonth() : -1;
+  var nomesMes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-  var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1rem;">';
-
+  // Agrupar semanas por mês (pelo sábado)
+  var porMes = {};
   semanas.forEach(function(sem){
-    var dSab = new Date(sem.sabado);
-    var dDom = new Date(sem.domingo);
-    var fmtSab = dSab.getDate()+'/'+(dSab.getMonth()+1);
-    var fmtDom = dDom.getDate()+'/'+(dDom.getMonth()+1);
-
-    html += '<div style="background:#1a0f35;border:1px solid #2a1a4e;border-radius:8px;overflow:hidden;">';
-    html += '<div style="background:#2a1a4e;padding:.4rem .7rem;font-size:.8rem;color:#fff;font-weight:600;">Semana '+sem.numSemana+' — '+fmtSab+' e '+fmtDom+'/'+String(ano).slice(2)+'</div>';
-
-    // Sábado
-    var sabPlantoes = sem.plantoes.filter(function(p){ return p.dia==='SAB'; });
-    html += '<div style="padding:.4rem .7rem;border-bottom:1px solid #2a1a4e;">';
-    html += '<div style="color:#E84A1A;font-size:.75rem;font-weight:700;margin-bottom:.3rem;">SÁBADO</div>';
-    setores.forEach(function(s){
-      var ps = sabPlantoes.filter(function(p){ return p.setor===s; });
-      if(ps.length===0) return;
-      html += '<div style="display:flex;align-items:flex-start;gap:.4rem;margin-bottom:.2rem;">';
-      html += '<span style="background:'+coresSetor[s]+';color:#fff;border-radius:3px;padding:.1rem .3rem;font-size:.68rem;font-weight:700;min-width:30px;text-align:center;">'+s+'</span>';
-      html += '<div>';
-      ps.forEach(function(p){
-        var tec = GE_TECNICOS.find(function(t){ return t.nome===p.tecnico; });
-        var cor = tec ? GE_CORES[tec.grupo] : '#fff';
-        html += '<div style="color:'+cor+';font-size:.75rem;">'+p.tecnico+' <span style="color:#666;">'+p.horario+'</span></div>';
-      });
-      html += '</div></div>';
-    });
-    html += '</div>';
-
-    // Domingo
-    var domPlantoes = sem.plantoes.filter(function(p){ return p.dia==='DOM'; });
-    if(domPlantoes.length > 0){
-      html += '<div style="padding:.4rem .7rem;">';
-      html += '<div style="color:#7B2FBE;font-size:.75rem;font-weight:700;margin-bottom:.3rem;">DOMINGO</div>';
-      setores.forEach(function(s){
-        var ps = domPlantoes.filter(function(p){ return p.setor===s; });
-        if(ps.length===0) return;
-        html += '<div style="display:flex;align-items:flex-start;gap:.4rem;margin-bottom:.2rem;">';
-        html += '<span style="background:'+coresSetor[s]+';color:#fff;border-radius:3px;padding:.1rem .3rem;font-size:.68rem;font-weight:700;min-width:30px;text-align:center;">'+s+'</span>';
-        html += '<div>';
-        ps.forEach(function(p){
-          var tec = GE_TECNICOS.find(function(t){ return t.nome===p.tecnico; });
-          var cor = tec ? GE_CORES[tec.grupo] : '#fff';
-          html += '<div style="color:'+cor+';font-size:.75rem;">'+p.tecnico+' <span style="color:#666;">'+p.horario+'</span></div>';
-        });
-        html += '</div></div>';
-      });
-      html += '</div>';
-    }
-    html += '</div>';
+    var mes = new Date(sem.sabado).getMonth();
+    if(!porMes[mes]) porMes[mes] = [];
+    porMes[mes].push(sem);
   });
 
+  var html = '';
+
+  Object.keys(porMes).sort(function(a,b){return a-b;}).forEach(function(mes){
+    mes = parseInt(mes);
+    var ehAtual = mes === mesAtual;
+    html += '<div style="margin-bottom:2rem;">';
+    html += '<div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:1px solid rgba(255,98,0,.2);">';
+    html += '<span style="color:#FF6200;font-size:.95rem;font-weight:700;letter-spacing:.06em;">'+nomesMes[mes].toUpperCase()+' '+ano+'</span>';
+    if(ehAtual) html += '<span style="background:rgba(255,98,0,.15);color:#FF6200;font-size:.68rem;border-radius:10px;padding:.15rem .6rem;border:1px solid rgba(255,98,0,.3);">mês atual</span>';
+    html += '</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.75rem;">';
+
+    porMes[mes].forEach(function(sem){
+      var dSab = new Date(sem.sabado+'T12:00:00');
+      var dDom = new Date(sem.domingo+'T12:00:00');
+      var fmtSab = String(dSab.getDate()).padStart(2,'0')+'/'+(String(dSab.getMonth()+1).padStart(2,'0'));
+      var fmtDom = String(dDom.getDate()).padStart(2,'0')+'/'+(String(dDom.getMonth()+1).padStart(2,'0'));
+      var bordaAtual = ehAtual ? 'border:1px solid rgba(255,98,0,.5);' : 'border:1px solid #2a1a4e;';
+
+      html += '<div style="background:#1a0f35;'+bordaAtual+'border-radius:8px;overflow:hidden;">';
+      html += '<div style="background:#2a1a4e;padding:.35rem .65rem;display:flex;justify-content:space-between;align-items:center;">';
+      html += '<span style="color:#F5F0FF;font-size:.78rem;font-weight:600;">Sáb '+fmtSab+' e Dom '+fmtDom+'</span>';
+      html += '<span style="color:#555;font-size:.68rem;">FDS '+sem.numSemana+'</span>';
+      html += '</div>';
+
+      var sabPlantoes = sem.plantoes.filter(function(p){ return p.dia==='SAB'; });
+      var domPlantoes = sem.plantoes.filter(function(p){ return p.dia==='DOM'; });
+
+      // Sábado
+      html += '<div style="padding:.4rem .65rem;'+(domPlantoes.length?'border-bottom:1px solid #2a1a4e;':'')+'">';
+      html += '<div style="color:#E84A1A;font-size:.7rem;font-weight:700;letter-spacing:.05em;margin-bottom:.3rem;">SÁBADO</div>';
+      if(sabPlantoes.length===0){
+        html += '<div style="color:#444;font-size:.72rem;font-style:italic;">— sem plantões definidos</div>';
+      } else {
+        setores.forEach(function(s){
+          var ps = sabPlantoes.filter(function(p){ return p.setor===s; });
+          if(!ps.length) return;
+          ps.forEach(function(p){
+            var tec = GE_TECNICOS.find(function(t){ return t.nome===p.tecnico; });
+            var corGrupo = tec ? GE_CORES[tec.grupo] : '#fff';
+            html += '<div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.2rem;">';
+            html += '<span style="background:'+coresSetor[s]+';color:#fff;border-radius:3px;padding:.1rem .3rem;font-size:.63rem;font-weight:700;min-width:28px;text-align:center;">'+s+'</span>';
+            html += '<div style="width:6px;height:6px;border-radius:50%;background:'+corGrupo+';flex-shrink:0;"></div>';
+            html += '<span style="font-size:.72rem;color:#d4c8f0;flex:1;">'+p.tecnico+'</span>';
+            html += '<span style="font-size:.68rem;color:#555;">'+p.horario+'</span>';
+            html += '</div>';
+          });
+        });
+      }
+      html += '</div>';
+
+      // Domingo
+      if(domPlantoes.length){
+        html += '<div style="padding:.4rem .65rem;">';
+        html += '<div style="color:#7B2FBE;font-size:.7rem;font-weight:700;letter-spacing:.05em;margin-bottom:.3rem;">DOMINGO</div>';
+        setores.forEach(function(s){
+          var ps = domPlantoes.filter(function(p){ return p.setor===s; });
+          if(!ps.length) return;
+          ps.forEach(function(p){
+            var tec = GE_TECNICOS.find(function(t){ return t.nome===p.tecnico; });
+            var corGrupo = tec ? GE_CORES[tec.grupo] : '#fff';
+            html += '<div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.2rem;">';
+            html += '<span style="background:'+coresSetor[s]+';color:#fff;border-radius:3px;padding:.1rem .3rem;font-size:.63rem;font-weight:700;min-width:28px;text-align:center;">'+s+'</span>';
+            html += '<div style="width:6px;height:6px;border-radius:50%;background:'+corGrupo+';flex-shrink:0;"></div>';
+            html += '<span style="font-size:.72rem;color:#d4c8f0;flex:1;">'+p.tecnico+'</span>';
+            html += '<span style="font-size:.68rem;color:#555;">'+p.horario+'</span>';
+            html += '</div>';
+          });
+        });
+        html += '</div>';
+      }
+
+      html += '</div>';
+    });
+
+    html += '</div></div>';
+  });
+
+  // Legenda
+  html += '<div style="display:flex;gap:1rem;margin-top:.5rem;flex-wrap:wrap;">';
+  html += '<span style="font-size:.72rem;color:#888;display:flex;align-items:center;gap:.35rem;"><span style="width:8px;height:8px;border-radius:50%;background:#E84A1A;display:inline-block;"></span>Laranja</span>';
+  html += '<span style="font-size:.72rem;color:#888;display:flex;align-items:center;gap:.35rem;"><span style="width:8px;height:8px;border-radius:50%;background:#2563eb;display:inline-block;"></span>Azul</span>';
+  html += '<span style="font-size:.72rem;color:#888;display:flex;align-items:center;gap:.35rem;"><span style="width:8px;height:8px;border-radius:50%;background:#16a34a;display:inline-block;"></span>Verde</span>';
+  html += '<span style="font-size:.72rem;color:#888;display:flex;align-items:center;gap:.35rem;"><span style="width:8px;height:8px;border-radius:50%;background:#6b7280;display:inline-block;"></span>Fixo</span>';
   html += '</div>';
+
   grid.innerHTML = html;
 }
 
