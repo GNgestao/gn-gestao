@@ -10064,21 +10064,25 @@ window.geSalvarFerias = async function geSalvarFerias(){
   await geRenderFerias();
 }
 
-function geTecnicoEmFerias(nome, data){
+function geTecnicoEmFerias(nome, data, feriasList){
   var d = new Date(data);
-  var ferias = geGetFerias(d.getFullYear());
-  return ferias.some(function(f){
+  if(!feriasList || !feriasList.length) return false;
+  return feriasList.some(function(f){
     if(!f.inicio || !f.fim) return false;
     return f.nome===nome && new Date(f.inicio+'T00:00:00')<=d && new Date(f.fim+'T00:00:00')>=d;
   });
 }
 
 // Gerador de Escala
-window.geGerarEscala = function geGerarEscala(){
+window.geGerarEscala = async function geGerarEscala(){
   var ano = parseInt(document.getElementById('geAnoEscala').value);
-  var semanas = [];
+  var grid = document.getElementById('geGridEscala');
+  grid.innerHTML = '<div style="color:#aaa;font-size:.85rem;padding:1rem;">Carregando escala...</div>';
 
-  // Calcular todos os fins de semana do ano
+  var feriasList = [];
+  try{ feriasList = await geGetFerias(ano); } catch(e){ feriasList = []; }
+
+  var semanas = [];
   var d = new Date(ano, 0, 1);
   while(d.getDay() !== 6) d.setDate(d.getDate()+1); // primeiro sábado
 
@@ -10096,7 +10100,7 @@ window.geGerarEscala = function geGerarEscala(){
       numSemana: numSemana,
       sabado: sSab,
       domingo: sDom,
-      plantoes: geAlocarPlantoes(sSab, sDom, ciclo, numSemana)
+      plantoes: geAlocarPlantoes(sSab, sDom, ciclo, numSemana, feriasList)
     };
     semanas.push(semana);
     d.setDate(d.getDate()+7);
@@ -10111,7 +10115,7 @@ function geGrupoDisponivel(grupo, ciclo){
   return c < 2; // 0 e 1 trabalha, 2 folga
 }
 
-function geAlocarPlantoes(sSab, sDom, ciclo, numSemana){
+function geAlocarPlantoes(sSab, sDom, ciclo, numSemana, feriasList){
   var plantoes = [];
 
   // Avançar ciclos dos grupos
@@ -10121,41 +10125,41 @@ function geAlocarPlantoes(sSab, sDom, ciclo, numSemana){
 
   // SÁBADO
   // SRM 1° turno — Bruno (verde) se disponível
-  if(trabVerde && !geTecnicoEmFerias('Bruno', sSab)){
+  if(trabVerde && !geTecnicoEmFerias('Bruno', sSab, feriasList)){
     plantoes.push({dia:'SAB', setor:'SRM', tecnico:'Bruno', horario:'08:00-17:00'});
   }
   // SRM 2° turno — Humberto (laranja)
-  if(trabLaranja && !geTecnicoEmFerias('Humberto', sSab)){
+  if(trabLaranja && !geTecnicoEmFerias('Humberto', sSab, feriasList)){
     plantoes.push({dia:'SAB', setor:'SRM', tecnico:'Humberto', horario:'13:00-22:00'});
   }
   // SBV — Paulo André (verde), subs Alisson, Giliard, Charlington
   var sbvTec = null;
-  if(trabVerde && !geTecnicoEmFerias('Paulo Andre', sSab)) sbvTec='Paulo Andre';
-  else if(trabAzul && !geTecnicoEmFerias('Alisson', sSab)) sbvTec='Alisson';
-  else if(trabLaranja && !geTecnicoEmFerias('Giliard', sSab)) sbvTec='Giliard';
-  else if(trabLaranja && !geTecnicoEmFerias('Charlington', sSab)) sbvTec='Charlington';
+  if(trabVerde && !geTecnicoEmFerias('Paulo Andre', sSab, feriasList)) sbvTec='Paulo Andre';
+  else if(trabAzul && !geTecnicoEmFerias('Alisson', sSab, feriasList)) sbvTec='Alisson';
+  else if(trabLaranja && !geTecnicoEmFerias('Giliard', sSab, feriasList)) sbvTec='Giliard';
+  else if(trabLaranja && !geTecnicoEmFerias('Charlington', sSab, feriasList)) sbvTec='Charlington';
   if(sbvTec) plantoes.push({dia:'SAB', setor:'SBV', tecnico:sbvTec, horario:'08:00-17:00'});
 
   // SPO sábado — Wellington/Klebson Ramos alternando
   var spoTec = null;
   if(numSemana%2===0){
-    if(trabAzul && !geTecnicoEmFerias('Wellington', sSab)) spoTec='Wellington';
-    else if(trabLaranja && !geTecnicoEmFerias('Klebson Ramos', sSab)) spoTec='Klebson Ramos';
+    if(trabAzul && !geTecnicoEmFerias('Wellington', sSab, feriasList)) spoTec='Wellington';
+    else if(trabLaranja && !geTecnicoEmFerias('Klebson Ramos', sSab, feriasList)) spoTec='Klebson Ramos';
   } else {
-    if(trabLaranja && !geTecnicoEmFerias('Klebson Ramos', sSab)) spoTec='Klebson Ramos';
-    else if(trabAzul && !geTecnicoEmFerias('Wellington', sSab)) spoTec='Wellington';
+    if(trabLaranja && !geTecnicoEmFerias('Klebson Ramos', sSab, feriasList)) spoTec='Klebson Ramos';
+    else if(trabAzul && !geTecnicoEmFerias('Wellington', sSab, feriasList)) spoTec='Wellington';
   }
   if(spoTec) plantoes.push({dia:'SAB', setor:'SPO', tecnico:spoTec, horario:'10:00-21:00'});
 
   // ERM — Adriano Rog (fixo)
-  if(!geTecnicoEmFerias('Adriano Rog', sSab)){
+  if(!geTecnicoEmFerias('Adriano Rog', sSab, feriasList)){
     plantoes.push({dia:'SAB', setor:'ERM', tecnico:'Adriano Rog', horario:'08:00-12:00'});
   }
   // TRF — Laercio e Marcelo (fixos)
-  if(!geTecnicoEmFerias('Laercio', sSab)){
+  if(!geTecnicoEmFerias('Laercio', sSab, feriasList)){
     plantoes.push({dia:'SAB', setor:'TRF', tecnico:'Laercio', horario:'08:00-12:00'});
   }
-  if(!geTecnicoEmFerias('Marcelo', sSab)){
+  if(!geTecnicoEmFerias('Marcelo', sSab, feriasList)){
     plantoes.push({dia:'SAB', setor:'TRF', tecnico:'Marcelo', horario:'12:00-17:00'});
   }
   // RHP sábado dia — demais disponíveis
@@ -10163,31 +10167,31 @@ function geAlocarPlantoes(sSab, sDom, ciclo, numSemana){
     var tec = GE_TECNICOS.find(function(t){ return t.nome===nome; });
     if(!tec) return;
     var trab = tec.grupo==='laranja'?trabLaranja:tec.grupo==='azul'?trabAzul:tec.grupo==='verde'?trabVerde:true;
-    if(trab && !geTecnicoEmFerias(nome, sSab)){
+    if(trab && !geTecnicoEmFerias(nome, sSab, feriasList)){
       plantoes.push({dia:'SAB', setor:'RHP', tecnico:nome, horario:'07:00-19:00'});
     }
   });
 
   // DOMINGO
   // SRM dom — Klebson Andrade
-  if(trabLaranja && !geTecnicoEmFerias('Klebson Andrade', sDom)){
+  if(trabLaranja && !geTecnicoEmFerias('Klebson Andrade', sDom, feriasList)){
     plantoes.push({dia:'DOM', setor:'SRM', tecnico:'Klebson Andrade', horario:'10:00-21:20'});
   }
   // RHP dom — George
-  if(trabVerde && !geTecnicoEmFerias('George', sDom)){
+  if(trabVerde && !geTecnicoEmFerias('George', sDom, feriasList)){
     plantoes.push({dia:'DOM', setor:'RHP', tecnico:'George', horario:'07:00-19:00'});
   }
   // SPO dom — Adriano Francisco
-  if(trabAzul && !geTecnicoEmFerias('Adriano Fran', sDom)){
+  if(trabAzul && !geTecnicoEmFerias('Adriano Fran', sDom, feriasList)){
     plantoes.push({dia:'DOM', setor:'SPO', tecnico:'Adriano Fran', horario:'10:00-21:00'});
   }
   // SBV dom — Paulo André (se disponível)
-  if(trabVerde && !geTecnicoEmFerias('Paulo Andre', sDom)){
+  if(trabVerde && !geTecnicoEmFerias('Paulo Andre', sDom, feriasList)){
     plantoes.push({dia:'DOM', setor:'SBV', tecnico:'Paulo Andre', horario:'08:00-17:00'});
   }
   // Noturno Filial dom — Rodrigo (a cada 4 semanas)
   if(numSemana%4===0){
-    if(!geTecnicoEmFerias('Rodrigo', sDom)){
+    if(!geTecnicoEmFerias('Rodrigo', sDom, feriasList)){
       plantoes.push({dia:'DOM', setor:'NTF', tecnico:'Rodrigo', horario:'22:00-07:00'});
     }
   }
