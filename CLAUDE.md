@@ -467,6 +467,22 @@ Salvos em /scripts/ no repositório GitHub para uso futuro em caso de nova reins
 7. Cache do browser desativado via meta tags
 8. Jarvis NÃO deve inventar respostas — se não sabe fazer algo deve informar
 
+## STATUS 11/06/2026 - Correções
+
+1. tac-api.js reescrito com retry automático (3 tentativas, timeout 15s, intervalo crescente 3s/6s)
+2. Quando TK Mobile falha após 3 tentativas, retorna lista vazia em vez de erro — fluxo n8n nunca quebra
+3. Fluxo TAC Mobile n8n configurado com neverError no nó Buscar OS
+4. Plano de Ação max_tokens aumentado para 16000 para laudos grandes
+
+## STATUS 11/06/2026 - Correção TAC Mobile
+
+- tac-api.js reescrito completamente com tratamento robusto de encoding
+- Problema raiz: TK Mobile retornava caracteres latin1 corrompidos no campo Relato das OS
+- Solução: tac-api agora parseia o JSON da TK Mobile, limpa todos os campos string e reconstrói JSON limpo antes de retornar
+- Retry automático: 3 tentativas com timeout 15s e intervalo crescente
+- Falha total retorna lista vazia em vez de erro — fluxo n8n nunca quebra
+- URL do nó Buscar OS atualizada para http://172.17.0.1:5053/tac (IP do host Docker)
+
 ## PENDÊNCIAS GERAIS
 
 ### Módulos novos
