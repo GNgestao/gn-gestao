@@ -9794,29 +9794,86 @@ async function cipaEnviarAssinatura(){
 var GE_MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 
 var GE_TECNICOS = [
-  {nome:'Giliard',          grupo:'laranja', matricula:'55018679'},
-  {nome:'Humberto',         grupo:'laranja', matricula:'55013171'},
-  {nome:'Klebson Ramos',    grupo:'laranja', matricula:'55012621'},
-  {nome:'Elenildo',         grupo:'laranja', matricula:'55016383'},
-  {nome:'Klebson Andrade',  grupo:'laranja', matricula:'55001880'},
-  {nome:'Charlington',      grupo:'laranja', matricula:'55018937'},
-  {nome:'Rodrigo',          grupo:'laranja', matricula:'55012352'},
-  {nome:'Edvaldo',          grupo:'azul',    matricula:'55010850'},
-  {nome:'Wellington',       grupo:'azul',    matricula:'55013039'},
-  {nome:'Alisson',          grupo:'azul',    matricula:'55016328'},
-  {nome:'Adriano Fran',     grupo:'azul',    matricula:'55007813'},
-  {nome:'Joaz',             grupo:'azul',    matricula:'55004915'},
-  {nome:'Tone',             grupo:'azul',    matricula:'55021085'},
-  {nome:'Bruno',            grupo:'verde',   matricula:'55007445'},
-  {nome:'Diego',            grupo:'verde',   matricula:'55019788'},
-  {nome:'Paulo Andre',      grupo:'verde',   matricula:'55015783'},
-  {nome:'Rodolfo',          grupo:'verde',   matricula:'55000585'},
-  {nome:'George',           grupo:'verde',   matricula:'55015944'},
-  {nome:'Durval',           grupo:'verde',   matricula:'55004902'},
-  {nome:'Laercio',          grupo:'fixo',    matricula:'55012128'},
-  {nome:'Marcelo',          grupo:'fixo',    matricula:'55015003'},
-  {nome:'Adriano Rog',      grupo:'fixo',    matricula:'55013039'},
+  {nome:'Giliard',          grupo:'laranja', matricula:'55018679', ativo:true},
+  {nome:'Humberto',         grupo:'laranja', matricula:'55013171', ativo:true},
+  {nome:'Klebson Ramos',    grupo:'laranja', matricula:'55012621', ativo:true},
+  {nome:'Elenildo',         grupo:'laranja', matricula:'55016383', ativo:true},
+  {nome:'Klebson Andrade',  grupo:'laranja', matricula:'55001880', ativo:true},
+  {nome:'Charlington',      grupo:'laranja', matricula:'55018937', ativo:true},
+  {nome:'Rodrigo',          grupo:'laranja', matricula:'55012352', ativo:true},
+  {nome:'Edvaldo',          grupo:'azul',    matricula:'55010850', ativo:false},
+  {nome:'Wellington',       grupo:'azul',    matricula:'55013039', ativo:true},
+  {nome:'Alisson',          grupo:'azul',    matricula:'55016328', ativo:true},
+  {nome:'Adriano Fran',     grupo:'azul',    matricula:'55007813', ativo:true},
+  {nome:'Joaz',             grupo:'azul',    matricula:'55004915', ativo:true},
+  {nome:'Tone',             grupo:'azul',    matricula:'55021085', ativo:true},
+  {nome:'Rodolfo',          grupo:'azul',    matricula:'55000585', ativo:true},
+  {nome:'Bruno',            grupo:'verde',   matricula:'55007445', ativo:true},
+  {nome:'Diego',            grupo:'verde',   matricula:'55019788', ativo:true},
+  {nome:'Paulo Andre',      grupo:'verde',   matricula:'55015783', ativo:true},
+  {nome:'George',           grupo:'verde',   matricula:'55015944', ativo:true},
+  {nome:'Durval',           grupo:'verde',   matricula:'55004902', ativo:true},
+  {nome:'Luciano',          grupo:'verde',   matricula:'00000000', ativo:true},
+  {nome:'Laercio',          grupo:'fixo',    matricula:'55012128', ativo:true},
+  {nome:'Marcelo',          grupo:'fixo',    matricula:'55015003', ativo:true},
+  {nome:'Adriano Rog',      grupo:'fixo',    matricula:'55013039', ativo:true},
 ];
+
+// Regras por tecnico: pode[], nunca[], titular[]
+var GE_REGRAS = {
+  'Giliard':         { pode:[{s:'SBV',dias:['SAB']},{s:'SPO',dias:['SAB']},{s:'RHP',dias:['SAB','DOM']},{s:'NTF',dias:['SAB']}], titular:['RHP','SPO'] },
+  'Humberto':        { pode:[{s:'SRM',dias:['SAB'],turno:2},{s:'RHP',dias:['SAB']}], titular:['SRM'] },
+  'Klebson Ramos':   { pode:[{s:'SPO',dias:['SAB']}], titular:['SPO'] },
+  'Elenildo':        { pode:[{s:'RHP',dias:['SAB','DOM'],turno:1},{s:'NTF',dias:['SAB']}], titular:['RHP'] },
+  'Klebson Andrade': { pode:[{s:'SRM',dias:['DOM']},{s:'SPO',dias:['DOM']}], titular:['SRM','SPO'] },
+  'Charlington':     { pode:[{s:'SPO',dias:['SAB']},{s:'RHP',dias:['SAB'],turno:1}], titular:['RHP'] },
+  'Rodrigo':         { pode:[{s:'NTF',dias:['DOM']}], titular:['NTF'] },
+  'Edvaldo':         { pode:[{s:'SRM',dias:['SAB']}], titular:['SRM'], ativo:false },
+  'Wellington':      { pode:[{s:'SPO',dias:['SAB']},{s:'SRM',dias:['SAB'],turno:2}], titular:['SPO'] },
+  'Alisson':         { pode:[{s:'SRM',dias:['SAB','DOM']},{s:'SPO',dias:['SAB','DOM']},{s:'SBV',dias:['SAB']},{s:'ERM',dias:['SAB']},{s:'TRF',dias:['SAB']},{s:'RHP',dias:['SAB'],turno:1}], evitar:['RHP'], titular:['SRM'] },
+  'Adriano Fran':    { pode:[{s:'SRM',dias:['DOM']},{s:'SPO',dias:['DOM']},{s:'RHP',dias:['DOM'],turno:2}], titular:['SRM','SPO'] },
+  'Joaz':            { pode:[{s:'RHP',dias:['SAB']},{s:'RHP',dias:['DOM'],turno:1}], titular:['RHP'] },
+  'Tone':            { pode:[{s:'RHP',dias:['SAB'],turno:2},{s:'RHP',dias:['DOM'],turno:1}], titular:['RHP'] },
+  'Rodolfo':         { pode:[{s:'RHP',dias:['SAB']},{s:'RHP',dias:['DOM'],turno:1}], titular:['RHP'] },
+  'Bruno':           { pode:[{s:'SRM',dias:['SAB'],turno:1}], titular:['SRM'] },
+  'Diego':           { pode:[{s:'RHP',dias:['SAB']},{s:'RHP',dias:['DOM'],turno:1}], titular:['RHP'] },
+  'Paulo Andre':     { pode:[{s:'SBV',dias:['SAB']}], titular:['SBV'] },
+  'George':          { pode:[{s:'SPO',dias:['DOM']},{s:'RHP',dias:['DOM'],turno:2}], titular:['SPO','RHP'] },
+  'Durval':          { pode:[{s:'NTF',dias:['SAB']},{s:'RHP',dias:['DOM'],turno:2},{s:'NTF',dias:['DOM']}], titular:['RHP','NTF'] },
+  'Luciano':         { pode:[{s:'SRM',dias:['SAB','DOM'],turno:2},{s:'SPO',dias:['SAB','DOM']},{s:'RHP',dias:['SAB'],turno:1},{s:'ERM',dias:['SAB']},{s:'TRF',dias:['SAB']}], titular:['SPO','SRM'] },
+  'Laercio':         { pode:[{s:'TRF',dias:['SAB'],turno:1}], titular:['TRF'], fixo:true },
+  'Marcelo':         { pode:[{s:'TRF',dias:['SAB'],turno:2}], titular:['TRF'], fixo:true },
+  'Adriano Rog':     { pode:[{s:'ERM',dias:['SAB']}], titular:['ERM'], fixo:true },
+};
+
+// Ciclo de cores: a partir de 13/06/2026, verde folga
+// Sequencia: verde, laranja, azul, verde, laranja, azul...
+var GE_CICLO_INICIO = new Date('2026-06-13T12:00:00');
+var GE_CICLO_SEQ = ['verde','laranja','azul'];
+
+function geGetCorFDS(sSab){
+  var dSab = new Date(sSab+'T12:00:00');
+  var inicio = GE_CICLO_INICIO;
+  if(dSab < inicio) return null;
+  var diffMs = dSab - inicio;
+  var diffSem = Math.round(diffMs / (7*24*60*60*1000));
+  return GE_CICLO_SEQ[diffSem % 3];
+}
+
+// Horarios por setor e turno
+var GE_HORARIOS = {
+  SRM: {1:'08:00-17:00', 2:'13:00-22:00', dom:'10:00-21:20'},
+  RHP: {1:'07:00-19:00', 2:'19:00-07:00'},
+  ERM: {1:'08:00-12:00'},
+  SPO: {1:'10:00-21:00'},
+  SBV: {1:'08:00-17:00'},
+  TRF: {1:'08:00-12:00', 2:'12:00-17:00'},
+  NTF: {1:'22:00-07:00'},
+};
+
+// Supervisores por FDS — salvo no localStorage com chave geSupFDS_YYYY-MM-DD
+function geGetSupervisor(sSab){ try{ return localStorage.getItem('geSupFDS_'+sSab)||''; }catch(e){ return ''; } }
+function geSetSupervisor(sSab, nome){ try{ localStorage.setItem('geSupFDS_'+sSab, nome); }catch(e){} }
 
 var GE_CORES = {laranja:'#E84A1A', azul:'#2563eb', verde:'#16a34a', fixo:'#6b7280'};
 
@@ -10082,9 +10139,14 @@ window.geGerarEscala = async function geGerarEscala(){
   var feriasList = [];
   try{ feriasList = await geGetFerias(ano); } catch(e){ feriasList = []; }
 
+  // NTF sabado: proximo ocorre em 27/06/2026, depois a cada 4 semanas
+  var NTF_SAB_INICIO = new Date('2026-06-27T12:00:00');
+
   var semanas = [];
   var d = new Date(ano, 0, 1);
   while(d.getDay() !== 6) d.setDate(d.getDate()+1);
+
+  var INICIO_ESCALA = new Date('2026-06-13T12:00:00');
 
   while(d.getFullYear() === ano){
     var sabado = new Date(d);
@@ -10092,11 +10154,150 @@ window.geGerarEscala = async function geGerarEscala(){
     var numSemana = semanas.length + 1;
     var sSab = sabado.toISOString().split('T')[0];
     var sDom = domingo.toISOString().split('T')[0];
-    semanas.push({ numSemana: numSemana, sabado: sSab, domingo: sDom, plantoes: [] });
+
+    var plantoes = [];
+
+    // So gera plantoes a partir de 13/06/2026
+    if(sabado >= INICIO_ESCALA){
+      var corFolga = geGetCorFDS(sSab);
+      plantoes = geAlocarPlantoes(sSab, sDom, corFolga, feriasList, sabado, NTF_SAB_INICIO);
+    }
+
+    semanas.push({ numSemana: numSemana, sabado: sSab, domingo: sDom, plantoes: plantoes });
     d.setDate(d.getDate()+7);
   }
 
   geRenderEscala(semanas, ano);
+}
+
+// geGrupoDisponivel — reservado para fase de regras
+
+function geAlocarPlantoes(sSab, sDom, corFolga, feriasList, dSab, NTF_SAB_INICIO){
+  var plantoes = [];
+
+  function dispTec(nome, dia, setor, turno){
+    var tec = GE_TECNICOS.find(function(t){ return t.nome===nome; });
+    if(!tec || tec.ativo===false) return false;
+    if(tec.grupo === corFolga && tec.grupo !== 'fixo') return false;
+    var data = dia==='SAB' ? sSab : sDom;
+    if(geTecnicoEmFerias(nome, data, feriasList)) return false;
+    var regra = GE_REGRAS[nome];
+    if(!regra) return false;
+    var ok = regra.pode.some(function(p){
+      var diaOk = p.dias.indexOf(dia) >= 0;
+      var setorOk = p.s === setor;
+      var turnoOk = !turno || !p.turno || p.turno === turno;
+      return diaOk && setorOk && turnoOk;
+    });
+    return ok;
+  }
+
+  function add(dia, setor, nome, horario){
+    plantoes.push({dia:dia, setor:setor, tecnico:nome, horario:horario});
+  }
+
+  // --- SABADO ---
+  // TRF fixos sempre
+  if(dispTec('Laercio','SAB','TRF',1)) add('SAB','TRF','Laercio', GE_HORARIOS.TRF[1]);
+  if(dispTec('Marcelo','SAB','TRF',2)) add('SAB','TRF','Marcelo', GE_HORARIOS.TRF[2]);
+  // ERM fixo sempre
+  if(dispTec('Adriano Rog','SAB','ERM',1)) add('SAB','ERM','Adriano Rog', GE_HORARIOS.ERM[1]);
+
+  // SRM sab 1° turno — Bruno titular
+  var srm1 = null;
+  if(dispTec('Bruno','SAB','SRM',1)) srm1='Bruno';
+  else if(dispTec('Luciano','SAB','SRM',2)) srm1='Luciano';
+  if(srm1) add('SAB','SRM',srm1, GE_HORARIOS.SRM[1]);
+
+  // SRM sab 2° turno — Humberto titular, subs: Wellington, Alisson, Luciano
+  var srm2 = null;
+  if(dispTec('Humberto','SAB','SRM',2)) srm2='Humberto';
+  else if(dispTec('Wellington','SAB','SRM',2)) srm2='Wellington';
+  else if(dispTec('Alisson','SAB','SRM',2)) srm2='Alisson';
+  else if(dispTec('Luciano','SAB','SRM',2)) srm2='Luciano';
+  if(srm2) add('SAB','SRM',srm2, GE_HORARIOS.SRM[2]);
+
+  // SBV sab — Paulo Andre titular
+  var sbv = null;
+  if(dispTec('Paulo Andre','SAB','SBV',1)) sbv='Paulo Andre';
+  else if(dispTec('Giliard','SAB','SBV',1)) sbv='Giliard';
+  else if(dispTec('Alisson','SAB','SBV',1)) sbv='Alisson';
+  if(sbv) add('SAB','SBV',sbv, GE_HORARIOS.SBV[1]);
+
+  // SPO sab — Klebson Ramos titular, subs: Wellington, Giliard, Charlington, Luciano
+  var spo = null;
+  if(dispTec('Klebson Ramos','SAB','SPO',1)) spo='Klebson Ramos';
+  else if(dispTec('Wellington','SAB','SPO',1)) spo='Wellington';
+  else if(dispTec('Giliard','SAB','SPO',1)) spo='Giliard';
+  else if(dispTec('Charlington','SAB','SPO',1)) spo='Charlington';
+  else if(dispTec('Luciano','SAB','SPO',1)) spo='Luciano';
+  if(spo) add('SAB','SPO',spo, GE_HORARIOS.SPO[1]);
+
+  // RHP sab 1° turno — titulares: Elenildo, Charlington, Giliard; subs: Joaz, Diego, Rodolfo, Alisson, Luciano
+  var rhp1 = null;
+  var candidatos1 = ['Elenildo','Charlington','Giliard','Joaz','Diego','Rodolfo','Alisson','Luciano'];
+  for(var i=0;i<candidatos1.length;i++){
+    if(dispTec(candidatos1[i],'SAB','RHP',1)){ rhp1=candidatos1[i]; break; }
+  }
+  if(rhp1) add('SAB','RHP',rhp1, GE_HORARIOS.RHP[1]);
+
+  // RHP sab 2° turno — titulares: Tone, subs: Joaz, Rodolfo, Diego
+  var rhp2 = null;
+  var candidatos2 = ['Tone','Joaz','Rodolfo','Diego'];
+  for(var j=0;j<candidatos2.length;j++){
+    if(dispTec(candidatos2[j],'SAB','RHP',2)){ rhp2=candidatos2[j]; break; }
+  }
+  if(rhp2) add('SAB','RHP',rhp2, GE_HORARIOS.RHP[2]);
+
+  // NTF sab — a cada 4 semanas a partir de 27/06/2026
+  var diffNtf = dSab - NTF_SAB_INICIO;
+  var semsNtf = Math.round(diffNtf/(7*24*60*60*1000));
+  if(dSab >= NTF_SAB_INICIO && semsNtf % 4 === 0){
+    var ntfSab = null;
+    if(dispTec('Giliard','SAB','NTF',1)) ntfSab='Giliard';
+    else if(dispTec('Elenildo','SAB','NTF',1)) ntfSab='Elenildo';
+    else if(dispTec('Durval','SAB','NTF',1)) ntfSab='Durval';
+    if(ntfSab) add('SAB','NTF',ntfSab, GE_HORARIOS.NTF[1]);
+  }
+
+  // --- DOMINGO ---
+  // SRM dom — Klebson Andrade titular, sub: Luciano
+  var srmD = null;
+  if(dispTec('Klebson Andrade','DOM','SRM',1)) srmD='Klebson Andrade';
+  else if(dispTec('Luciano','DOM','SRM',2)) srmD='Luciano';
+  if(srmD) add('DOM','SRM',srmD, GE_HORARIOS.SRM.dom);
+
+  // SPO dom — Klebson Andrade (alternativa), Adriano Fran, George, Luciano
+  var spoD = null;
+  if(dispTec('Adriano Fran','DOM','SPO',1)) spoD='Adriano Fran';
+  else if(dispTec('George','DOM','SPO',1)) spoD='George';
+  else if(dispTec('Klebson Andrade','DOM','SPO',1)) spoD='Klebson Andrade';
+  else if(dispTec('Luciano','DOM','SPO',1)) spoD='Luciano';
+  if(spoD) add('DOM','SPO',spoD, GE_HORARIOS.SPO[1]);
+
+  // RHP dom 1° turno — Elenildo titular, subs: Joaz, Tone, Rodolfo, Diego
+  var rhpD1 = null;
+  var candD1 = ['Elenildo','Joaz','Tone','Rodolfo','Diego'];
+  for(var k=0;k<candD1.length;k++){
+    if(dispTec(candD1[k],'DOM','RHP',1)){ rhpD1=candD1[k]; break; }
+  }
+  if(rhpD1) add('DOM','RHP',rhpD1, GE_HORARIOS.RHP[1]);
+
+  // RHP dom 2° turno — George titular, sub: Durval, Adriano Fran
+  var rhpD2 = null;
+  var candD2 = ['George','Durval','Adriano Fran'];
+  for(var l=0;l<candD2.length;l++){
+    if(dispTec(candD2[l],'DOM','RHP',2)){ rhpD2=candD2[l]; break; }
+  }
+  if(rhpD2) add('DOM','RHP',rhpD2, GE_HORARIOS.RHP[2]);
+
+  // NTF dom — Rodrigo titular, sub: Durval
+  var ntfD = null;
+  if(dispTec('Rodrigo','DOM','NTF',1)) ntfD='Rodrigo';
+  else if(dispTec('Durval','DOM','NTF',1)) ntfD='Durval';
+  if(ntfD) add('DOM','NTF',ntfD, GE_HORARIOS.NTF[1]);
+
+  return plantoes;
 }
 
 // geGrupoDisponivel — reservado para fase de regras
@@ -10197,11 +10398,16 @@ function geRenderEscala(semanas, ano){
   var hoje = new Date();
   var mesAtual = hoje.getFullYear()===ano ? hoje.getMonth() : -1;
   var nomesMes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var coresCiclo = {verde:'#16a34a', laranja:'#E84A1A', azul:'#2563eb'};
+  var nomesCiclo = {verde:'Verde folga', laranja:'Laranja folga', azul:'Azul folga'};
 
-  // Agrupar semanas por mês (pelo sábado)
   var porMes = {};
   semanas.forEach(function(sem){
-    var mes = new Date(sem.sabado).getMonth();
+    var dSab = new Date(sem.sabado+'T12:00:00');
+    var INICIO = new Date('2026-06-13T12:00:00');
+    if(dSab < INICIO) return;
+    var mes = dSab.getMonth();
+    if(dSab.getFullYear() !== ano) return;
     if(!porMes[mes]) porMes[mes] = [];
     porMes[mes].push(sem);
   });
@@ -10223,12 +10429,22 @@ function geRenderEscala(semanas, ano){
       var dDom = new Date(sem.domingo+'T12:00:00');
       var fmtSab = String(dSab.getDate()).padStart(2,'0')+'/'+(String(dSab.getMonth()+1).padStart(2,'0'));
       var fmtDom = String(dDom.getDate()).padStart(2,'0')+'/'+(String(dDom.getMonth()+1).padStart(2,'0'));
-      var bordaAtual = ehAtual ? 'border:1px solid rgba(255,98,0,.5);' : 'border:1px solid #2a1a4e;';
+      var corFolga = geGetCorFDS(sem.sabado);
+      var corHex = corFolga ? coresCiclo[corFolga] : '#2a1a4e';
+      var supervisor = geGetSupervisor(sem.sabado);
 
-      html += '<div style="background:#1a0f35;'+bordaAtual+'border-radius:8px;overflow:hidden;">';
-      html += '<div style="background:#2a1a4e;padding:.35rem .65rem;display:flex;justify-content:space-between;align-items:center;">';
+      html += '<div style="background:#1a0f35;border:2px solid '+corHex+';border-radius:8px;overflow:hidden;">';
+
+      // Header com cor do ciclo
+      html += '<div style="background:'+corHex+'22;border-bottom:1px solid '+corHex+'55;padding:.35rem .65rem;display:flex;justify-content:space-between;align-items:center;">';
       html += '<span style="color:#F5F0FF;font-size:.78rem;font-weight:600;">Sáb '+fmtSab+' e Dom '+fmtDom+'</span>';
-      html += '<span style="color:#555;font-size:.68rem;">FDS '+sem.numSemana+'</span>';
+      if(corFolga) html += '<span style="background:'+corHex+'33;color:'+corHex+';font-size:.63rem;border-radius:8px;padding:.1rem .4rem;font-weight:700;">'+nomesCiclo[corFolga]+'</span>';
+      html += '</div>';
+
+      // Campo supervisor
+      html += '<div style="padding:.3rem .65rem;border-bottom:1px solid #2a1a4e;display:flex;align-items:center;gap:.4rem;">';
+      html += '<span style="color:#888;font-size:.68rem;white-space:nowrap;">Supervisor:</span>';
+      html += '<input type="text" value="'+supervisor+'" placeholder="digitar nome..." data-sab="'+sem.sabado+'" onchange="geSetSupervisor(this.dataset.sab,this.value)" style="background:transparent;border:none;outline:none;color:#F5F0FF;font-size:.72rem;width:100%;font-family:DM Sans,sans-serif;" />';
       html += '</div>';
 
       var sabPlantoes = sem.plantoes.filter(function(p){ return p.dia==='SAB'; });
@@ -10277,7 +10493,6 @@ function geRenderEscala(semanas, ano){
         });
         html += '</div>';
       }
-
       html += '</div>';
     });
 
