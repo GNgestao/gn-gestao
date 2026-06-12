@@ -9848,15 +9848,15 @@ var GE_REGRAS = {
 
 // Ciclo de cores: a partir de 13/06/2026, verde folga
 // Sequencia: verde, laranja, azul, verde, laranja, azul...
-var GE_CICLO_INICIO = new Date('2026-06-13T12:00:00');
+var GE_CICLO_INICIO = '2026-06-13';
 var GE_CICLO_SEQ = ['verde','laranja','azul'];
 
 function geGetCorFDS(sSab){
-  var dSab = new Date(sSab+'T12:00:00');
-  var inicio = GE_CICLO_INICIO;
-  if(dSab < inicio) return null;
-  var diffMs = dSab - inicio;
-  var diffSem = Math.round(diffMs / (7*24*60*60*1000));
+  if(sSab < GE_CICLO_INICIO) return null;
+  // Calcular diferenca em semanas por diferenca de dias
+  var d1 = new Date(GE_CICLO_INICIO+'T12:00:00');
+  var d2 = new Date(sSab+'T12:00:00');
+  var diffSem = Math.round((d2 - d1) / (7*24*60*60*1000));
   return GE_CICLO_SEQ[diffSem % 3];
 }
 
@@ -10140,25 +10140,25 @@ window.geGerarEscala = async function geGerarEscala(){
   try{ feriasList = await Promise.race([geGetFerias(ano), new Promise(function(r){ setTimeout(function(){ r([]); }, 3000); })]); } catch(e){ feriasList = []; }
 
   // NTF sabado: proximo ocorre em 27/06/2026, depois a cada 4 semanas
-  var NTF_SAB_INICIO = new Date('2026-06-27T12:00:00');
+  var NTF_SAB_INICIO = '2026-06-27';
 
   var semanas = [];
   var d = new Date(ano, 0, 1);
   while(d.getDay() !== 6) d.setDate(d.getDate()+1);
 
-  var INICIO_ESCALA = new Date('2026-06-13T12:00:00');
+  var INICIO_ESCALA = '2026-06-13';
 
   while(d.getFullYear() === ano){
     var sabado = new Date(d);
     var domingo = new Date(d); domingo.setDate(domingo.getDate()+1);
     var numSemana = semanas.length + 1;
-    var sSab = sabado.toISOString().split('T')[0];
-    var sDom = domingo.toISOString().split('T')[0];
+    var sSab = sabado.getFullYear()+'-'+String(sabado.getMonth()+1).padStart(2,'0')+'-'+String(sabado.getDate()).padStart(2,'0');
+    var sDom = domingo.getFullYear()+'-'+String(domingo.getMonth()+1).padStart(2,'0')+'-'+String(domingo.getDate()).padStart(2,'0');
 
     var plantoes = [];
 
     // So gera plantoes a partir de 13/06/2026
-    if(sabado >= INICIO_ESCALA){
+    if(sSab >= INICIO_ESCALA){
       console.log('[ESCALA] FDS:', sSab, 'corFolga:', corFolga);
       var corFolga = geGetCorFDS(sSab);
       plantoes = geAlocarPlantoes(sSab, sDom, corFolga, feriasList, sabado, NTF_SAB_INICIO);
@@ -10174,9 +10174,8 @@ window.geGerarEscala = async function geGerarEscala(){
 // geGrupoDisponivel — reservado para fase de regras
 
 function geAlocarPlantoes(sSab, sDom, corFolga, feriasList, dSab, NTF_SAB_INICIO){
-  var HUMBERTO_RETORNO = new Date('2026-07-01T00:00:00');
   var tHumberto = GE_TECNICOS.find(function(t){ return t.nome==='Humberto'; });
-  if(tHumberto) tHumberto._bloqueado = dSab < HUMBERTO_RETORNO;
+  if(tHumberto) tHumberto._bloqueado = sSab < '2026-07-01';
 
   var alocados = {};
   var plantoes = [];
@@ -10261,9 +10260,10 @@ function geAlocarPlantoes(sSab, sDom, corFolga, feriasList, dSab, NTF_SAB_INICIO
   if(rhp2) add('SAB','RHP',rhp2, GE_HORARIOS.RHP[2]);
 
   // NTF sab — a cada 4 semanas a partir de 27/06/2026
-  var diffNtf = dSab - NTF_SAB_INICIO;
-  var semsNtf = Math.round(diffNtf/(7*24*60*60*1000));
-  if(dSab >= NTF_SAB_INICIO && semsNtf % 4 === 0){
+  var dNtfInicio = new Date(NTF_SAB_INICIO+'T12:00:00');
+  var dSabDate = new Date(sSab+'T12:00:00');
+  var semsNtf = Math.round((dSabDate - dNtfInicio)/(7*24*60*60*1000));
+  if(sSab >= NTF_SAB_INICIO && semsNtf % 4 === 0){
     var ntfSab = null;
     if(dispTec('Giliard','SAB','NTF',1)) ntfSab='Giliard';
     else if(dispTec('Elenildo','SAB','NTF',1)) ntfSab='Elenildo';
@@ -10323,9 +10323,8 @@ function geRenderEscala(semanas, ano){
 
   var porMes = {};
   semanas.forEach(function(sem){
+    if(sem.sabado < GE_CICLO_INICIO) return;
     var dSab = new Date(sem.sabado+'T12:00:00');
-    var INICIO = new Date('2026-06-13T12:00:00');
-    if(dSab < INICIO) return;
     var mes = dSab.getMonth();
     if(dSab.getFullYear() !== ano) return;
     if(!porMes[mes]) porMes[mes] = [];
