@@ -10159,6 +10159,7 @@ window.geGerarEscala = async function geGerarEscala(){
 
     // So gera plantoes a partir de 13/06/2026
     if(sabado >= INICIO_ESCALA){
+      console.log('[ESCALA] FDS:', sSab, 'corFolga:', corFolga);
       var corFolga = geGetCorFDS(sSab);
       plantoes = geAlocarPlantoes(sSab, sDom, corFolga, feriasList, sabado, NTF_SAB_INICIO);
     }
