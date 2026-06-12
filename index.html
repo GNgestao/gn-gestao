@@ -6042,10 +6042,7 @@ function repRenderCal(){
       +'</div>';
   }
   grid.innerHTML = html;
-  // Renderizar painel lateral com cor atual (primeiro FDS visivel)
-  var primeiroFDS = semanas.find(function(s){ return s.sabado >= GE_CICLO_INICIO; });
-  var corAtual = primeiroFDS ? geGetCorFDS(primeiroFDS.sabado) : null;
-  setTimeout(function(){ geRenderPainelTecnicos(corAtual); }, 100);
+
 }
 
 function repOpenNewOnDate(dateKey){
@@ -9966,6 +9963,17 @@ window.geTabEscala = function geTabEscala(){
   document.getElementById('btnTabEscala').style.cssText = _GE_TAB_ATIVO;
   document.getElementById('btnTabFerias').style.cssText = _GE_TAB_INATIVO;
   document.getElementById('painelTecnicosFixo').style.display='block';
+  var primeiroFDS = null;
+  var hoje = new Date();
+  var anoAtual = hoje.getFullYear();
+  var d2 = new Date(anoAtual, 0, 1);
+  while(d2.getDay() !== 6) d2.setDate(d2.getDate()+1);
+  while(d2.getFullYear() === anoAtual){
+    var ss = d2.getFullYear()+'-'+String(d2.getMonth()+1).padStart(2,'0')+'-'+String(d2.getDate()).padStart(2,'0');
+    if(ss >= GE_CICLO_INICIO){ primeiroFDS = ss; break; }
+    d2.setDate(d2.getDate()+7);
+  }
+  geRenderPainelTecnicos(primeiroFDS ? geGetCorFDS(primeiroFDS) : null);
   geGerarEscala();
 }
 
@@ -10471,7 +10479,7 @@ window.geExportarEscalaPDF = function geExportarEscalaPDF(){
 
 <!-- ==================== GESTÃO DE EQUIPE ==================== -->
 <div id="screenGestaoEquipe" style="display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto;font-family:'DM Sans',sans-serif;">
-<div id="painelTecnicosFixo" style="display:none;position:fixed;right:1rem;top:80px;width:175px;background:#1a0f35;border:1px solid #2a1a4e;border-radius:8px;padding:.75rem;max-height:calc(100vh - 100px);overflow-y:auto;z-index:10002;">
+<div id="painelTecnicosFixo" style="display:none;position:fixed;right:0;top:57px;width:175px;background:#1a0f35;border:1px solid #2a1a4e;border-radius:0 0 0 8px;padding:.75rem;max-height:calc(100vh - 57px);overflow-y:auto;z-index:10002;">
   <div id="painelTecnicosConteudo"></div>
 </div>
 
