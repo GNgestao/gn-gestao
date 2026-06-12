@@ -9945,6 +9945,7 @@ window.enterGestaoEquipe = function enterGestaoEquipe(){
 
 window.gestaoEquipeVoltar = function gestaoEquipeVoltar(){
   document.getElementById('screenGestaoEquipe').style.display='none';
+  document.getElementById('painelTecnicosFixo').style.display='none';
   if(typeof gnVoltarHub==='function') gnVoltarHub(); else document.getElementById('hubScreen').style.display='block';
 }
 
@@ -9956,6 +9957,7 @@ window.geTabFerias = function geTabFerias(){
   document.getElementById('geAbaEscala').style.display='none';
   document.getElementById('btnTabFerias').style.cssText = _GE_TAB_ATIVO;
   document.getElementById('btnTabEscala').style.cssText = _GE_TAB_INATIVO;
+  document.getElementById('painelTecnicosFixo').style.display='none';
 }
 
 window.geTabEscala = function geTabEscala(){
@@ -9963,6 +9965,7 @@ window.geTabEscala = function geTabEscala(){
   document.getElementById('geAbaEscala').style.display='block';
   document.getElementById('btnTabEscala').style.cssText = _GE_TAB_ATIVO;
   document.getElementById('btnTabFerias').style.cssText = _GE_TAB_INATIVO;
+  document.getElementById('painelTecnicosFixo').style.display='block';
   geGerarEscala();
 }
 
@@ -10468,6 +10471,9 @@ window.geExportarEscalaPDF = function geExportarEscalaPDF(){
 
 <!-- ==================== GESTÃO DE EQUIPE ==================== -->
 <div id="screenGestaoEquipe" style="display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto;font-family:'DM Sans',sans-serif;">
+<div id="painelTecnicosFixo" style="display:none;position:fixed;right:1rem;top:80px;width:175px;background:#1a0f35;border:1px solid #2a1a4e;border-radius:8px;padding:.75rem;max-height:calc(100vh - 100px);overflow-y:auto;z-index:10002;">
+  <div id="painelTecnicosConteudo"></div>
+</div>
 
   <!-- HEADER STICKY -->
   <div style="background:linear-gradient(135deg,#321d65 0%,#5B21B6 40%,#c44a00 75%,#FF6200 100%);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,98,0,.2);">
