@@ -10435,27 +10435,28 @@ function geRenderEscala(semanas, ano){
 }
 
 function geRenderPainelTecnicos(corFolga){
+  var el = document.getElementById('painelTecnicosConteudo');
+  if(!el) return;
   var grupos = ['laranja','azul','verde','fixo'];
+  var nomes = {laranja:'LARANJA', azul:'AZUL', verde:'VERDE', fixo:'FIXO'};
   var cores = {laranja:'#E84A1A', azul:'#2563eb', verde:'#16a34a', fixo:'#6b7280'};
-  // Usar setTimeout para garantir que o DOM foi atualizado
-  setTimeout(function(){
-    grupos.forEach(function(g){
-      var el = document.getElementById('painel'+g.charAt(0).toUpperCase()+g.slice(1));
-      if(!el) return;
-      var html = '';
-      GE_TECNICOS.filter(function(t){ return t.grupo===g && t.ativo!==false; }).forEach(function(t){
-        var folga = t.grupo === corFolga && t.grupo !== 'fixo';
-        var cor = folga ? '#444' : cores[g];
-        var txt = folga ? '#555' : '#d4c8f0';
-        var badge = folga ? ' <span style="font-size:.58rem;color:#555;">(folga)</span>' : '';
-        html += '<div style="display:flex;align-items:center;gap:.35rem;margin-bottom:.3rem;">';
-        html += '<div style="width:7px;height:7px;border-radius:50%;background:'+cor+';flex-shrink:0;"></div>';
-        html += '<span style="font-size:.71rem;color:'+txt+';">'+t.nome+'</span>'+badge;
-        html += '</div>';
-      });
-      el.innerHTML = html;
+  var html = '<div style="font-size:.75rem;font-weight:700;color:#FF6200;letter-spacing:.06em;margin-bottom:.75rem;">T\u00c9CNICOS</div>';
+  grupos.forEach(function(g){
+    html += '<div style="margin-bottom:.6rem;">';
+    html += '<div style="font-size:.65rem;color:'+cores[g]+';font-weight:700;letter-spacing:.05em;margin-bottom:.3rem;">'+nomes[g]+'</div>';
+    GE_TECNICOS.filter(function(t){ return t.grupo===g && t.ativo!==false; }).forEach(function(t){
+      var folga = t.grupo === corFolga && t.grupo !== 'fixo';
+      var cor = folga ? '#444' : cores[g];
+      var txt = folga ? '#555' : '#d4c8f0';
+      var badge = folga ? ' <span style="font-size:.58rem;color:#555;">(folga)</span>' : '';
+      html += '<div style="display:flex;align-items:center;gap:.35rem;margin-bottom:.3rem;">';
+      html += '<div style="width:7px;height:7px;border-radius:50%;background:'+cor+';flex-shrink:0;"></div>';
+      html += '<span style="font-size:.71rem;color:'+txt+';">'+t.nome+'</span>'+badge;
+      html += '</div>';
     });
-  }, 50);
+    html += '</div>';
+  });
+  el.innerHTML = html;
 }
 
 window.geExportarEscalaPDF = function geExportarEscalaPDF(){
@@ -10522,23 +10523,7 @@ window.geExportarEscalaPDF = function geExportarEscalaPDF(){
     </div>
     <!-- Painel lateral tecnicos -->
     <div style="width:185px;flex-shrink:0;background:#1a0f35;border:1px solid #2a1a4e;border-radius:8px;padding:.75rem;position:sticky;top:80px;max-height:calc(100vh - 100px);overflow-y:auto;align-self:flex-start;">
-      <div style="font-size:.75rem;font-weight:700;color:#FF6200;letter-spacing:.06em;margin-bottom:.75rem;">TÉCNICOS</div>
-      <div style="margin-bottom:.6rem;">
-        <div style="font-size:.65rem;color:#E84A1A;font-weight:700;letter-spacing:.05em;margin-bottom:.3rem;">LARANJA</div>
-        <div id="painelLaranja"></div>
-      </div>
-      <div style="margin-bottom:.6rem;">
-        <div style="font-size:.65rem;color:#2563eb;font-weight:700;letter-spacing:.05em;margin-bottom:.3rem;">AZUL</div>
-        <div id="painelAzul"></div>
-      </div>
-      <div style="margin-bottom:.6rem;">
-        <div style="font-size:.65rem;color:#16a34a;font-weight:700;letter-spacing:.05em;margin-bottom:.3rem;">VERDE</div>
-        <div id="painelVerde"></div>
-      </div>
-      <div>
-        <div style="font-size:.65rem;color:#6b7280;font-weight:700;letter-spacing:.05em;margin-bottom:.3rem;">FIXO</div>
-        <div id="painelFixo"></div>
-      </div>
+      <div id="painelTecnicosConteudo"></div>
     </div>
     </div>
     </div>
