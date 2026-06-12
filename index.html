@@ -10243,6 +10243,18 @@ function geAlocarPlantoes(sSab, sDom, corFolga, feriasList, dSab, NTF_SAB_INICIO
   else if(dispTec('Luciano','SAB','SPO',1)) spo='Luciano';
   if(spo) add('SAB','SPO',spo, GE_HORARIOS.SPO[1]);
 
+  // NTF sab — a cada 4 semanas a partir de 27/06/2026 (antes do RHP para evitar conflito)
+  var dNtfInicio = new Date(NTF_SAB_INICIO+'T12:00:00');
+  var dSabDate = new Date(sSab+'T12:00:00');
+  var semsNtf = Math.round((dSabDate - dNtfInicio)/(7*24*60*60*1000));
+  if(sSab >= NTF_SAB_INICIO && semsNtf % 4 === 0){
+    var ntfSab = null;
+    if(dispTec('Giliard','SAB','NTF',1)) ntfSab='Giliard';
+    else if(dispTec('Elenildo','SAB','NTF',1)) ntfSab='Elenildo';
+    else if(dispTec('Durval','SAB','NTF',1)) ntfSab='Durval';
+    if(ntfSab) add('SAB','NTF',ntfSab, GE_HORARIOS.NTF[1]);
+  }
+
   // RHP sab 1° turno — titulares: Elenildo, Charlington, Giliard; subs: Joaz, Diego, Rodolfo, Alisson, Luciano
   var rhp1 = null;
   var candidatos1 = ['Elenildo','Charlington','Giliard','Joaz','Diego','Rodolfo','Alisson','Luciano'];
@@ -10258,18 +10270,6 @@ function geAlocarPlantoes(sSab, sDom, corFolga, feriasList, dSab, NTF_SAB_INICIO
     if(dispTec(candidatos2[j],'SAB','RHP',2)){ rhp2=candidatos2[j]; break; }
   }
   if(rhp2) add('SAB','RHP',rhp2, GE_HORARIOS.RHP[2]);
-
-  // NTF sab — a cada 4 semanas a partir de 27/06/2026
-  var dNtfInicio = new Date(NTF_SAB_INICIO+'T12:00:00');
-  var dSabDate = new Date(sSab+'T12:00:00');
-  var semsNtf = Math.round((dSabDate - dNtfInicio)/(7*24*60*60*1000));
-  if(sSab >= NTF_SAB_INICIO && semsNtf % 4 === 0){
-    var ntfSab = null;
-    if(dispTec('Giliard','SAB','NTF',1)) ntfSab='Giliard';
-    else if(dispTec('Elenildo','SAB','NTF',1)) ntfSab='Elenildo';
-    else if(dispTec('Durval','SAB','NTF',1)) ntfSab='Durval';
-    if(ntfSab) add('SAB','NTF',ntfSab, GE_HORARIOS.NTF[1]);
-  }
 
   // --- DOMINGO ---
   // SRM dom — Klebson Andrade titular, sub: Luciano
@@ -10385,8 +10385,8 @@ function geRenderEscala(semanas, ano){
             html += '<div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.2rem;">';
             html += '<span style="background:'+coresSetor[s]+';color:#fff;border-radius:3px;padding:.1rem .3rem;font-size:.63rem;font-weight:700;min-width:28px;text-align:center;">'+s+'</span>';
             html += '<div style="width:6px;height:6px;border-radius:50%;background:'+corGrupo+';flex-shrink:0;"></div>';
-            html += '<span style="font-size:.72rem;color:#d4c8f0;flex:1;">'+p.tecnico+'</span>';
-            html += '<span style="font-size:.68rem;color:#555;">'+p.horario+'</span>';
+            html += '<input type="text" value="'+p.tecnico+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:#d4c8f0;font-size:.72rem;flex:1;font-family:inherit;cursor:text;min-width:0;" onfocus="this.style.borderBottomColor=\'#FF6200\'" onblur="this.style.borderBottomColor=\'transparent\'" />';
+            html += '<input type="text" value="'+p.horario+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:#555;font-size:.68rem;width:80px;text-align:right;font-family:inherit;cursor:text;" onfocus="this.style.borderBottomColor=\'#FF6200\'" onblur="this.style.borderBottomColor=\'transparent\'" />';
             html += '</div>';
           });
         });
@@ -10406,8 +10406,8 @@ function geRenderEscala(semanas, ano){
             html += '<div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.2rem;">';
             html += '<span style="background:'+coresSetor[s]+';color:#fff;border-radius:3px;padding:.1rem .3rem;font-size:.63rem;font-weight:700;min-width:28px;text-align:center;">'+s+'</span>';
             html += '<div style="width:6px;height:6px;border-radius:50%;background:'+corGrupo+';flex-shrink:0;"></div>';
-            html += '<span style="font-size:.72rem;color:#d4c8f0;flex:1;">'+p.tecnico+'</span>';
-            html += '<span style="font-size:.68rem;color:#555;">'+p.horario+'</span>';
+            html += '<input type="text" value="'+p.tecnico+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:#d4c8f0;font-size:.72rem;flex:1;font-family:inherit;cursor:text;min-width:0;" onfocus="this.style.borderBottomColor=\'#FF6200\'" onblur="this.style.borderBottomColor=\'transparent\'" />';
+            html += '<input type="text" value="'+p.horario+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:#555;font-size:.68rem;width:80px;text-align:right;font-family:inherit;cursor:text;" onfocus="this.style.borderBottomColor=\'#FF6200\'" onblur="this.style.borderBottomColor=\'transparent\'" />';
             html += '</div>';
           });
         });
