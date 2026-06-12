@@ -9942,7 +9942,6 @@ window.enterGestaoEquipe = function enterGestaoEquipe(){
 
 window.gestaoEquipeVoltar = function gestaoEquipeVoltar(){
   document.getElementById('screenGestaoEquipe').style.display='none';
-  document.getElementById('painelTecnicosFixo').style.display='none';
   if(typeof gnVoltarHub==='function') gnVoltarHub(); else document.getElementById('hubScreen').style.display='block';
 }
 
@@ -9954,7 +9953,6 @@ window.geTabFerias = function geTabFerias(){
   document.getElementById('geAbaEscala').style.display='none';
   document.getElementById('btnTabFerias').style.cssText = _GE_TAB_ATIVO;
   document.getElementById('btnTabEscala').style.cssText = _GE_TAB_INATIVO;
-  document.getElementById('painelTecnicosFixo').style.display='none';
 }
 
 window.geTabEscala = function geTabEscala(){
@@ -9962,7 +9960,6 @@ window.geTabEscala = function geTabEscala(){
   document.getElementById('geAbaEscala').style.display='block';
   document.getElementById('btnTabEscala').style.cssText = _GE_TAB_ATIVO;
   document.getElementById('btnTabFerias').style.cssText = _GE_TAB_INATIVO;
-  document.getElementById('painelTecnicosFixo').style.display='block';
   var primeiroFDS = null;
   var hoje = new Date();
   var anoAtual = hoje.getFullYear();
@@ -10479,9 +10476,7 @@ window.geExportarEscalaPDF = function geExportarEscalaPDF(){
 
 <!-- ==================== GESTÃO DE EQUIPE ==================== -->
 <div id="screenGestaoEquipe" style="display:none;position:fixed;inset:0;background:#1e1040;z-index:10000;overflow-y:auto;font-family:'DM Sans',sans-serif;">
-<div id="painelTecnicosFixo" style="display:none;position:fixed;right:0;top:57px;width:175px;background:#1a0f35;border:1px solid #2a1a4e;border-radius:0 0 0 8px;padding:.75rem;max-height:calc(100vh - 57px);overflow-y:auto;z-index:10002;">
-  <div id="painelTecnicosConteudo"></div>
-</div>
+
 
   <!-- HEADER STICKY -->
   <div style="background:linear-gradient(135deg,#321d65 0%,#5B21B6 40%,#c44a00 75%,#FF6200 100%);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,98,0,.2);">
@@ -10531,6 +10526,12 @@ window.geExportarEscalaPDF = function geExportarEscalaPDF(){
           </select>
           <button onclick="geGerarEscala()" style="background:rgba(255,98,0,.15);color:#FF6200;border:1px solid rgba(255,98,0,.35);border-radius:8px;padding:.4rem .85rem;cursor:pointer;font-size:.82rem;font-family:'DM Sans',sans-serif;">🔄 Gerar Escala</button>
           <button onclick="geExportarEscalaPDF()" style="background:var(--orange);color:#fff;border:none;border-radius:8px;padding:.4rem .85rem;cursor:pointer;font-size:.82rem;font-family:'DM Sans',sans-serif;font-weight:600;">📄 Exportar PDF</button>
+          <div style="position:relative;">
+            <button onclick="document.getElementById('painelTecnicosFixo').style.display=document.getElementById('painelTecnicosFixo').style.display==='none'?'block':'none'" style="background:rgba(123,47,190,.2);color:#b39ddb;border:1px solid rgba(123,47,190,.4);border-radius:8px;padding:.4rem .85rem;cursor:pointer;font-size:.82rem;font-family:'DM Sans',sans-serif;">👥 Técnicos</button>
+            <div id="painelTecnicosFixo" style="display:none;position:absolute;right:0;top:calc(100% + 6px);width:190px;background:#1a0f35;border:1px solid #2a1a4e;border-radius:8px;padding:.75rem;max-height:70vh;overflow-y:auto;z-index:10002;">
+              <div id="painelTecnicosConteudo"></div>
+            </div>
+          </div>
         </div>
       </div>
       <div id="geGridEscala" style="overflow-x:auto;"></div>
