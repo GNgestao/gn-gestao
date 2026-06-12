@@ -10137,7 +10137,7 @@ window.geGerarEscala = async function geGerarEscala(){
   grid.innerHTML = '<div style="color:#aaa;font-size:.85rem;padding:1rem;">Carregando escala...</div>';
 
   var feriasList = [];
-  try{ feriasList = await geGetFerias(ano); } catch(e){ feriasList = []; }
+  try{ feriasList = await Promise.race([geGetFerias(ano), new Promise(function(r){ setTimeout(function(){ r([]); }, 3000); })]); } catch(e){ feriasList = []; }
 
   // NTF sabado: proximo ocorre em 27/06/2026, depois a cada 4 semanas
   var NTF_SAB_INICIO = new Date('2026-06-27T12:00:00');
