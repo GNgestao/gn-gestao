@@ -6045,7 +6045,7 @@ function repRenderCal(){
   // Renderizar painel lateral com cor atual (primeiro FDS visivel)
   var primeiroFDS = semanas.find(function(s){ return s.sabado >= GE_CICLO_INICIO; });
   var corAtual = primeiroFDS ? geGetCorFDS(primeiroFDS.sabado) : null;
-  geRenderPainelTecnicos(corAtual);
+  setTimeout(function(){ geRenderPainelTecnicos(corAtual); }, 100);
 }
 
 function repOpenNewOnDate(dateKey){
