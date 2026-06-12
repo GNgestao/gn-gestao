@@ -10229,7 +10229,7 @@ function geAlocarPlantoes(sSab, sDom, corFolga, feriasList, dSab, NTF_SAB_INICIO
   for(var i1=0;i1<candSRM1.length;i1++){
     if(dispTec(candSRM1[i1],'SAB','SRM',1)){ srm1=candSRM1[i1]; break; }
   }
-  if(srm1) add('SAB','SRM',srm1, GE_HORARIOS.SRM[1]);
+  add('SAB','SRM',srm1||'', GE_HORARIOS.SRM[1]);
 
   // SRM sab 2° turno — Humberto titular, subs: Wellington, Alisson, Luciano
   var srm2 = null;
@@ -10244,7 +10244,7 @@ function geAlocarPlantoes(sSab, sDom, corFolga, feriasList, dSab, NTF_SAB_INICIO
   if(dispTec('Paulo Andre','SAB','SBV',1)) sbv='Paulo Andre';
   else if(dispTec('Giliard','SAB','SBV',1)) sbv='Giliard';
   else if(dispTec('Alisson','SAB','SBV',1)) sbv='Alisson';
-  if(sbv) add('SAB','SBV',sbv, GE_HORARIOS.SBV[1]);
+  add('SAB','SBV',sbv||'', GE_HORARIOS.SBV[1]);
 
   // SPO sab — Klebson Ramos titular, subs: Wellington, Giliard, Charlington, Luciano
   var spo = null;
@@ -10253,7 +10253,7 @@ function geAlocarPlantoes(sSab, sDom, corFolga, feriasList, dSab, NTF_SAB_INICIO
   else if(dispTec('Giliard','SAB','SPO',1)) spo='Giliard';
   else if(dispTec('Charlington','SAB','SPO',1)) spo='Charlington';
   else if(dispTec('Luciano','SAB','SPO',1)) spo='Luciano';
-  if(spo) add('SAB','SPO',spo, GE_HORARIOS.SPO[1]);
+  add('SAB','SPO',spo||'', GE_HORARIOS.SPO[1]);
 
   // NTF sab — a cada 4 semanas a partir de 27/06/2026 (antes do RHP para evitar conflito)
   var dNtfInicio = new Date(NTF_SAB_INICIO+'T12:00:00');
@@ -10273,7 +10273,7 @@ function geAlocarPlantoes(sSab, sDom, corFolga, feriasList, dSab, NTF_SAB_INICIO
   for(var i=0;i<candidatos1.length;i++){
     if(dispTec(candidatos1[i],'SAB','RHP',1)){ rhp1=candidatos1[i]; break; }
   }
-  if(rhp1) add('SAB','RHP',rhp1, GE_HORARIOS.RHP[1]);
+  add('SAB','RHP',rhp1||'', GE_HORARIOS.RHP[1]);
 
   // RHP sab 2° turno — titulares: Tone, subs: Joaz, Rodolfo, Diego
   var rhp2 = null;
@@ -10281,14 +10281,14 @@ function geAlocarPlantoes(sSab, sDom, corFolga, feriasList, dSab, NTF_SAB_INICIO
   for(var j=0;j<candidatos2.length;j++){
     if(dispTec(candidatos2[j],'SAB','RHP',2)){ rhp2=candidatos2[j]; break; }
   }
-  if(rhp2) add('SAB','RHP',rhp2, GE_HORARIOS.RHP[2]);
+  add('SAB','RHP',rhp2||'', GE_HORARIOS.RHP[2]);
 
   // --- DOMINGO ---
   // SRM dom — Klebson Andrade titular, sub: Luciano
   var srmD = null;
   if(dispTec('Klebson Andrade','DOM','SRM',1)) srmD='Klebson Andrade';
   else if(dispTec('Luciano','DOM','SRM',2)) srmD='Luciano';
-  if(srmD) add('DOM','SRM',srmD, GE_HORARIOS.SRM.dom);
+  add('DOM','SRM',srmD||'', GE_HORARIOS.SRM.dom);
 
   // SPO dom — Klebson Andrade (alternativa), Adriano Fran, George, Luciano
   var spoD = null;
@@ -10296,7 +10296,7 @@ function geAlocarPlantoes(sSab, sDom, corFolga, feriasList, dSab, NTF_SAB_INICIO
   else if(dispTec('George','DOM','SPO',1)) spoD='George';
   else if(dispTec('Klebson Andrade','DOM','SPO',1)) spoD='Klebson Andrade';
   else if(dispTec('Luciano','DOM','SPO',1)) spoD='Luciano';
-  if(spoD) add('DOM','SPO',spoD, GE_HORARIOS.SPO[1]);
+  add('DOM','SPO',spoD||'', GE_HORARIOS.SPO[1]);
 
   // RHP dom 1° turno — Elenildo titular, subs: Joaz, Tone, Rodolfo, Diego
   var rhpD1 = null;
@@ -10304,7 +10304,7 @@ function geAlocarPlantoes(sSab, sDom, corFolga, feriasList, dSab, NTF_SAB_INICIO
   for(var k=0;k<candD1.length;k++){
     if(dispTec(candD1[k],'DOM','RHP',1)){ rhpD1=candD1[k]; break; }
   }
-  if(rhpD1) add('DOM','RHP',rhpD1, GE_HORARIOS.RHP[1]);
+  add('DOM','RHP',rhpD1||'', GE_HORARIOS.RHP[1]);
 
   // RHP dom 2° turno — George titular, sub: Durval, Adriano Fran
   var rhpD2 = null;
@@ -10312,13 +10312,13 @@ function geAlocarPlantoes(sSab, sDom, corFolga, feriasList, dSab, NTF_SAB_INICIO
   for(var l=0;l<candD2.length;l++){
     if(dispTec(candD2[l],'DOM','RHP',2)){ rhpD2=candD2[l]; break; }
   }
-  if(rhpD2) add('DOM','RHP',rhpD2, GE_HORARIOS.RHP[2]);
+  add('DOM','RHP',rhpD2||'', GE_HORARIOS.RHP[2]);
 
   // NTF dom — Rodrigo titular, sub: Durval
   var ntfD = null;
   if(dispTec('Rodrigo','DOM','NTF',1)) ntfD='Rodrigo';
   else if(dispTec('Durval','DOM','NTF',1)) ntfD='Durval';
-  if(ntfD) add('DOM','NTF',ntfD, GE_HORARIOS.NTF[1]);
+  add('DOM','NTF',ntfD||'', GE_HORARIOS.NTF[1]);
 
   return plantoes;
 }
@@ -10397,7 +10397,10 @@ function geRenderEscala(semanas, ano){
             html += '<div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.2rem;">';
             html += '<span style="background:'+coresSetor[s]+';color:#fff;border-radius:3px;padding:.1rem .3rem;font-size:.63rem;font-weight:700;min-width:28px;text-align:center;">'+s+'</span>';
             html += '<div style="width:6px;height:6px;border-radius:50%;background:'+corGrupo+';flex-shrink:0;"></div>';
-            html += '<input type="text" value="'+p.tecnico+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:#d4c8f0;font-size:.72rem;flex:1;font-family:inherit;cursor:text;min-width:0;" onfocus="this.style.borderBottomColor=\'#FF6200\'" onblur="this.style.borderBottomColor=\'transparent\'" />';
+            var nomeTec = p.tecnico || '';
+            var placeholderTec = p.tecnico ? '' : '— vago';
+            var corTec = p.tecnico ? '#d4c8f0' : '#555';
+            html += '<input type="text" value="'+nomeTec+'" placeholder="'+placeholderTec+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:'+corTec+';font-size:.72rem;flex:1;font-family:inherit;cursor:text;min-width:0;" onfocus="this.style.borderBottomColor=\'#FF6200\';this.style.color=\'#d4c8f0\'" onblur="this.style.borderBottomColor=\'transparent\'" />';
             html += '<input type="text" value="'+p.horario+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:#555;font-size:.68rem;width:80px;text-align:right;font-family:inherit;cursor:text;" onfocus="this.style.borderBottomColor=\'#FF6200\'" onblur="this.style.borderBottomColor=\'transparent\'" />';
             html += '</div>';
           });
@@ -10418,7 +10421,10 @@ function geRenderEscala(semanas, ano){
             html += '<div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.2rem;">';
             html += '<span style="background:'+coresSetor[s]+';color:#fff;border-radius:3px;padding:.1rem .3rem;font-size:.63rem;font-weight:700;min-width:28px;text-align:center;">'+s+'</span>';
             html += '<div style="width:6px;height:6px;border-radius:50%;background:'+corGrupo+';flex-shrink:0;"></div>';
-            html += '<input type="text" value="'+p.tecnico+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:#d4c8f0;font-size:.72rem;flex:1;font-family:inherit;cursor:text;min-width:0;" onfocus="this.style.borderBottomColor=\'#FF6200\'" onblur="this.style.borderBottomColor=\'transparent\'" />';
+            var nomeTec = p.tecnico || '';
+            var placeholderTec = p.tecnico ? '' : '— vago';
+            var corTec = p.tecnico ? '#d4c8f0' : '#555';
+            html += '<input type="text" value="'+nomeTec+'" placeholder="'+placeholderTec+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:'+corTec+';font-size:.72rem;flex:1;font-family:inherit;cursor:text;min-width:0;" onfocus="this.style.borderBottomColor=\'#FF6200\';this.style.color=\'#d4c8f0\'" onblur="this.style.borderBottomColor=\'transparent\'" />';
             html += '<input type="text" value="'+p.horario+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:#555;font-size:.68rem;width:80px;text-align:right;font-family:inherit;cursor:text;" onfocus="this.style.borderBottomColor=\'#FF6200\'" onblur="this.style.borderBottomColor=\'transparent\'" />';
             html += '</div>';
           });
