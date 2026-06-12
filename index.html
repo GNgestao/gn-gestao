@@ -6042,6 +6042,10 @@ function repRenderCal(){
       +'</div>';
   }
   grid.innerHTML = html;
+  // Renderizar painel lateral com cor atual (primeiro FDS visivel)
+  var primeiroFDS = semanas.find(function(s){ return s.sabado >= GE_CICLO_INICIO; });
+  var corAtual = primeiroFDS ? geGetCorFDS(primeiroFDS.sabado) : null;
+  geRenderPainelTecnicos(corAtual);
 }
 
 function repOpenNewOnDate(dateKey){
@@ -10430,6 +10434,27 @@ function geRenderEscala(semanas, ano){
   grid.innerHTML = html;
 }
 
+function geRenderPainelTecnicos(corFolga){
+  var grupos = ['laranja','azul','verde','fixo'];
+  var cores = {laranja:'#E84A1A', azul:'#2563eb', verde:'#16a34a', fixo:'#6b7280'};
+  grupos.forEach(function(g){
+    var el = document.getElementById('painel'+g.charAt(0).toUpperCase()+g.slice(1));
+    if(!el) return;
+    var html = '';
+    GE_TECNICOS.filter(function(t){ return t.grupo===g && t.ativo!==false; }).forEach(function(t){
+      var folga = t.grupo === corFolga && t.grupo !== 'fixo';
+      var cor = folga ? '#444' : cores[g];
+      var txt = folga ? '#555' : '#d4c8f0';
+      var badge = folga ? '<span style="font-size:.58rem;color:#555;margin-left:3px;">(folga)</span>' : '';
+      html += '<div style="display:flex;align-items:center;gap:.35rem;margin-bottom:.25rem;">';
+      html += '<div style="width:6px;height:6px;border-radius:50%;background:'+cor+';flex-shrink:0;"></div>';
+      html += '<span style="font-size:.7rem;color:'+txt+';">'+t.nome+'</span>'+badge;
+      html += '</div>';
+    });
+    el.innerHTML = html;
+  });
+}
+
 window.geExportarEscalaPDF = function geExportarEscalaPDF(){
   alert('Exportar PDF da escala — em desenvolvimento.');
 }
@@ -10477,6 +10502,8 @@ window.geExportarEscalaPDF = function geExportarEscalaPDF(){
 
     <!-- ABA ESCALA -->
     <div id="geAbaEscala" style="display:none;">
+    <div style="display:flex;gap:1.5rem;align-items:flex-start;">
+    <div style="flex:1;min-width:0;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem;">
         <h2 style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;color:#F5F0FF;letter-spacing:-.02em;margin:0;">Escala de Plantões</h2>
         <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
@@ -10489,6 +10516,28 @@ window.geExportarEscalaPDF = function geExportarEscalaPDF(){
         </div>
       </div>
       <div id="geGridEscala" style="overflow-x:auto;"></div>
+    </div>
+    <!-- Painel lateral tecnicos -->
+    <div style="width:200px;flex-shrink:0;background:#1a0f35;border:1px solid #2a1a4e;border-radius:8px;padding:.75rem;position:sticky;top:1rem;">
+      <div style="font-size:.75rem;font-weight:700;color:#FF6200;letter-spacing:.06em;margin-bottom:.75rem;">TÉCNICOS</div>
+      <div style="margin-bottom:.6rem;">
+        <div style="font-size:.65rem;color:#E84A1A;font-weight:700;letter-spacing:.05em;margin-bottom:.3rem;">LARANJA</div>
+        <div id="painelLaranja"></div>
+      </div>
+      <div style="margin-bottom:.6rem;">
+        <div style="font-size:.65rem;color:#2563eb;font-weight:700;letter-spacing:.05em;margin-bottom:.3rem;">AZUL</div>
+        <div id="painelAzul"></div>
+      </div>
+      <div style="margin-bottom:.6rem;">
+        <div style="font-size:.65rem;color:#16a34a;font-weight:700;letter-spacing:.05em;margin-bottom:.3rem;">VERDE</div>
+        <div id="painelVerde"></div>
+      </div>
+      <div>
+        <div style="font-size:.65rem;color:#6b7280;font-weight:700;letter-spacing:.05em;margin-bottom:.3rem;">FIXO</div>
+        <div id="painelFixo"></div>
+      </div>
+    </div>
+    </div>
     </div>
 
   </div>
