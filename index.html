@@ -10437,22 +10437,25 @@ function geRenderEscala(semanas, ano){
 function geRenderPainelTecnicos(corFolga){
   var grupos = ['laranja','azul','verde','fixo'];
   var cores = {laranja:'#E84A1A', azul:'#2563eb', verde:'#16a34a', fixo:'#6b7280'};
-  grupos.forEach(function(g){
-    var el = document.getElementById('painel'+g.charAt(0).toUpperCase()+g.slice(1));
-    if(!el) return;
-    var html = '';
-    GE_TECNICOS.filter(function(t){ return t.grupo===g && t.ativo!==false; }).forEach(function(t){
-      var folga = t.grupo === corFolga && t.grupo !== 'fixo';
-      var cor = folga ? '#444' : cores[g];
-      var txt = folga ? '#555' : '#d4c8f0';
-      var badge = folga ? '<span style="font-size:.58rem;color:#555;margin-left:3px;">(folga)</span>' : '';
-      html += '<div style="display:flex;align-items:center;gap:.35rem;margin-bottom:.25rem;">';
-      html += '<div style="width:6px;height:6px;border-radius:50%;background:'+cor+';flex-shrink:0;"></div>';
-      html += '<span style="font-size:.7rem;color:'+txt+';">'+t.nome+'</span>'+badge;
-      html += '</div>';
+  // Usar setTimeout para garantir que o DOM foi atualizado
+  setTimeout(function(){
+    grupos.forEach(function(g){
+      var el = document.getElementById('painel'+g.charAt(0).toUpperCase()+g.slice(1));
+      if(!el) return;
+      var html = '';
+      GE_TECNICOS.filter(function(t){ return t.grupo===g && t.ativo!==false; }).forEach(function(t){
+        var folga = t.grupo === corFolga && t.grupo !== 'fixo';
+        var cor = folga ? '#444' : cores[g];
+        var txt = folga ? '#555' : '#d4c8f0';
+        var badge = folga ? ' <span style="font-size:.58rem;color:#555;">(folga)</span>' : '';
+        html += '<div style="display:flex;align-items:center;gap:.35rem;margin-bottom:.3rem;">';
+        html += '<div style="width:7px;height:7px;border-radius:50%;background:'+cor+';flex-shrink:0;"></div>';
+        html += '<span style="font-size:.71rem;color:'+txt+';">'+t.nome+'</span>'+badge;
+        html += '</div>';
+      });
+      el.innerHTML = html;
     });
-    el.innerHTML = html;
-  });
+  }, 50);
 }
 
 window.geExportarEscalaPDF = function geExportarEscalaPDF(){
@@ -10502,7 +10505,7 @@ window.geExportarEscalaPDF = function geExportarEscalaPDF(){
 
     <!-- ABA ESCALA -->
     <div id="geAbaEscala" style="display:none;">
-    <div style="display:flex;gap:1.5rem;align-items:flex-start;">
+    <div style="display:flex;gap:1.5rem;align-items:flex-start;position:relative;">
     <div style="flex:1;min-width:0;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem;">
         <h2 style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;color:#F5F0FF;letter-spacing:-.02em;margin:0;">Escala de Plantões</h2>
@@ -10518,7 +10521,7 @@ window.geExportarEscalaPDF = function geExportarEscalaPDF(){
       <div id="geGridEscala" style="overflow-x:auto;"></div>
     </div>
     <!-- Painel lateral tecnicos -->
-    <div style="width:200px;flex-shrink:0;background:#1a0f35;border:1px solid #2a1a4e;border-radius:8px;padding:.75rem;position:sticky;top:1rem;">
+    <div style="width:185px;flex-shrink:0;background:#1a0f35;border:1px solid #2a1a4e;border-radius:8px;padding:.75rem;position:sticky;top:80px;max-height:calc(100vh - 100px);overflow-y:auto;align-self:flex-start;">
       <div style="font-size:.75rem;font-weight:700;color:#FF6200;letter-spacing:.06em;margin-bottom:.75rem;">TÉCNICOS</div>
       <div style="margin-bottom:.6rem;">
         <div style="font-size:.65rem;color:#E84A1A;font-weight:700;letter-spacing:.05em;margin-bottom:.3rem;">LARANJA</div>
