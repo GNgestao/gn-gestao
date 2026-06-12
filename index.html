@@ -9956,6 +9956,7 @@ window.geTabFerias = function geTabFerias(){
   document.getElementById('geAbaEscala').style.display='none';
   document.getElementById('btnTabFerias').style.cssText = _GE_TAB_ATIVO;
   document.getElementById('btnTabEscala').style.cssText = _GE_TAB_INATIVO;
+  document.getElementById('painelTecnicosFixo').style.display='none';
 }
 
 window.geTabEscala = function geTabEscala(){
@@ -9963,6 +9964,7 @@ window.geTabEscala = function geTabEscala(){
   document.getElementById('geAbaEscala').style.display='block';
   document.getElementById('btnTabEscala').style.cssText = _GE_TAB_ATIVO;
   document.getElementById('btnTabFerias').style.cssText = _GE_TAB_INATIVO;
+  document.getElementById('painelTecnicosFixo').style.display='block';
   geGerarEscala();
 }
 
@@ -10506,7 +10508,6 @@ window.geExportarEscalaPDF = function geExportarEscalaPDF(){
 
     <!-- ABA ESCALA -->
     <div id="geAbaEscala" style="display:none;">
-    <div style="display:flex;gap:1.5rem;align-items:flex-start;position:relative;">
     <div style="flex:1;min-width:0;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem;">
         <h2 style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;color:#F5F0FF;letter-spacing:-.02em;margin:0;">Escala de Plantões</h2>
@@ -10520,11 +10521,6 @@ window.geExportarEscalaPDF = function geExportarEscalaPDF(){
         </div>
       </div>
       <div id="geGridEscala" style="overflow-x:auto;"></div>
-    </div>
-    <!-- Painel lateral tecnicos -->
-    <div style="width:185px;flex-shrink:0;background:#1a0f35;border:1px solid #2a1a4e;border-radius:8px;padding:.75rem;position:sticky;top:80px;max-height:calc(100vh - 100px);overflow-y:auto;align-self:flex-start;">
-      <div id="painelTecnicosConteudo"></div>
-    </div>
     </div>
     </div>
 
