@@ -9829,8 +9829,8 @@ var GE_REGRAS = {
   'Charlington':     { pode:[{s:'SPO',dias:['SAB']},{s:'RHP',dias:['SAB'],turno:1}], titular:['RHP'] },
   'Rodrigo':         { pode:[{s:'NTF',dias:['DOM']}], titular:['NTF'] },
   'Edvaldo':         { pode:[{s:'SRM',dias:['SAB']}], titular:['SRM'], ativo:false },
-  'Wellington':      { pode:[{s:'SPO',dias:['SAB']},{s:'SRM',dias:['SAB'],turno:2}], titular:['SPO'] },
-  'Alisson':         { pode:[{s:'SRM',dias:['SAB','DOM']},{s:'SPO',dias:['SAB','DOM']},{s:'SBV',dias:['SAB']},{s:'ERM',dias:['SAB']},{s:'TRF',dias:['SAB']},{s:'RHP',dias:['SAB'],turno:1}], evitar:['RHP'], titular:['SRM'] },
+  'Wellington':      { pode:[{s:'SPO',dias:['SAB']},{s:'SRM',dias:['SAB'],turno:1},{s:'SRM',dias:['SAB'],turno:2}], titular:['SPO'] },
+  'Alisson':         { pode:[{s:'SRM',dias:['SAB'],turno:1},{s:'SRM',dias:['SAB','DOM'],turno:2},{s:'SPO',dias:['SAB','DOM']},{s:'SBV',dias:['SAB']},{s:'ERM',dias:['SAB']},{s:'TRF',dias:['SAB']},{s:'RHP',dias:['SAB'],turno:1}], evitar:['RHP'], titular:['SRM'] },
   'Adriano Fran':    { pode:[{s:'SRM',dias:['DOM']},{s:'SPO',dias:['DOM']},{s:'RHP',dias:['DOM'],turno:2}], titular:['SRM','SPO'] },
   'Joaz':            { pode:[{s:'RHP',dias:['SAB']},{s:'RHP',dias:['DOM'],turno:1}], titular:['RHP'] },
   'Tone':            { pode:[{s:'RHP',dias:['SAB'],turno:2},{s:'RHP',dias:['DOM'],turno:1}], titular:['RHP'] },
@@ -9840,7 +9840,7 @@ var GE_REGRAS = {
   'Paulo Andre':     { pode:[{s:'SBV',dias:['SAB']}], titular:['SBV'] },
   'George':          { pode:[{s:'SPO',dias:['DOM']},{s:'RHP',dias:['DOM'],turno:2}], titular:['SPO','RHP'] },
   'Durval':          { pode:[{s:'NTF',dias:['SAB']},{s:'RHP',dias:['DOM'],turno:2},{s:'NTF',dias:['DOM']}], titular:['RHP','NTF'] },
-  'Luciano':         { pode:[{s:'SRM',dias:['SAB','DOM'],turno:2},{s:'SPO',dias:['SAB','DOM']},{s:'RHP',dias:['SAB'],turno:1},{s:'ERM',dias:['SAB']},{s:'TRF',dias:['SAB']}], titular:['SPO','SRM'] },
+  'Luciano':         { pode:[{s:'SRM',dias:['SAB'],turno:1},{s:'SRM',dias:['SAB','DOM'],turno:2},{s:'SPO',dias:['SAB','DOM']},{s:'RHP',dias:['SAB'],turno:1},{s:'ERM',dias:['SAB']},{s:'TRF',dias:['SAB']}], titular:['SPO','SRM'] },
   'Laercio':         { pode:[{s:'TRF',dias:['SAB'],turno:1}], titular:['TRF'], fixo:true },
   'Marcelo':         { pode:[{s:'TRF',dias:['SAB'],turno:2}], titular:['TRF'], fixo:true },
   'Adriano Rog':     { pode:[{s:'ERM',dias:['SAB']}], titular:['ERM'], fixo:true },
@@ -10173,12 +10173,19 @@ window.geGerarEscala = async function geGerarEscala(){
 // geGrupoDisponivel — reservado para fase de regras
 
 function geAlocarPlantoes(sSab, sDom, corFolga, feriasList, dSab, NTF_SAB_INICIO){
+  var HUMBERTO_RETORNO = new Date('2026-07-01T00:00:00');
+  var tHumberto = GE_TECNICOS.find(function(t){ return t.nome==='Humberto'; });
+  if(tHumberto) tHumberto._bloqueado = dSab < HUMBERTO_RETORNO;
+
+  var alocados = {};
   var plantoes = [];
 
   function dispTec(nome, dia, setor, turno){
     var tec = GE_TECNICOS.find(function(t){ return t.nome===nome; });
     if(!tec || tec.ativo===false) return false;
+    if(tec._bloqueado) return false;
     if(tec.grupo === corFolga && tec.grupo !== 'fixo') return false;
+    if(alocados[nome+'-'+dia]) return false;
     var data = dia==='SAB' ? sSab : sDom;
     if(geTecnicoEmFerias(nome, data, feriasList)) return false;
     var regra = GE_REGRAS[nome];
@@ -10193,6 +10200,7 @@ function geAlocarPlantoes(sSab, sDom, corFolga, feriasList, dSab, NTF_SAB_INICIO
   }
 
   function add(dia, setor, nome, horario){
+    alocados[nome+'-'+dia] = true;
     plantoes.push({dia:dia, setor:setor, tecnico:nome, horario:horario});
   }
 
@@ -10203,10 +10211,12 @@ function geAlocarPlantoes(sSab, sDom, corFolga, feriasList, dSab, NTF_SAB_INICIO
   // ERM fixo sempre
   if(dispTec('Adriano Rog','SAB','ERM',1)) add('SAB','ERM','Adriano Rog', GE_HORARIOS.ERM[1]);
 
-  // SRM sab 1° turno — Bruno titular
+  // SRM sab 1° turno — Bruno titular, subs quando verde folga
   var srm1 = null;
-  if(dispTec('Bruno','SAB','SRM',1)) srm1='Bruno';
-  else if(dispTec('Luciano','SAB','SRM',2)) srm1='Luciano';
+  var candSRM1 = ['Bruno','Luciano','Alisson','Wellington','Humberto'];
+  for(var i1=0;i1<candSRM1.length;i1++){
+    if(dispTec(candSRM1[i1],'SAB','SRM',1)){ srm1=candSRM1[i1]; break; }
+  }
   if(srm1) add('SAB','SRM',srm1, GE_HORARIOS.SRM[1]);
 
   // SRM sab 2° turno — Humberto titular, subs: Wellington, Alisson, Luciano
@@ -10351,9 +10361,10 @@ function geRenderEscala(semanas, ano){
       html += '</div>';
 
       // Campo supervisor
+      var supId = 'sup_'+sem.sabado.replace(/-/g,'');
       html += '<div style="padding:.3rem .65rem;border-bottom:1px solid #2a1a4e;display:flex;align-items:center;gap:.4rem;">';
       html += '<span style="color:#888;font-size:.68rem;white-space:nowrap;">Supervisor:</span>';
-      html += '<input type="text" value="'+supervisor+'" placeholder="digitar nome..." data-sab="'+sem.sabado+'" onchange="geSetSupervisor(this.dataset.sab,this.value)" style="background:transparent;border:none;outline:none;color:#F5F0FF;font-size:.72rem;width:100%;font-family:DM Sans,sans-serif;" />';
+      html += '<input type="text" id="'+supId+'" value="'+supervisor+'" placeholder="digitar nome..." style="background:transparent;border:none;outline:none;color:#F5F0FF;font-size:.72rem;width:100%;font-family:\'DM Sans\',sans-serif;cursor:text;" onblur="geSetSupervisor(\''+sem.sabado+'\',this.value)" />';
       html += '</div>';
 
       var sabPlantoes = sem.plantoes.filter(function(p){ return p.dia==='SAB'; });
