@@ -9872,6 +9872,43 @@ var GE_HORARIOS = {
   NTF: {1:'22:00-07:00'},
 };
 
+// Autosave escala no PostgreSQL
+async function geAutoSavePlantao(sabado, dia, setor, horario, tecnico){
+  try{
+    await fetch('http://187.127.26.136:5057/escala/plantao',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({sabado, dia, setor, horario, tecnico})
+    });
+  }catch(e){ console.warn('[ESCALA] Erro ao salvar plantao:', e); }
+}
+
+async function geAutoSaveSupervisor(sabado, supervisor){
+  try{
+    await fetch('http://187.127.26.136:5057/escala/supervisor',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({sabado, supervisor})
+    });
+  }catch(e){ console.warn('[ESCALA] Erro ao salvar supervisor:', e); }
+}
+
+// Carregar escala salva do PostgreSQL
+async function geCarregarEscalaSalva(ano){
+  try{
+    const r = await fetch('http://187.127.26.136:5057/escala?ano='+ano);
+    const rows = await r.json();
+    var map = {};
+    rows.forEach(function(row){
+      if(row.dia==='SAB' && row.setor==='SUP'){
+        map['sup_'+row.sabado] = row.supervisor||'';
+      } else {
+        var key = row.sabado+'_'+row.dia+'_'+row.setor+'_'+row.horario;
+        map[key] = row.tecnico||'';
+      }
+    });
+    return map;
+  }catch(e){ return {}; }
+}
+
 // Supervisores por FDS — salvo no localStorage com chave geSupFDS_YYYY-MM-DD
 function geGetSupervisor(sSab){ try{ return localStorage.getItem('geSupFDS_'+sSab)||''; }catch(e){ return ''; } }
 function geSetSupervisor(sSab, nome){ try{ localStorage.setItem('geSupFDS_'+sSab, nome); }catch(e){} }
@@ -10151,6 +10188,9 @@ window.geGerarEscala = async function geGerarEscala(){
   var feriasList = [];
   try{ feriasList = await Promise.race([geGetFerias(ano), new Promise(function(r){ setTimeout(function(){ r([]); }, 3000); })]); } catch(e){ feriasList = []; }
 
+  // Carregar dados salvos do PostgreSQL
+  window._geEscalaSalva = await geCarregarEscalaSalva(ano);
+
   // NTF sabado: proximo ocorre em 27/06/2026, depois a cada 4 semanas
   var NTF_SAB_INICIO = '2026-06-27';
 
@@ -10373,10 +10413,10 @@ function geRenderEscala(semanas, ano){
       html += '</div>';
 
       // Campo supervisor
-      var supId = 'sup_'+sem.sabado.replace(/-/g,'');
+      var supSalvo = (window._geEscalaSalva && window._geEscalaSalva['sup_'+sem.sabado]) || supervisor;
       html += '<div style="padding:.3rem .65rem;border-bottom:1px solid #2a1a4e;display:flex;align-items:center;gap:.4rem;">';
       html += '<span style="color:#888;font-size:.68rem;white-space:nowrap;">Supervisor:</span>';
-      html += '<input type="text" id="'+supId+'" value="'+supervisor+'" placeholder="digitar nome..." style="background:transparent;border:none;outline:none;color:#F5F0FF;font-size:.72rem;width:100%;font-family:\'DM Sans\',sans-serif;cursor:text;" onblur="geSetSupervisor(\''+sem.sabado+'\',this.value)" />';
+      html += '<input type="text" value="'+supSalvo+'" placeholder="digitar nome..." style="background:transparent;border:none;outline:none;color:#F5F0FF;font-size:.72rem;width:100%;font-family:\'DM Sans\',sans-serif;cursor:text;" onblur="geSetSupervisor(\''+sem.sabado+'\',this.value);geAutoSaveSupervisor(\''+sem.sabado+'\',this.value)" />';
       html += '</div>';
 
       var sabPlantoes = sem.plantoes.filter(function(p){ return p.dia==='SAB'; });
@@ -10397,10 +10437,11 @@ function geRenderEscala(semanas, ano){
             html += '<div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.2rem;">';
             html += '<span style="background:'+coresSetor[s]+';color:#fff;border-radius:3px;padding:.1rem .3rem;font-size:.63rem;font-weight:700;min-width:28px;text-align:center;">'+s+'</span>';
             html += '<div style="width:6px;height:6px;border-radius:50%;background:'+corGrupo+';flex-shrink:0;"></div>';
-            var nomeTec = p.tecnico || '';
-            var placeholderTec = p.tecnico ? '' : '— vago';
-            var corTec = p.tecnico ? '#d4c8f0' : '#555';
-            html += '<input type="text" value="'+nomeTec+'" placeholder="'+placeholderTec+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:'+corTec+';font-size:.72rem;flex:1;font-family:inherit;cursor:text;min-width:0;" onfocus="this.style.borderBottomColor=\'#FF6200\';this.style.color=\'#d4c8f0\'" onblur="this.style.borderBottomColor=\'transparent\'" />';
+            var keyTec = sem.sabado+'_'+p.dia+'_'+p.setor+'_'+p.horario;
+            var nomeSalvo = (window._geEscalaSalva && window._geEscalaSalva[keyTec] !== undefined) ? window._geEscalaSalva[keyTec] : (p.tecnico||'');
+            var placeholderTec = nomeSalvo ? '' : '— vago';
+            var corTec = nomeSalvo ? '#d4c8f0' : '#555';
+            html += '<input type="text" value="'+nomeSalvo+'" placeholder="'+placeholderTec+'" data-sab="'+sem.sabado+'" data-dia="'+p.dia+'" data-setor="'+p.setor+'" data-hor="'+p.horario+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:'+corTec+';font-size:.72rem;flex:1;font-family:inherit;cursor:text;min-width:0;" onfocus="this.style.borderBottomColor=\'#FF6200\';this.style.color=\'#d4c8f0\'" onblur="this.style.borderBottomColor=\'transparent\';geAutoSavePlantao(this.dataset.sab,this.dataset.dia,this.dataset.setor,this.dataset.hor,this.value)" />';
             html += '<input type="text" value="'+p.horario+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:#555;font-size:.68rem;width:80px;text-align:right;font-family:inherit;cursor:text;" onfocus="this.style.borderBottomColor=\'#FF6200\'" onblur="this.style.borderBottomColor=\'transparent\'" />';
             html += '</div>';
           });
@@ -10421,10 +10462,11 @@ function geRenderEscala(semanas, ano){
             html += '<div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.2rem;">';
             html += '<span style="background:'+coresSetor[s]+';color:#fff;border-radius:3px;padding:.1rem .3rem;font-size:.63rem;font-weight:700;min-width:28px;text-align:center;">'+s+'</span>';
             html += '<div style="width:6px;height:6px;border-radius:50%;background:'+corGrupo+';flex-shrink:0;"></div>';
-            var nomeTec = p.tecnico || '';
-            var placeholderTec = p.tecnico ? '' : '— vago';
-            var corTec = p.tecnico ? '#d4c8f0' : '#555';
-            html += '<input type="text" value="'+nomeTec+'" placeholder="'+placeholderTec+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:'+corTec+';font-size:.72rem;flex:1;font-family:inherit;cursor:text;min-width:0;" onfocus="this.style.borderBottomColor=\'#FF6200\';this.style.color=\'#d4c8f0\'" onblur="this.style.borderBottomColor=\'transparent\'" />';
+            var keyTec = sem.sabado+'_'+p.dia+'_'+p.setor+'_'+p.horario;
+            var nomeSalvo = (window._geEscalaSalva && window._geEscalaSalva[keyTec] !== undefined) ? window._geEscalaSalva[keyTec] : (p.tecnico||'');
+            var placeholderTec = nomeSalvo ? '' : '— vago';
+            var corTec = nomeSalvo ? '#d4c8f0' : '#555';
+            html += '<input type="text" value="'+nomeSalvo+'" placeholder="'+placeholderTec+'" data-sab="'+sem.sabado+'" data-dia="'+p.dia+'" data-setor="'+p.setor+'" data-hor="'+p.horario+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:'+corTec+';font-size:.72rem;flex:1;font-family:inherit;cursor:text;min-width:0;" onfocus="this.style.borderBottomColor=\'#FF6200\';this.style.color=\'#d4c8f0\'" onblur="this.style.borderBottomColor=\'transparent\';geAutoSavePlantao(this.dataset.sab,this.dataset.dia,this.dataset.setor,this.dataset.hor,this.value)" />';
             html += '<input type="text" value="'+p.horario+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:#555;font-size:.68rem;width:80px;text-align:right;font-family:inherit;cursor:text;" onfocus="this.style.borderBottomColor=\'#FF6200\'" onblur="this.style.borderBottomColor=\'transparent\'" />';
             html += '</div>';
           });
