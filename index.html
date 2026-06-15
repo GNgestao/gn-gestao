@@ -9872,6 +9872,56 @@ var GE_HORARIOS = {
   NTF: {1:'22:00-07:00'},
 };
 
+// Salvar escala completa via botao
+window.geSalvarEscala = async function geSalvarEscala(){
+  var btn = document.getElementById('btnSalvarEscala');
+  btn.textContent = '⏳ Salvando...';
+  btn.disabled = true;
+
+  var inputs = document.querySelectorAll('#geGridEscala input[data-sab]');
+  var supervisores = document.querySelectorAll('#geGridEscala input[data-sup]');
+  var promessas = [];
+
+  // Salvar plantoes
+  inputs.forEach(function(inp){
+    promessas.push(
+      fetch(_GE_N8N+'/webhook/gn-escala-post',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          rota:'/escala/plantao',
+          sabado: inp.dataset.sab,
+          dia: inp.dataset.dia,
+          setor: inp.dataset.setor,
+          horario: inp.dataset.hor,
+          tecnico: inp.value||''
+        })
+      }).catch(function(){})
+    );
+  });
+
+  // Salvar supervisores
+  supervisores.forEach(function(inp){
+    promessas.push(
+      fetch(_GE_N8N+'/webhook/gn-escala-post',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          rota:'/escala/supervisor',
+          sabado: inp.dataset.sup,
+          supervisor: inp.value||''
+        })
+      }).catch(function(){})
+    );
+  });
+
+  await Promise.all(promessas);
+  btn.textContent = '✅ Salvo!';
+  btn.style.color = '#27b464';
+  setTimeout(function(){
+    btn.textContent = '💾 Salvar';
+    btn.disabled = false;
+  }, 2000);
+};
+
 // Autosave escala via n8n (HTTPS)
 var _GE_N8N = 'https://n8n.srv1610251.hstgr.cloud';
 
@@ -10418,7 +10468,7 @@ function geRenderEscala(semanas, ano){
       var supSalvo = (window._geEscalaSalva && window._geEscalaSalva['sup_'+sem.sabado]) || supervisor;
       html += '<div style="padding:.3rem .65rem;border-bottom:1px solid #2a1a4e;display:flex;align-items:center;gap:.4rem;">';
       html += '<span style="color:#888;font-size:.68rem;white-space:nowrap;">Supervisor:</span>';
-      html += '<input type="text" value="'+supSalvo+'" placeholder="digitar nome..." style="background:transparent;border:none;outline:none;color:#F5F0FF;font-size:.72rem;width:100%;font-family:\'DM Sans\',sans-serif;cursor:text;" onblur="geSetSupervisor(\''+sem.sabado+'\',this.value);geAutoSaveSupervisor(\''+sem.sabado+'\',this.value)" />';
+      html += '<input type="text" value="'+supSalvo+'" placeholder="digitar nome..." data-sup="'+sem.sabado+'" style="background:transparent;border:none;outline:none;color:#F5F0FF;font-size:.72rem;width:100%;font-family:\'DM Sans\',sans-serif;cursor:text;" />';
       html += '</div>';
 
       var sabPlantoes = sem.plantoes.filter(function(p){ return p.dia==='SAB'; });
@@ -10443,7 +10493,7 @@ function geRenderEscala(semanas, ano){
             var nomeSalvo = (window._geEscalaSalva && window._geEscalaSalva[keyTec] !== undefined) ? window._geEscalaSalva[keyTec] : (p.tecnico||'');
             var placeholderTec = nomeSalvo ? '' : '— vago';
             var corTec = nomeSalvo ? '#d4c8f0' : '#555';
-            html += '<input type="text" value="'+nomeSalvo+'" placeholder="'+placeholderTec+'" data-sab="'+sem.sabado+'" data-dia="'+p.dia+'" data-setor="'+p.setor+'" data-hor="'+p.horario+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:'+corTec+';font-size:.72rem;flex:1;font-family:inherit;cursor:text;min-width:0;" onfocus="this.style.borderBottomColor=\'#FF6200\';this.style.color=\'#d4c8f0\'" onblur="this.style.borderBottomColor=\'transparent\';geAutoSavePlantao(this.dataset.sab,this.dataset.dia,this.dataset.setor,this.dataset.hor,this.value)" />';
+            html += '<input type="text" value="'+nomeSalvo+'" placeholder="'+placeholderTec+'" data-sab="'+sem.sabado+'" data-dia="'+p.dia+'" data-setor="'+p.setor+'" data-hor="'+p.horario+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:'+corTec+';font-size:.72rem;flex:1;font-family:inherit;cursor:text;min-width:0;" onfocus="this.style.borderBottomColor=\'#FF6200\';this.style.color=\'#d4c8f0\'" onblur="this.style.borderBottomColor=\'transparent\'" />';
             html += '<input type="text" value="'+p.horario+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:#555;font-size:.68rem;width:80px;text-align:right;font-family:inherit;cursor:text;" onfocus="this.style.borderBottomColor=\'#FF6200\'" onblur="this.style.borderBottomColor=\'transparent\'" />';
             html += '</div>';
           });
@@ -10468,7 +10518,7 @@ function geRenderEscala(semanas, ano){
             var nomeSalvo = (window._geEscalaSalva && window._geEscalaSalva[keyTec] !== undefined) ? window._geEscalaSalva[keyTec] : (p.tecnico||'');
             var placeholderTec = nomeSalvo ? '' : '— vago';
             var corTec = nomeSalvo ? '#d4c8f0' : '#555';
-            html += '<input type="text" value="'+nomeSalvo+'" placeholder="'+placeholderTec+'" data-sab="'+sem.sabado+'" data-dia="'+p.dia+'" data-setor="'+p.setor+'" data-hor="'+p.horario+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:'+corTec+';font-size:.72rem;flex:1;font-family:inherit;cursor:text;min-width:0;" onfocus="this.style.borderBottomColor=\'#FF6200\';this.style.color=\'#d4c8f0\'" onblur="this.style.borderBottomColor=\'transparent\';geAutoSavePlantao(this.dataset.sab,this.dataset.dia,this.dataset.setor,this.dataset.hor,this.value)" />';
+            html += '<input type="text" value="'+nomeSalvo+'" placeholder="'+placeholderTec+'" data-sab="'+sem.sabado+'" data-dia="'+p.dia+'" data-setor="'+p.setor+'" data-hor="'+p.horario+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:'+corTec+';font-size:.72rem;flex:1;font-family:inherit;cursor:text;min-width:0;" onfocus="this.style.borderBottomColor=\'#FF6200\';this.style.color=\'#d4c8f0\'" onblur="this.style.borderBottomColor=\'transparent\'" />';
             html += '<input type="text" value="'+p.horario+'" style="background:transparent;border:none;border-bottom:1px solid transparent;outline:none;color:#555;font-size:.68rem;width:80px;text-align:right;font-family:inherit;cursor:text;" onfocus="this.style.borderBottomColor=\'#FF6200\'" onblur="this.style.borderBottomColor=\'transparent\'" />';
             html += '</div>';
           });
@@ -10575,6 +10625,7 @@ window.geExportarEscalaPDF = function geExportarEscalaPDF(){
             <option value="2027">2027</option>
           </select>
           <button onclick="geGerarEscala()" style="background:rgba(255,98,0,.15);color:#FF6200;border:1px solid rgba(255,98,0,.35);border-radius:8px;padding:.4rem .85rem;cursor:pointer;font-size:.82rem;font-family:'DM Sans',sans-serif;">🔄 Gerar Escala</button>
+          <button onclick="geSalvarEscala()" id="btnSalvarEscala" style="background:rgba(39,180,100,.15);color:#27b464;border:1px solid rgba(39,180,100,.4);border-radius:8px;padding:.4rem .85rem;cursor:pointer;font-size:.82rem;font-family:'DM Sans',sans-serif;font-weight:600;">💾 Salvar</button>
           <button onclick="geExportarEscalaPDF()" style="background:var(--orange);color:#fff;border:none;border-radius:8px;padding:.4rem .85rem;cursor:pointer;font-size:.82rem;font-family:'DM Sans',sans-serif;font-weight:600;">📄 Exportar PDF</button>
           <div style="position:relative;">
             <button onclick="var p=document.getElementById('painelTecnicosFixo');p.style.display=p.style.display==='none'?'block':'none'" style="background:rgba(123,47,190,.2);color:#b39ddb;border:1px solid rgba(123,47,190,.4);border-radius:8px;padding:.4rem .85rem;cursor:pointer;font-size:.82rem;font-family:'DM Sans',sans-serif;">👥 Técnicos</button>
