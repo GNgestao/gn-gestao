@@ -9872,29 +9872,31 @@ var GE_HORARIOS = {
   NTF: {1:'22:00-07:00'},
 };
 
-// Autosave escala no PostgreSQL
+// Autosave escala via n8n (HTTPS)
+var _GE_N8N = 'https://n8n.srv1610251.hstgr.cloud';
+
 async function geAutoSavePlantao(sabado, dia, setor, horario, tecnico){
   try{
-    await fetch('http://187.127.26.136:5057/escala/plantao',{
+    await fetch(_GE_N8N+'/webhook/gn-escala-post',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({sabado, dia, setor, horario, tecnico})
+      body:JSON.stringify({rota:'/escala/plantao', sabado, dia, setor, horario, tecnico})
     });
   }catch(e){ console.warn('[ESCALA] Erro ao salvar plantao:', e); }
 }
 
 async function geAutoSaveSupervisor(sabado, supervisor){
   try{
-    await fetch('http://187.127.26.136:5057/escala/supervisor',{
+    await fetch(_GE_N8N+'/webhook/gn-escala-post',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({sabado, supervisor})
+      body:JSON.stringify({rota:'/escala/supervisor', sabado, supervisor})
     });
   }catch(e){ console.warn('[ESCALA] Erro ao salvar supervisor:', e); }
 }
 
-// Carregar escala salva do PostgreSQL
+// Carregar escala salva via n8n (HTTPS)
 async function geCarregarEscalaSalva(ano){
   try{
-    const r = await fetch('http://187.127.26.136:5057/escala?ano='+ano);
+    const r = await fetch(_GE_N8N+'/webhook/gn-escala-get?ano='+ano);
     const rows = await r.json();
     var map = {};
     rows.forEach(function(row){
