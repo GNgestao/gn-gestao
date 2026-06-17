@@ -10070,69 +10070,86 @@ window.geRenderFerias = async function geRenderFerias(){
   _geAnoAtual = parseInt(anoEl.value);
   var grid = document.getElementById('geGridFerias');
   var title = document.getElementById('geFeriasTitle');
-  if(title) title.textContent = 'Férias ' + _geAnoAtual;
+  if(title) title.textContent = 'Férias';
   grid.innerHTML = '<div style="padding:2rem;text-align:center;color:rgba(196,181,253,.55);font-size:.85rem;">Carregando férias...</div>';
-  var ferias = await geGetFerias(_geAnoAtual);
-  var ano = _geAnoAtual;
 
-  var thB = 'background:#241050;';
-  var thS = thB+'color:#FF6200;font-size:.7rem;font-weight:700;padding:.5rem .3rem;border:1px solid rgba(255,98,0,.18);white-space:nowrap;text-align:center;position:sticky;top:0;z-index:3;';
-  var thNS = thB+'color:#FF6200;font-size:.7rem;font-weight:700;padding:.5rem .9rem;border:1px solid rgba(255,98,0,.18);text-align:left;position:sticky;left:0;top:0;z-index:4;min-width:138px;';
+  // Anos a exibir: do ano atual ate o maior ano com registro (minimo 1 ano)
+  var anos = window._geAnosExibidos || [_geAnoAtual];
+  if(anos.indexOf(_geAnoAtual)<0) anos.push(_geAnoAtual);
+  anos.sort();
 
-  var html = '<table style="border-collapse:collapse;width:100%;font-size:.75rem;">';
+  var html = '';
+
+  for(var ai=0; ai<anos.length; ai++){
+    var ano = anos[ai];
+    var ferias = await geGetFerias(ano);
+    html += geRenderTabelaAno(ano, ferias);
+  }
+
+  // Botao adicionar ano
+  html += '<div style="text-align:center;margin-top:1rem;">';
+  html += '<button onclick="geAdicionarAnoFerias()" style="background:rgba(255,98,0,.15);color:#FF6200;border:1px solid rgba(255,98,0,.4);border-radius:6px;padding:.4rem .9rem;cursor:pointer;font-size:.8rem;font-family:\'DM Sans\',sans-serif;font-weight:600;">+ Adicionar ano</button>';
+  html += '</div>';
+
+  grid.innerHTML = html;
+}
+
+function geRenderTabelaAno(ano, ferias){
+  var thS = 'background:#1a0f35;color:#b39ddb;font-size:.66rem;font-weight:600;padding:.4rem .2rem;border:1px solid #2a1a4e;text-align:center;text-transform:lowercase;';
+
+  var html = '<div style="margin-bottom:1.5rem;border:1px solid #2a1a4e;border-radius:8px;overflow:hidden;">';
+  html += '<div style="background:#2a1a4e;color:#FF6200;font-size:.9rem;font-weight:700;text-align:center;padding:.45rem;letter-spacing:.04em;">Férias '+ano+'</div>';
+  html += '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;table-layout:fixed;">';
+
+  // Cabecalho meses
   html += '<thead><tr>';
-  html += '<th style="'+thNS+'">Técnico</th>';
-  GE_MESES.forEach(function(mes){ html += '<th style="'+thS+'">'+mes.toUpperCase()+'<br><span style="font-size:.6rem;font-weight:400;color:rgba(196,181,253,.5);">/'+String(ano).slice(2)+'</span></th>'; });
-  html += '<th style="'+thS+'min-width:34px;padding:.5rem .1rem;"></th>';
-  html += '</tr></thead><tbody>';
+  GE_MESES.forEach(function(mes){
+    html += '<th style="'+thS+'">'+mes.toLowerCase()+'/'+String(ano).slice(2)+'</th>';
+  });
+  html += '</tr></thead><tbody><tr>';
 
-  GE_FERIAS_TECNICOS.forEach(function(nome, ti){
-    var rowBg = ti%2===0 ? 'rgba(26,15,53,.9)' : 'rgba(36,20,75,.7)';
-    html += '<tr style="background:'+rowBg+';">';
-    html += '<td style="background:#1e1040;color:#F5F0FF;font-weight:600;font-size:.78rem;padding:.42rem .9rem;border:1px solid rgba(255,98,0,.12);position:sticky;left:0;white-space:nowrap;">'+nome+'</td>';
-
-    GE_MESES.forEach(function(mes, m){
-      var mesNum = m+1;
-      var fm = ferias.filter(function(f){
-        if(f.nome!==nome) return false;
-        if(f.inicio && f.fim){
-          var ini=new Date(f.inicio+'T00:00:00'), fim=new Date(f.fim+'T00:00:00');
-          var mI=new Date(ano,m,1), mF=new Date(ano,m+1,0);
-          return ini<=mF && fim>=mI;
-        }
-        return f.mesHint===mesNum;
-      });
-
-      html += '<td style="padding:.28rem .25rem;border:1px solid rgba(255,98,0,.1);text-align:center;vertical-align:middle;min-width:76px;cursor:pointer;" onclick="geAbrirModalFerias(null,\''+nome+'\','+ano+','+mesNum+')">';
-      if(fm.length>0){
-        fm.forEach(function(f){
-          html += '<div onclick="event.stopPropagation();geAbrirModalFerias(\''+f.id+'\')" style="display:inline-flex;align-items:center;gap:.18rem;background:rgba(36,16,80,.95);border:1px solid rgba(255,98,0,.3);border-radius:4px;padding:.18rem .32rem;cursor:pointer;margin:.08rem;">';
-          if(f.inicio && f.fim){
-            var i=new Date(f.inicio+'T00:00:00'), fi=new Date(f.fim+'T00:00:00');
-            var dI=String(i.getDate()).padStart(2,'0')+'-'+String(i.getMonth()+1).padStart(2,'0');
-            var dF=String(fi.getDate()).padStart(2,'0')+'-'+String(fi.getMonth()+1).padStart(2,'0');
-            html += '<span style="color:#ef4444;font-size:.68rem;font-weight:700;">'+dI+'</span>';
-            html += '<span style="color:#444;font-size:.58rem;">→</span>';
-            html += '<span style="color:#22c55e;font-size:.68rem;font-weight:700;">'+dF+'</span>';
-          } else {
-            html += '<span style="color:#eab308;font-size:.68rem;font-weight:600;letter-spacing:.01em;">Previsto</span>';
-          }
-          html += '<span onclick="event.stopPropagation();geDeletarFerias(\''+f.id+'\')" title="Remover" style="color:#555;font-size:.6rem;cursor:pointer;margin-left:3px;padding:0 2px;background:rgba(0,0,0,.4);border-radius:2px;">×</span>';
-          html += '</div>';
-        });
-      } else {
-        html += '<span style="color:rgba(255,98,0,.18);font-size:.75rem;pointer-events:none;">+</span>';
+  // Uma celula por mes, com tecnicos empilhados
+  GE_MESES.forEach(function(mes, m){
+    var mesNum = m+1;
+    var fm = ferias.filter(function(f){
+      if(f.inicio && f.fim){
+        var ini=new Date(f.inicio+'T00:00:00'), fim=new Date(f.fim+'T00:00:00');
+        var mI=new Date(ano,m,1), mF=new Date(ano,m+1,0);
+        return ini<=mF && fim>=mI;
       }
-      html += '</td>';
+      return f.mesHint===mesNum;
     });
 
-    html += '<td style="padding:.28rem .3rem;border:1px solid rgba(255,98,0,.1);text-align:center;vertical-align:middle;">';
-    html += '<button onclick="event.stopPropagation();geAbrirModalFerias(null,\''+nome+'\','+ano+',null)" style="background:rgba(255,98,0,.12);color:#FF6200;border:1px solid rgba(255,98,0,.3);border-radius:4px;padding:.12rem .42rem;cursor:pointer;font-size:.8rem;line-height:1.4;font-family:\'DM Sans\',sans-serif;" title="Adicionar férias">+</button>';
-    html += '</td></tr>';
+    html += '<td style="border:1px solid #2a1a4e;padding:.3rem .25rem;vertical-align:top;height:42px;background:#1e1040;" onclick="geAbrirModalFerias(null,null,'+ano+','+mesNum+')">';
+
+    fm.forEach(function(f){
+      html += '<div onclick="event.stopPropagation();geAbrirModalFerias(\''+f.id+'\')" style="margin-bottom:.4rem;line-height:1.25;cursor:pointer;position:relative;">';
+      html += '<span style="color:#d4c8f0;font-size:.66rem;display:block;">'+f.nome+'</span>';
+      if(f.inicio && f.fim){
+        var i=new Date(f.inicio+'T00:00:00'), fi=new Date(f.fim+'T00:00:00');
+        var dI=String(i.getDate()).padStart(2,'0')+'-'+String(i.getMonth()+1).padStart(2,'0');
+        var dF=String(fi.getDate()).padStart(2,'0')+'-'+String(fi.getMonth()+1).padStart(2,'0');
+        html += '<span style="font-size:.62rem;font-variant-numeric:tabular-nums;"><span style="color:#e2504a;font-weight:600;">'+dI+'</span> <span style="color:#27b464;font-weight:600;">'+dF+'</span></span>';
+      } else {
+        html += '<span style="color:#eab308;font-size:.62rem;font-weight:600;">Previsto</span>';
+      }
+      html += '<span onclick="event.stopPropagation();geDeletarFerias(\''+f.id+'\')" title="Remover" style="color:#555;font-size:.58rem;cursor:pointer;margin-left:4px;">×</span>';
+      html += '</div>';
+    });
+
+    html += '<span style="color:#3a2a5e;font-size:.66rem;cursor:pointer;display:block;" onmouseover="this.style.color=\'#FF6200\'" onmouseout="this.style.color=\'#3a2a5e\'">+ adicionar</span>';
+    html += '</td>';
   });
 
-  html += '</tbody></table>';
-  grid.innerHTML = html;
+  html += '</tr></tbody></table></div></div>';
+  return html;
+}
+
+window.geAdicionarAnoFerias = function geAdicionarAnoFerias(){
+  if(!window._geAnosExibidos) window._geAnosExibidos = [_geAnoAtual];
+  var maxAno = Math.max.apply(null, window._geAnosExibidos);
+  window._geAnosExibidos.push(maxAno+1);
+  geRenderFerias();
 }
 
 window.geAbrirModalFerias = function geAbrirModalFerias(id, nomePresel, anoPresel, mesPresel){
@@ -10146,7 +10163,7 @@ window.geAbrirModalFerias = function geAbrirModalFerias(id, nomePresel, anoPrese
     if(f){
       sel.value = f.nome;
       document.getElementById('geFeriasInicio').value = f.inicio || '';
-      document.getElementById('geFeirasFim').value = f.fim || '';
+      document.getElementById('geFeriasFim').value = f.fim || '';
       document.getElementById('geFeriasMesHint').value = f.mesHint || '';
       _geEditandoFerias = id;
     }
@@ -10155,11 +10172,11 @@ window.geAbrirModalFerias = function geAbrirModalFerias(id, nomePresel, anoPrese
     if(anoPresel && mesPresel){
       var mm = String(mesPresel).padStart(2,'0');
       document.getElementById('geFeriasInicio').value = anoPresel+'-'+mm+'-01';
-      document.getElementById('geFeirasFim').value = '';
+      document.getElementById('geFeriasFim').value = '';
       document.getElementById('geFeriasMesHint').value = mesPresel;
     } else {
       document.getElementById('geFeriasInicio').value = '';
-      document.getElementById('geFeirasFim').value = '';
+      document.getElementById('geFeriasFim').value = '';
       document.getElementById('geFeriasMesHint').value = '';
     }
     _geEditandoFerias = null;
@@ -10199,7 +10216,7 @@ window.geFecharModalFerias = function geFecharModalFerias(){
 window.geSalvarFerias = async function geSalvarFerias(){
   var nome = document.getElementById('geFeriasNome').value;
   var inicio = document.getElementById('geFeriasInicio').value || null;
-  var fim = document.getElementById('geFeirasFim').value || null;
+  var fim = document.getElementById('geFeriasFim').value || null;
   var mesHintRaw = document.getElementById('geFeriasMesHint').value;
   var mesHint = mesHintRaw ? parseInt(mesHintRaw) : null;
 
@@ -10659,7 +10676,7 @@ window.geExportarEscalaPDF = function geExportarEscalaPDF(){
     </div>
     <div style="margin-bottom:.9rem;">
       <label style="color:rgba(196,181,253,.7);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:.35rem;">Data Fim <span style="color:rgba(196,181,253,.4);font-weight:400;text-transform:none;">(opcional)</span></label>
-      <input type="date" id="geFeirasFim" style="width:100%;background:rgba(50,29,101,.6);color:#F5F0FF;border:1px solid rgba(255,98,0,.25);border-radius:8px;padding:.5rem .7rem;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;box-sizing:border-box;"/>
+      <input type="date" id="geFeriasFim" style="width:100%;background:rgba(50,29,101,.6);color:#F5F0FF;border:1px solid rgba(255,98,0,.25);border-radius:8px;padding:.5rem .7rem;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;box-sizing:border-box;"/>
     </div>
     <div style="margin-bottom:1.25rem;">
       <label style="color:rgba(196,181,253,.7);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:.35rem;">Mês Previsto <span style="color:rgba(196,181,253,.4);font-weight:400;text-transform:none;">(quando sem data definida)</span></label>
