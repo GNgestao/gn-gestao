@@ -35,7 +35,7 @@ Single-page HTML/CSS/JS puro. Tema escuro roxo/laranja, fontes Syne + DM Sans.
 - CIPA ✅ — Ata CIPA completa; formulário, PDF, envio Autentique, integração Jarvis
 
 ### Módulos em desenvolvimento:
-- Gestão de Equipe (aba Férias + aba Escala de Plantões)
+- Gestão de Equipe (aba Férias + aba Escala de Plantões) — **Escala funcional com autosave; Férias com novo layout tabela anual**
 
 ### Hub:
 Rede neural animada. GN no centro, módulos ao redor flutuando. Fundo estrelado global.
@@ -508,3 +508,46 @@ Salvos em /scripts/ no repositório GitHub para uso futuro em caso de nova reins
 ### Segurança / Infra
 - [ ] Senha mestra antes do login (~10k tokens)
 - [ ] Rotacionar API keys e tokens expostos (~2k tokens)
+
+
+## STATUS GESTÃO DE EQUIPE — 17/06/2026
+
+### Aba Escala de Plantões — FUNCIONAL
+- Layout por mês (cards de FDS), a partir de 13/06/2026
+- Ciclo de cores verde→laranja→azul (grupo da cor folga naquele FDS); fixos sempre trabalham
+- Alocação automática por regras (GE_REGRAS): cada técnico tem pode[]/titular[]/turno
+- Setores: SRM(2 sáb/1 dom), RHP(2 sáb/2 dom), ERM(1 sáb), SPO(1 sáb/1 dom), SBV(1 sáb), TRF(2 sáb), NTF(sáb a cada 4 semanas desde 27/06, dom toda semana)
+- Slots vazios mostram "— vago"; todos os campos (técnico, horário, supervisor) editáveis inline
+- **Botão Salvar** salva tudo no PostgreSQL via n8n; recarrega dados salvos ao gerar
+- Painel lateral de técnicos (botão 👥 Técnicos) com badge de folga, position:fixed
+- Humberto bloqueado até 01/07/2026 (atestado); Edvaldo inativo (atestado, só SRM sáb quando voltar)
+- Datas tratadas como string YYYY-MM-DD (evita bug de fuso UTC-3)
+
+### Aba Férias — NOVO LAYOUT FUNCIONAL
+- Tabela anual: 12 meses em colunas, técnicos empilhados nas células do mês
+- Data início em vermelho, fim em verde (formato DD-MM)
+- Múltiplos anos empilhados; botão "+ Adicionar ano" cria próximo ano
+- Clique na célula abre modal para adicionar/editar; × remove
+- PENDENTE: ajustes que Gabriel vai pedir (a definir)
+
+### Infra Escala/Férias (n8n + ferias-api porta 5057)
+- Tabela escala_plantoes: UNIQUE(sabado,dia,setor,horario); supervisor em setor='SUP'
+- Webhooks n8n (todos retornam array via $input.all().map):
+  - gn-escala-get?ano= (bBqprTaVHWU3MRJv)
+  - gn-escala-post (yQ8eaTPjrEpXbxKe) — rota no body decide /escala/plantao ou /escala/supervisor
+  - gn-ferias-get?ano= (51HGqebHl422nAxM)
+  - gn-ferias-save (1keyNWJSpZaO3div)
+  - gn-ferias-delete (NWsYrYvAHHdVjVZl)
+- TODAS as chamadas do app passam por n8n HTTPS (nunca HTTP direto — Mixed Content)
+- ferias-api roteia para 172.17.0.1:5057 (IP host Docker)
+
+### Fluxo 2 HE — BLOQUEIO EXTERNO
+- he-api (porta 5054) e código corretos; bug de período (dataFinal) foi corrigido e revertido
+- Erro 500 "Usuário sem permissão para alterar marcações código 1370": bloqueio de permissão no Senior
+- Gabriel confirmou que o bloqueio é real (não conseguia autorizar nem manualmente) — aguardando retorno da empresa
+- Backup: /root/he-api.js.bak
+
+### Regras dos técnicos na Escala (resumo GE_REGRAS)
+- 24 técnicos: 7 laranja, 7 azul (Rodolfo é azul), 6 verde, 3 fixos (Laercio/Marcelo/Adriano Rog)
+- Luciano é verde (matrícula 55012623)
+- Regras completas de pode/titular por setor/dia/turno estão em GE_REGRAS no index.html
