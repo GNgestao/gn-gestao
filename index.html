@@ -9951,10 +9951,12 @@ async function geCarregarEscalaSalva(ano){
     const rows = await r.json();
     var map = {};
     rows.forEach(function(row){
-      if(row.dia==='SAB' && row.setor==='SUP'){
-        map['sup_'+row.sabado] = row.supervisor||'';
+      // Normalizar data: '2026-06-13T00:00:00.000Z' -> '2026-06-13'
+      var sab = (row.sabado||'').split('T')[0];
+      if(row.setor==='SUP'){
+        map['sup_'+sab] = row.supervisor||'';
       } else {
-        var key = row.sabado+'_'+row.dia+'_'+row.setor+'_'+row.horario;
+        var key = sab+'_'+row.dia+'_'+row.setor+'_'+row.horario;
         map[key] = row.tecnico||'';
       }
     });
