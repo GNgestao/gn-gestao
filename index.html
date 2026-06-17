@@ -10187,8 +10187,8 @@ window.geAbrirModalFerias = function geAbrirModalFerias(id, nomePresel, anoPrese
 window.geDeletarFerias = async function geDeletarFerias(id){
   if(!confirm('Remover este período de férias?')) return;
   try{
-    await fetch(_GE_API+'/ferias', {
-      method:'DELETE',
+    await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-ferias-delete', {
+      method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({id:id})
     });
@@ -10229,7 +10229,7 @@ window.geSalvarFerias = async function geSalvarFerias(){
   if(_geEditandoFerias) body.id = _geEditandoFerias;
 
   try{
-    var res = await fetch(_GE_API+'/ferias', {
+    var res = await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-ferias-save', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(body)
