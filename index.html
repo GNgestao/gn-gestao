@@ -10008,10 +10008,20 @@ var _GE_API = 'http://187.127.26.136:5057';
 
 async function geGetFerias(ano){
   try{
-    var res = await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-ferias-get?ano='+ano);
+    var res = await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-ferias-get?ano='+ano+'&_t='+Date.now(), {cache:'no-store'});
     if(!res.ok) throw new Error('HTTP '+res.status);
-    var data = await res.json();
-    return Array.isArray(data) ? data : [];
+    var txt = await res.text();
+    if(!txt || !txt.trim()) return [];
+    var data = JSON.parse(txt);
+    // Normalizar datas: '2026-01-06T00:00:00.000Z' -> '2026-01-06'
+    if(Array.isArray(data)){
+      data.forEach(function(f){
+        if(f.inicio) f.inicio = String(f.inicio).split('T')[0];
+        if(f.fim) f.fim = String(f.fim).split('T')[0];
+      });
+      return data;
+    }
+    return [];
   }catch(e){
     console.error('[GE] Erro ao buscar férias:', e);
     return [];
