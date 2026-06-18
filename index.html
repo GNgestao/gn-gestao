@@ -10122,10 +10122,10 @@ function geRenderTabelaAno(ano, ferias){
   GE_MESES.forEach(function(mes, m){
     var mesNum = m+1;
     var fm = ferias.filter(function(f){
-      if(f.inicio && f.fim){
-        var ini=new Date(f.inicio+'T00:00:00'), fim=new Date(f.fim+'T00:00:00');
-        var mI=new Date(ano,m,1), mF=new Date(ano,m+1,0);
-        return ini<=mF && fim>=mI;
+      if(f.inicio){
+        // Aparece apenas no mes de INICIO das ferias
+        var ini=new Date(f.inicio+'T00:00:00');
+        return ini.getMonth()===m && ini.getFullYear()===ano;
       }
       return f.mesHint===mesNum;
     });
