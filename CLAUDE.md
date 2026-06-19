@@ -551,3 +551,23 @@ Salvos em /scripts/ no repositório GitHub para uso futuro em caso de nova reins
 - 24 técnicos: 7 laranja, 7 azul (Rodolfo é azul), 6 verde, 3 fixos (Laercio/Marcelo/Adriano Rog)
 - Luciano é verde (matrícula 55012623)
 - Regras completas de pode/titular por setor/dia/turno estão em GE_REGRAS no index.html
+
+
+## STATUS FLUXOS HE/BH — 19/06/2026
+
+### Fluxo 2 — Autorização HE — VOLTOU A FUNCIONAR
+- O bloqueio de permissão no Senior foi resolvido (lado da empresa)
+- Autorização de HE (códigos 613→663 diurno, 614→664 noturno) operando normalmente
+- he-api porta 5054, lógica original mantida (dataFinal = ontem); backup em /root/he-api.js.bak
+
+### Fluxo 3 — Banco de Horas — CORRIGIDO
+- Bug: retornava 00:00 para todos os técnicos
+- Causa: a API do Senior mudou a estrutura da resposta de saldo-mensal. O campo `saldo` no topo do JSON é só do mês corrente (sempre zerado até fechar). O saldo real do ponto vigente está dentro do array `horasVencendo`, por período (ex: {periodo:"Julho 2026", saldo:"04:23"})
+- Correção em bh-api.js (porta 5055): em vez de ler r.body.saldo, agora calcula o período de referência do ponto vigente e busca em horasVencendo:
+  - Se hoje >= dia 11 → período = mês seguinte (ponto 11/MM a 10/MM+1 refere-se ao mês seguinte)
+  - Se hoje < dia 11 → período = mês atual
+  - Ex: hoje 19/06 → ponto 11/06 a 10/07 → refere-se a "Julho 2026"
+- Endpoint real do bh-api: GET /gestaoponto-backend/api/colaborador/{colabId}/bancos-horas/saldo-mensal?codigoCalculo=1370&projecaoMeses=3&gestor=S
+- Auth G7: POST /api/senior/auth/g7
+- Backup em /root/bh-api.js.bak
+- Validado: Giliard 04:23, saldos variados (positivos/zerados/negativos), ordenados decrescente
