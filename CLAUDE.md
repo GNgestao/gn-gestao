@@ -571,3 +571,48 @@ Salvos em /scripts/ no repositório GitHub para uso futuro em caso de nova reins
 - Auth G7: POST /api/senior/auth/g7
 - Backup em /root/bh-api.js.bak
 - Validado: Giliard 04:23, saldos variados (positivos/zerados/negativos), ordenados decrescente
+
+
+## STATUS SESSÃO — 21/06/2026
+
+### Concluído nesta sessão:
+
+**Memória Jarvis convencional — AUMENTADA**
+- Limite de mensagens: 20 → 50 no nó "Buscar Memoria" do fluxo GN Assistente Inteligente
+- Workflow ID: mVZ1RyggUw9mnVgF
+
+**Módulo Clientes — CRIADO E FUNCIONAL**
+- API: /root/clientes-api.js, porta 5058, tabela `clientes` no PostgreSQL
+- Serviço systemd: clientes-api.service
+- Campos: nome, endereco, contato, observacoes
+- Webhooks n8n: gn-clientes-get (0iCqdicXjJxj3XYi), gn-clientes-post (LZaHr8BBR5tgB17F), gn-clientes-delete (RLxSK5KXK8cFAoDL)
+- Tela no app: screenClientes, acessível pelo Hub 3D
+- Header padronizado igual ao Gestão de Equipe
+- 19 clientes cadastrados por Gabriel
+
+**Jarvis + Clientes — INTEGRADO**
+- Nó "Buscar Clientes" adicionado no fluxo GN Assistente Inteligente (executeOnce:true)
+- Jarvis consulta automaticamente os clientes cadastrados em cada resposta
+- Webhook adicional: gn-jarvis-clientes (nxEfamvK1kXLvi5E)
+- IP correto do gateway Docker: 172.18.0.1 (não 172.17.0.1)
+- Validado: Jarvis responde endereço do Shopping RioMar, Alfred Nobel, Patteo corretamente
+
+**Rebrand Jarvis → Ultron — CANCELADO**
+- Gabriel decidiu manter o nome Jarvis
+
+**Repositório GitHub**
+- Alternado entre público/privado durante a sessão
+- Estado atual: PÚBLICO (necessário para GitHub Pages funcionar com conta gratuita)
+- GitHub Pro (~$4/mês) permitiria repositório privado com Pages
+
+### Pendências restantes (ordem de prioridade):
+1. PWA — app instalável (~8k / ~2h)
+2. Senha mestra antes do login (~10k / ~2h)
+3. Consulta HE em tempo real via Jarvis (~15k / ~3h)
+4. Tela de login futurista (~15k / ~3h)
+5. Whisper local — substituir Deepgram (~15k / ~3h)
+6. TTS streaming / melhorar latência (~20k / ~4h)
+7. Integração TK Mobile com Jarvis (~20k / ~4h)
+8. Hub 3D estilo Obsidian (~30k / ~6h)
+9. Integração Gmail + Google Calendar (~40k / ~8h)
+10. Módulo Perito Judicial / ARTs e Laudos (~50k / ~10h)
