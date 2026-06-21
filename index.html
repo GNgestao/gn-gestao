@@ -8163,9 +8163,9 @@ async function gnSpeak(texto){
       if(window._gnAudioCtx.state === 'suspended'){
         await window._gnAudioCtx.resume();
       }
-      const bufferCopy = (arrayBuffer.byteLength > 1500000 ? arrayBuffer.slice(0, 1500000) : arrayBuffer.slice(0));
-      if(arrayBuffer.byteLength > 1500000){
-        console.warn('TTS buffer muito grande (' + arrayBuffer.byteLength + ' bytes) — truncando para 1.5MB');
+      const bufferCopy = (arrayBuffer.byteLength > 10000000 ? arrayBuffer.slice(0, 10000000) : arrayBuffer.slice(0));
+      if(arrayBuffer.byteLength > 10000000){
+        console.warn('TTS buffer muito grande (' + arrayBuffer.byteLength + ' bytes) — truncando para 10MB');
       }
       {
         await Promise.race([
