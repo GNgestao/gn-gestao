@@ -10640,7 +10640,7 @@ function cliRender(clientes){
     html += '<span style="color:#F5F0FF;font-size:.85rem;font-weight:600;">'+c.nome+'</span>';
     html += '<div style="display:flex;gap:.4rem;">';
     html += '<button onclick="cliEditar('+JSON.stringify(c).replace(/"/g,"'")+')" style="background:rgba(123,47,190,.2);color:#b39ddb;border:1px solid rgba(123,47,190,.3);border-radius:4px;padding:.15rem .4rem;cursor:pointer;font-size:.7rem;">Editar</button>';
-    html += '<button onclick="cliDeletar('+c.id+',''+c.nome+'')" style="background:rgba(226,80,74,.15);color:#e2504a;border:1px solid rgba(226,80,74,.3);border-radius:4px;padding:.15rem .4rem;cursor:pointer;font-size:.7rem;">×</button>';
+    html += '<button data-id="'+c.id+'" data-nome="'+c.nome.replace(/"/g,'&quot;')+'" onclick="cliDeletarBtn(this)" style="background:rgba(226,80,74,.15);color:#e2504a;border:1px solid rgba(226,80,74,.3);border-radius:4px;padding:.15rem .4rem;cursor:pointer;font-size:.7rem;">×</button>';
     html += '</div></div>';
     if(c.endereco) html += '<div style="color:#b39ddb;font-size:.75rem;margin-bottom:.25rem;">📍 '+c.endereco+'</div>';
     if(c.contato) html += '<div style="color:#888;font-size:.72rem;margin-bottom:.25rem;">📞 '+c.contato+'</div>';
@@ -10692,6 +10692,12 @@ window.cliDeletar = async function cliDeletar(id, nome){
   if(!confirm('Remover cliente "'+nome+'"?')) return;
   await fetch(_CLI_N8N+'/webhook/gn-clientes-delete', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:id})});
   await cliCarregar();
+}
+
+window.cliDeletarBtn = function cliDeletarBtn(btn){
+  var id = btn.getAttribute('data-id');
+  var nome = btn.getAttribute('data-nome');
+  cliDeletar(id, nome);
 }
 
 window.cliBuscar = function cliBuscar(){
