@@ -8135,59 +8135,6 @@ document.addEventListener('keydown', function(e){
   }
 });
 
-// Dividir texto em frases para TTS por chunks (reduz latencia percebida)
-function gnSplitFrases(texto){
-  // Divide por pontuacao, mantendo frases de no minimo 3 palavras
-  var frases = texto.split(/(?<=[.!?;])\s+|(?<=,)\s+(?=\w{4,})/);
-  var resultado = [];
-  var acum = '';
-  frases.forEach(function(f){
-    f = f.trim();
-    if(!f) return;
-    acum = acum ? acum + ' ' + f : f;
-    if(acum.length >= 40 || /[.!?]$/.test(acum)){
-      resultado.push(acum);
-      acum = '';
-    }
-  });
-  if(acum) resultado.push(acum);
-  return resultado.length ? resultado : [texto];
-}
-
-async function gnPlayBuffer(arrayBuffer){
-  if(!window._gnAudioCtx || window._gnAudioCtx.state === 'closed'){
-    window._gnAudioCtx = new AudioContext();
-  }
-  if(window._gnAudioCtx.state === 'suspended'){
-    await window._gnAudioCtx.resume();
-  }
-  return new Promise(function(resolve){
-    window._gnAudioCtx.decodeAudioData(arrayBuffer.slice(0), function(decoded){
-      if(window._gnSpeakAborted){ resolve(); return; }
-      var source = window._gnAudioCtx.createBufferSource();
-      source.buffer = decoded;
-      source.connect(window._gnAudioCtx.destination);
-      window._gnCurrentSource = source;
-      source.onended = function(){ window._gnCurrentSource = null; resolve(); };
-      source.start(0);
-    }, function(err){
-      console.error('decodeAudioData erro:', err);
-      resolve();
-    });
-  });
-}
-
-async function gnFetchTTS(frase){
-  var resp = await fetch(GN_TTS_WEBHOOK, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({texto: frase})
-  });
-  if(!resp.ok) throw new Error('TTS HTTP ' + resp.status);
-  var buf = await resp.arrayBuffer();
-  return buf;
-}
-
 async function gnSpeak(texto){
   if(window._gjModoTexto) return Promise.resolve();
   if(gnSpeaking) return Promise.resolve();
@@ -8201,24 +8148,47 @@ async function gnSpeak(texto){
   if(gnRecognition){ try{ gnRecognition.abort(); }catch(e){} gnRecognition=null; }
   gnListening = false;
   try{
-    var frases = gnSplitFrases(texto);
-    for(var fi=0; fi<frases.length; fi++){
-      if(window._gnSpeakAborted) break;
-      var frase = frases[fi].trim();
-      if(!frase) continue;
-      try{
-        // Buscar proximo chunk em paralelo enquanto toca o atual
-        var bufPromise = gnFetchTTS(frase);
-        // Se nao e o primeiro, ja temos o buffer — senao aguarda
-        var buf = await Promise.race([
-          bufPromise,
-          new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('TTS timeout 15s')); }, 15000); })
+    const resp = await fetch(GN_TTS_WEBHOOK, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({texto})
+    });
+    console.log('TTS status:', resp.status, resp.headers.get('content-type'));
+    const arrayBuffer = await resp.arrayBuffer();
+    console.log('TTS buffer size:', arrayBuffer.byteLength);
+    if(arrayBuffer.byteLength >= 100){
+      if(!window._gnAudioCtx || window._gnAudioCtx.state === 'closed'){
+        window._gnAudioCtx = new AudioContext();
+      }
+      if(window._gnAudioCtx.state === 'suspended'){
+        await window._gnAudioCtx.resume();
+      }
+      const bufferCopy = (arrayBuffer.byteLength > 1500000 ? arrayBuffer.slice(0, 1500000) : arrayBuffer.slice(0));
+      if(arrayBuffer.byteLength > 1500000){
+        console.warn('TTS buffer muito grande (' + arrayBuffer.byteLength + ' bytes) — truncando para 1.5MB');
+      }
+      {
+        await Promise.race([
+          new Promise((resolve) => {
+            window._gnAudioCtx.decodeAudioData(bufferCopy, (decoded) => {
+              const source = window._gnAudioCtx.createBufferSource();
+              source.buffer = decoded;
+              source.connect(window._gnAudioCtx.destination);
+              window._gnCurrentSource = source;
+              source.onended = () => { window._gnCurrentSource = null; resolve(); };
+              source.start(0);
+              if(window._gnAudioCtx.state === 'suspended') window._gnAudioCtx.resume();
+            }, (err) => {
+              console.error('decodeAudioData erro:', err);
+              resolve();
+            });
+          }),
+          new Promise(resolve => setTimeout(() => {
+            console.warn('TTS timeout 25s — forçando stop da source');
+            if(window._gnCurrentSource){ try{ window._gnCurrentSource.stop(); }catch(e){} window._gnCurrentSource = null; }
+            resolve();
+          }, 25000))
         ]);
-        if(buf && buf.byteLength >= 100){
-          await gnPlayBuffer(buf);
-        }
-      }catch(e){
-        console.error('gnSpeak chunk erro:', e);
       }
     }
   }catch(err){
