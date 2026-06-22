@@ -605,14 +605,39 @@ Salvos em /scripts/ no repositório GitHub para uso futuro em caso de nova reins
 - Estado atual: PÚBLICO (necessário para GitHub Pages funcionar com conta gratuita)
 - GitHub Pro (~$4/mês) permitiria repositório privado com Pages
 
+## STATUS SESSÃO — 22/06/2026
+
+### TTS — MIGRADO KOKORO → EDGE TTS
+- Kokoro (CPU, ~6s latência) substituído por Edge TTS (Microsoft, ~1.3s)
+- Serviço: /root/edge-tts-api.py, porta 5099, systemd: edge-tts-api.service
+- Voz: pt-BR-AntonioNeural (masculina)
+- Retorna MP3 diretamente (sem conversão ffmpeg)
+- Pronuncia Sheylla como Xeila (substituição no código)
+- n8n workflow GN Text to Speech (CeXOWX6ob1j49nNq): nó Kokoro TTS reaponta para http://172.17.0.1:5099, Content-Type: audio/mpeg
+
+### gnSpeak — REESCRITO
+- Abandonado decodeAudioData (Web Audio API) — lento para MP3
+- Novo: usa elemento <audio> HTML nativo — decodifica MP3 instantaneamente
+- Timeout: 60s (antes 25s)
+- Watchdog gnSpeaking: 70s (antes 30s)
+- Buffer limit: 10MB (antes 1.5MB)
+
+### Wake words Jarvis — ADICIONADOS
+- Novos: jabis, já aves, já avis, jabes, jarbes
+- Total atual: jarvis, charles, chaves, jarves, jarvi, javis, jarvist, jarvs, charlis, jalves, chalves, javi, jabez, jalvez, jalvis, jarvy, jabis, já aves, já avis, jabes, jarbes
+
+### Jarvis max_tokens — REDUZIDO
+- 1024 → 200 tokens (respostas mais curtas e adequadas para voz)
+
+### Whisper local — REMOVIDO DA LISTA
+- Sem GPU no VPS, seria mais lento que Deepgram — mantido Deepgram
+
 ### Pendências restantes (ordem de prioridade):
 1. PWA — app instalável (~8k / ~2h)
 2. Senha mestra antes do login (~10k / ~2h)
 3. Consulta HE em tempo real via Jarvis (~15k / ~3h)
 4. Tela de login futurista (~15k / ~3h)
-5. Whisper local — substituir Deepgram (~15k / ~3h)
-6. TTS streaming / melhorar latência (~20k / ~4h)
-7. Integração TK Mobile com Jarvis (~20k / ~4h)
-8. Hub 3D estilo Obsidian (~30k / ~6h)
-9. Integração Gmail + Google Calendar (~40k / ~8h)
-10. Módulo Perito Judicial / ARTs e Laudos (~50k / ~10h)
+5. Integração TK Mobile com Jarvis (~20k / ~4h)
+6. Hub 3D estilo Obsidian (~30k / ~6h)
+7. Integração Gmail + Google Calendar (~40k / ~8h)
+8. Módulo Perito Judicial / ARTs e Laudos (~50k / ~10h)
