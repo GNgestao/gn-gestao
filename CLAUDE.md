@@ -634,7 +634,6 @@ Salvos em /scripts/ no repositório GitHub para uso futuro em caso de nova reins
 
 ### Pendências restantes (ordem de prioridade):
 1. PWA — app instalável (~8k / ~2h)
-2. Senha mestra antes do login (~10k / ~2h)
 3. Consulta HE em tempo real via Jarvis (~15k / ~3h)
 4. Tela de login futurista (~15k / ~3h)
 5. Integração TK Mobile com Jarvis (~20k / ~4h)
