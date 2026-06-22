@@ -7401,8 +7401,8 @@ function gnWatchdog(){
   if(!gnContinuousMode) return;
   if(gnSpeaking){
     if(!_gnSpeakingStart) _gnSpeakingStart = Date.now();
-    if(Date.now() - _gnSpeakingStart > 30000){
-      console.warn('Watchdog: gnSpeaking travado por 30s — forçando reset');
+    if(Date.now() - _gnSpeakingStart > 70000){
+      console.warn('Watchdog: gnSpeaking travado por 70s — forçando reset');
       gnPararFala();
       gnSpeaking = false;
       gnExecutando = false;
@@ -8184,10 +8184,10 @@ async function gnSpeak(texto){
             });
           }),
           new Promise(resolve => setTimeout(() => {
-            console.warn('TTS timeout 25s — forçando stop da source');
+            console.warn('TTS timeout 60s — forçando stop da source');
             if(window._gnCurrentSource){ try{ window._gnCurrentSource.stop(); }catch(e){} window._gnCurrentSource = null; }
             resolve();
-          }, 25000))
+          }, 60000))
         ]);
       }
     }
