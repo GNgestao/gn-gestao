@@ -8093,6 +8093,7 @@ function gnPararFala(){
   console.log('gnPararFala chamado');
   if(!gnSpeaking) return;
   window._gnSpeakAborted = true;
+  if(window._gnCurrentAudio){ try{ window._gnCurrentAudio.pause(); }catch(e){} window._gnCurrentAudio=null; }
   if(window._gnCurrentSource){ try{ window._gnCurrentSource.stop(); }catch(e){} window._gnCurrentSource=null; }
   if(window._gnFallbackAudio){ try{ window._gnFallbackAudio.pause(); window._gnFallbackAudio.src=''; }catch(e){} window._gnFallbackAudio=null; }
   if(window._gnResolveAudio){ window._gnResolveAudio(); window._gnResolveAudio=null; }
@@ -8157,39 +8158,41 @@ async function gnSpeak(texto){
     const arrayBuffer = await resp.arrayBuffer();
     console.log('TTS buffer size:', arrayBuffer.byteLength);
     if(arrayBuffer.byteLength >= 100){
-      if(!window._gnAudioCtx || window._gnAudioCtx.state === 'closed'){
-        window._gnAudioCtx = new AudioContext();
-      }
-      if(window._gnAudioCtx.state === 'suspended'){
-        await window._gnAudioCtx.resume();
-      }
-      const bufferCopy = (arrayBuffer.byteLength > 10000000 ? arrayBuffer.slice(0, 10000000) : arrayBuffer.slice(0));
-      if(arrayBuffer.byteLength > 10000000){
-        console.warn('TTS buffer muito grande (' + arrayBuffer.byteLength + ' bytes) — truncando para 10MB');
-      }
-      {
-        await Promise.race([
-          new Promise((resolve) => {
-            window._gnAudioCtx.decodeAudioData(bufferCopy, (decoded) => {
-              const source = window._gnAudioCtx.createBufferSource();
-              source.buffer = decoded;
-              source.connect(window._gnAudioCtx.destination);
-              window._gnCurrentSource = source;
-              source.onended = () => { window._gnCurrentSource = null; resolve(); };
-              source.start(0);
-              if(window._gnAudioCtx.state === 'suspended') window._gnAudioCtx.resume();
-            }, (err) => {
-              console.error('decodeAudioData erro:', err);
-              resolve();
-            });
-          }),
-          new Promise(resolve => setTimeout(() => {
-            console.warn('TTS timeout 60s — forçando stop da source');
-            if(window._gnCurrentSource){ try{ window._gnCurrentSource.stop(); }catch(e){} window._gnCurrentSource = null; }
-            resolve();
-          }, 60000))
-        ]);
-      }
+      // Usar elemento <audio> HTML para MP3 — muito mais rapido que decodeAudioData
+      await new Promise(function(resolve){
+        var blob = new Blob([arrayBuffer], {type:'audio/mpeg'});
+        var url = URL.createObjectURL(blob);
+        var audio = new Audio(url);
+        window._gnCurrentAudio = audio;
+        var timeout;
+        audio.onerror = function(e){ 
+          console.error('Audio erro:', e);
+          clearTimeout(timeout);
+          URL.revokeObjectURL(url); 
+          window._gnCurrentAudio = null; 
+          resolve(); 
+        };
+        timeout = setTimeout(function(){
+          console.warn('TTS timeout 60s');
+          try{ audio.pause(); }catch(e){}
+          URL.revokeObjectURL(url);
+          window._gnCurrentAudio = null;
+          resolve();
+        }, 60000);
+        audio.onended = function(){
+          clearTimeout(timeout);
+          URL.revokeObjectURL(url);
+          window._gnCurrentAudio = null;
+          resolve();
+        };
+        audio.play().catch(function(e){
+          console.error('audio.play erro:', e);
+          clearTimeout(timeout);
+          URL.revokeObjectURL(url);
+          window._gnCurrentAudio = null;
+          resolve();
+        });
+      });
     }
   }catch(err){
     console.error('gnSpeak erro:', err);
