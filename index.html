@@ -7710,7 +7710,7 @@ async function gnExecutar(comando){
   }
 
   // OS de revisão — interceptado antes do bloco de abertura de sites para não cair em "abrir/abre X"
-  if (/(?:abre?|abrir|criar?|cria|gerar?|gera|registr)\s+o?s?\s*(?:de\s+)?revis[aã]o/i.test(cmdLower) || /ordem\s+de\s+servi[cç]o\s+(?:de\s+)?revis[aã]o/i.test(cmdLower)) {
+  if (/(?:abre?|abrir|criar?|cria|gerar?|gera|registr|faz|fazer|abrir?\s+um?a?)\s+(?:um?a?\s+)?o\.?s\.?\s*(?:de\s+)?revis[aã]o/i.test(comando) || /(?:um?a?\s+)?o\.?s\.?\s*(?:de\s+)?revis[aã]o/i.test(comando) || /ordem\s+de\s+servi[cç]o\s+(?:de\s+)?revis[aã]o/i.test(comando)) {
     gnExecutando = true;
     try{
       console.log('gnExecutar - comando enviado (OS revisao):', comando);
