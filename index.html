@@ -7709,6 +7709,43 @@ async function gnExecutar(comando){
     return;
   }
 
+  // OS de revisão — interceptado antes do bloco de abertura de sites para não cair em "abrir/abre X"
+  if (/(?:abre?|abrir|criar?|cria|gerar?|gera|registr)\s+o?s?\s*(?:de\s+)?revis[aã]o/i.test(cmdLower) || /ordem\s+de\s+servi[cç]o\s+(?:de\s+)?revis[aã]o/i.test(cmdLower)) {
+    gnExecutando = true;
+    try{
+      console.log('gnExecutar - comando enviado (OS revisao):', comando);
+      const res = await fetch(GN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comando:comando,historico:gnSessionHistory.slice(-10)})});
+      const data = await res.json();
+      const resposta = (data.resposta||data.response||'').replace(/\*+/g,'').replace(/#+/g,'').replace(/_{2,}/g,'').trim() || 'Não consegui processar o comando.';
+      gnSessionHistory.push({role:'user',content:comando});
+      gnSessionHistory.push({role:'assistant',content:resposta});
+      const respEl = document.getElementById('gnResponse') || document.getElementById('globalJarvisChatResp');
+      if(respEl){ respEl.textContent=resposta; respEl.style.display='none'; }
+      if(gnCommandSource === 'text'){
+        gnCommandSource = 'voice';
+        if(gnTextTargetEl){ gnTextTargetEl.textContent = resposta; gnTextTargetEl = null; }
+        window._gjModoTexto = false;
+        gnSetStatus("Diga 'Jarvis' para ativar",'');
+        gnSetBars('');
+        gnDeactivateNodes();
+        setTimeout(function(){ if(typeof gnReiniciar==='function') gnReiniciar(); }, 500);
+      } else {
+        gnCurrentResposta = resposta;
+        if(gnModoVoz){ await gnSpeak(resposta); } else { var hc=document.getElementById('hubJarvisChatResp'); if(hc){hc.style.display='block';hc.textContent=resposta;} }
+      }
+    }catch(err){
+      console.error('Erro ao processar comando:', err);
+      gnSetStatus("Diga 'Jarvis' para ativar",'');
+      gnSetBars('');
+      gnDeactivateNodes();
+      gnListening = false;
+      gnReiniciar();
+    }finally{
+      gnExecutando = false;
+    }
+    return;
+  }
+
   // Abertura de sites — executado sincronamente antes de qualquer await para evitar popup blocker
   const _aberturaGatilhos = ['abri o ','abri ','abre ','abra o ','abra ','entrar no ','entrar na ','entrar em ','navegar para ','navegar no ','navegar na ','abre o ','abrir o ','abrir ','vai para o ','vai para ','acessa o ','acessa ','acessar o ','acessar ','quero ver ','me abre ','pode abrir ','poderia abrir ','me mostra ','mostra o '];
   if(_aberturaGatilhos.some(function(g){ return cmdLower.includes(g); })){
