@@ -640,3 +640,31 @@ Salvos em /scripts/ no repositório GitHub para uso futuro em caso de nova reins
 6. Hub 3D estilo Obsidian (~30k / ~6h)
 7. Integração Gmail + Google Calendar (~40k / ~8h)
 8. Módulo Perito Judicial / ARTs e Laudos (~50k / ~10h)
+
+
+## STATUS SESSÃO — 22/06/2026 (tarde)
+
+### OS de Revisão via Jarvis — IMPLEMENTADO
+- Gabriel pode falar: "Jarvis, abre OS de revisão para o [técnico] no equipamento [número]"
+- Jarvis extrai nome e equipamento, busca matrícula, chama webhook, confirma com número da OS
+- tac-api.js (porta 5053): adicionadas funções buscarEquipamento() e criarOsRevisao() + rota POST /tac/os-revisao
+- Fluxo: Login TK Mobile → BuscarInformacoesDoEquipamento → GravarOsDeRevisao
+- Webhook n8n: GN OS Revisao (ID: dM0PLFOJZxVjZ2R4), ativo
+- Backup: /root/tac-api.js.bak
+
+### Matrículas dos técnicos — CORRIGIDAS NO SYSTEM PROMPT
+Estavam incorretas no projeto. Lista correta:
+- Giliard=55018679, Humberto=55013171, Klebson Ramos=55012621, Elenildo=55016383
+- Klebson Andrade=55001880, Charlington=55018937, Rodrigo=55012352, Wellington=55013040
+- Alisson=55016328, Adriano Fran=55007445, Joaz=55004915, Tone=55021085
+- Rodolfo=55000585, Bruno=55006085, Diego=55019788, Paulo Andre=55015783
+- George=55015944, Durval=55004902, Luciano=55012623, Laercio=55012128
+- Marcelo=55015003, Adriano Rog=55013039, Edvaldo=55010850, Antonio Amaro=55007813
+
+### Pendências restantes (ordem de prioridade):
+1. Consulta HE em tempo real via Jarvis (~15k / ~3h)
+2. Tela de login futurista (~15k / ~3h)
+3. Integração TK Mobile — consulta OS abertas via Jarvis (~20k / ~4h)
+4. Hub 3D estilo Obsidian (~30k / ~6h)
+5. Integração Gmail + Google Calendar (~40k / ~8h)
+6. Módulo Perito Judicial / ARTs e Laudos (~50k / ~10h)
