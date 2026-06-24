@@ -8102,16 +8102,16 @@ async function gnExecutar(comando){
     } else {
       _aguardandoNovaOs = false;
       gnExecutando = false;
-      if(gnModoVoz){ try{ await gnSpeak('Às ordens, Senhor.'); }catch(e){} }
-      else { var _hcOs=document.getElementById('hubJarvisChatResp'); if(_hcOs){_hcOs.style.display='block';_hcOs.textContent='Às ordens, Senhor.';} }
+      if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot','Às ordens, Senhor.'); }
+      else if(gnModoVoz){ try{ await gnSpeak('Às ordens, Senhor.'); }catch(e){} }
       return;
     }
   }
   const _encerramentoTermos = ['obrigado','valeu','ok','certo','perfeito','tudo bem','entendido','pode','beleza','ótimo','otimo','show','massa'];
   if(_encerramentoTermos.includes(cmdLower)) {
     gnExecutando = false;
-    if(gnModoVoz){ try{ await gnSpeak('Disponha, Senhor.'); }catch(e){} }
-    else { var _hcEnc=document.getElementById('hubJarvisChatResp'); if(_hcEnc){_hcEnc.style.display='block';_hcEnc.textContent='Disponha, Senhor.';} }
+    if(window._gjModoTexto){ if(typeof window._gjAddMessage==='function') window._gjAddMessage('bot','Disponha, Senhor.'); }
+    else if(gnModoVoz){ try{ await gnSpeak('Disponha, Senhor.'); }catch(e){} }
     return;
   }
   try{
