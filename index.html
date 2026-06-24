@@ -7273,6 +7273,7 @@ let gnMediaRecorder = null;
 let gnAudioChunks = [];
 let gnSilenceTimer = null;
 let gnStream = null;
+let _aguardandoNovaOs = false;
 let gnSessionHistory = [];
 let gnLastActivity = Date.now();
 let gnWatchdogTimer = null;
@@ -8093,6 +8094,26 @@ async function gnExecutar(comando){
       return;
     }
   }
+  // Interceptação de encerramento e confirmação de nova OS
+  if(_aguardandoNovaOs) {
+    if(cmdLower.includes('sim') || cmdLower.includes('pode') || cmdLower.includes('claro')) {
+      _aguardandoNovaOs = false;
+      // deixa cair no bloco de OS abaixo
+    } else {
+      _aguardandoNovaOs = false;
+      gnExecutando = false;
+      if(gnModoVoz){ try{ await gnSpeak('Às ordens, Senhor.'); }catch(e){} }
+      else { var _hcOs=document.getElementById('hubJarvisChatResp'); if(_hcOs){_hcOs.style.display='block';_hcOs.textContent='Às ordens, Senhor.';} }
+      return;
+    }
+  }
+  const _encerramentoTermos = ['obrigado','valeu','ok','certo','perfeito','tudo bem','entendido','pode','beleza','ótimo','otimo','show','massa'];
+  if(_encerramentoTermos.includes(cmdLower)) {
+    gnExecutando = false;
+    if(gnModoVoz){ try{ await gnSpeak('Disponha, Senhor.'); }catch(e){} }
+    else { var _hcEnc=document.getElementById('hubJarvisChatResp'); if(_hcEnc){_hcEnc.style.display='block';_hcEnc.textContent='Disponha, Senhor.';} }
+    return;
+  }
   try{
     console.log('gnExecutar - comando enviado:', comando);
     const res = await fetch(GN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comando:comando,historico:gnSessionHistory.slice(-10)})});
@@ -8111,8 +8132,13 @@ async function gnExecutar(comando){
       gnDeactivateNodes();
       setTimeout(function(){ if(typeof gnReiniciar==='function') gnReiniciar(); }, 500);
     } else {
-      gnCurrentResposta = resposta;
-      if(gnModoVoz){ await gnSpeak(resposta); } else { var hc=document.getElementById('hubJarvisChatResp'); if(hc){hc.style.display='block';hc.textContent=resposta;} }
+      let _respostaFinal = resposta;
+      if(resposta.toLowerCase().replace(/[ãáàâ]/g,'a').includes('os de revisao aberta')) {
+        _respostaFinal = 'OS de revisão aberta, Senhor. Posso gerar outra?';
+        _aguardandoNovaOs = true;
+      }
+      gnCurrentResposta = _respostaFinal;
+      if(gnModoVoz){ await gnSpeak(_respostaFinal); } else { var hc=document.getElementById('hubJarvisChatResp'); if(hc){hc.style.display='block';hc.textContent=_respostaFinal;} }
     }
   }catch(err){
     console.error('Erro ao processar comando:', err);
