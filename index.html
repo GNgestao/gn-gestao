@@ -7417,7 +7417,7 @@ function gnWatchdog(){
   }
   _gnSpeakingStart = 0;
   const diff = Date.now() - gnLastActivity;
-  if(diff > 45000){
+  if(diff > 45000 && !gnExecutando){
     console.log('Watchdog: reiniciando loop travado...');
     gnListening = false;
     gnSpeaking = false;
@@ -7519,14 +7519,14 @@ async function gnListen(){
 
     gnMediaRecorder.start(100);
 
-    // Timeout máximo de 30s para evitar acúmulo de áudio em ambientes ruidosos
+    // Timeout máximo de 90s para evitar acúmulo de áudio em ambientes ruidosos
     window._gnMaxRecTimeout = setTimeout(function(){
       if(gnMediaRecorder && gnMediaRecorder.state === 'recording'){
-        console.warn('Timeout máximo de gravação (30s) — parando MediaRecorder');
+        console.warn('Timeout máximo de gravação (90s) — parando MediaRecorder');
         gnMediaRecorder.stop();
         if(gnStream){ gnStream.getTracks().forEach(t=>t.stop()); gnStream=null; }
       }
-    }, 30000);
+    }, 90000);
 
   } catch(err) {
     console.error('Erro ao acessar microfone:', err);
@@ -7607,8 +7607,8 @@ async function gnTranscrever(blob){
 }
 
 function gnReiniciar(){
-  console.log('gnReiniciar - flags:', 'continuousMode:', gnContinuousMode, 'listening:', gnListening, 'speaking:', gnSpeaking);
-  if(!gnContinuousMode || gnListening || gnSpeaking) return;
+  console.log('gnReiniciar - flags:', 'continuousMode:', gnContinuousMode, 'listening:', gnListening, 'speaking:', gnSpeaking, 'executando:', gnExecutando);
+  if(!gnContinuousMode || gnListening || gnSpeaking || gnExecutando) return;
   if(gnStream && gnStream.active === false){
     gnStream = null;
     gnListening = false;
@@ -8115,6 +8115,7 @@ async function gnExecutar(comando){
     return;
   }
   try{
+    gnLastActivity = Date.now();
     console.log('gnExecutar - comando enviado:', comando);
     const res = await fetch(GN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({comando:comando,historico:gnSessionHistory.slice(-10)})});
     const data = await res.json();
