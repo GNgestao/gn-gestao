@@ -916,20 +916,23 @@ tr:hover td{background:rgba(91,33,182,.05)}
     <div style="position:absolute;bottom:2rem;font-family:'DM Sans',sans-serif;font-size:.72rem;color:rgba(196,181,253,.3);cursor:pointer;letter-spacing:.08em;text-transform:uppercase" onclick="hubLogout()">⬅ Sair</div>
   </div>
   <div id="hubUserCorner" style="display:none;position:fixed;top:1rem;right:1.5rem;z-index:20;background:rgba(10,4,30,.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(124,58,237,.2);border-radius:10px;padding:.35rem .85rem;font-family:'DM Sans',sans-serif;font-size:.7rem;color:rgba(196,181,253,.65);align-items:center;gap:.5rem"><span id="hubCornerRole"></span>&nbsp;<span id="hubCornerName"></span></div>
+</div>
 
-  <!-- Chat Jarvis do Hub 2D -->
-  <div id="hub2dChat" style="display:none;position:fixed;right:20px;bottom:130px;width:300px;height:400px;background:rgba(8,8,20,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(124,58,237,.3);border-radius:14px;z-index:10005;box-shadow:0 12px 40px rgba(0,0,0,.55);flex-direction:column;overflow:hidden;font-family:'DM Sans',sans-serif">
-    <div id="hub2dChatHeader" style="cursor:grab;display:flex;align-items:center;justify-content:space-between;padding:.6rem .85rem;background:rgba(124,58,237,.15);border-bottom:1px solid rgba(124,58,237,.2);flex-shrink:0">
-      <span style="font-family:'Syne',sans-serif;font-size:.75rem;font-weight:700;color:#fff;letter-spacing:.1em">JARVIS</span>
-      <button onclick="hub2DCloseChat()" style="background:transparent;border:none;color:#fff;font-size:1.1rem;cursor:pointer;line-height:1;padding:0">×</button>
-    </div>
-    <div id="hub2dChatMsgs" style="flex:1;overflow-y:auto;padding:.6rem;display:flex;flex-direction:column;gap:.4rem"></div>
-    <div style="display:flex;gap:.4rem;padding:.55rem;border-top:1px solid rgba(124,58,237,.15);flex-shrink:0">
-      <input id="hub2dChatInput" type="text" placeholder="Fale com o Jarvis..." autocomplete="off" style="flex:1;min-width:0;background:rgba(255,255,255,.06);border:1px solid rgba(124,58,237,.25);border-radius:8px;color:#fff;padding:.45rem .6rem;font-size:.8rem;outline:none">
-      <button onclick="hub2DSendChat()" style="background:#7c3aed;border:none;color:#fff;border-radius:8px;padding:.45rem .8rem;font-size:.78rem;cursor:pointer;flex-shrink:0">Enviar</button>
-    </div>
+<!-- Chat Jarvis (compartilhado entre Hub 2D e botão flutuante dos módulos) -->
+<div id="hub2dChat" style="display:none;position:fixed;right:20px;bottom:130px;width:300px;height:400px;background:rgba(8,8,20,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(124,58,237,.3);border-radius:14px;z-index:10005;box-shadow:0 12px 40px rgba(0,0,0,.55);flex-direction:column;overflow:hidden;font-family:'DM Sans',sans-serif">
+  <div id="hub2dChatHeader" style="cursor:grab;display:flex;align-items:center;justify-content:space-between;padding:.6rem .85rem;background:rgba(124,58,237,.15);border-bottom:1px solid rgba(124,58,237,.2);flex-shrink:0">
+    <span style="font-family:'Syne',sans-serif;font-size:.75rem;font-weight:700;color:#fff;letter-spacing:.1em">JARVIS</span>
+    <button onclick="hub2DCloseChat()" style="background:transparent;border:none;color:#fff;font-size:1.1rem;cursor:pointer;line-height:1;padding:0">×</button>
+  </div>
+  <div id="hub2dChatMsgs" style="flex:1;overflow-y:auto;padding:.6rem;display:flex;flex-direction:column;gap:.4rem"></div>
+  <div style="display:flex;gap:.4rem;padding:.55rem;border-top:1px solid rgba(124,58,237,.15);flex-shrink:0">
+    <input id="hub2dChatInput" type="text" placeholder="Fale com o Jarvis..." autocomplete="off" style="flex:1;min-width:0;background:rgba(255,255,255,.06);border:1px solid rgba(124,58,237,.25);border-radius:8px;color:#fff;padding:.45rem .6rem;font-size:.8rem;outline:none">
+    <button onclick="hub2DSendChat()" style="background:#7c3aed;border:none;color:#fff;border-radius:8px;padding:.45rem .8rem;font-size:.78rem;cursor:pointer;flex-shrink:0">Enviar</button>
   </div>
 </div>
+
+<!-- Botão flutuante do Jarvis nos módulos (oculto no Hub) -->
+<div id="hubModuleJarvisBtn" onclick="hub2DToggleChat()" title="Falar com o Jarvis" style="display:none;position:fixed;bottom:24px;right:24px;z-index:10010;width:48px;height:48px;border-radius:50%;background:rgba(8,8,20,.9);border:1.5px solid rgba(106,180,255,.4);box-shadow:0 0 16px rgba(106,180,255,.35),0 4px 14px rgba(0,0,0,.4);align-items:center;justify-content:center;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;color:#6ab4ff;user-select:none">J</div>
 
 <div id="appScreen">
 
@@ -8435,6 +8438,7 @@ async function gnSpeak(texto){
       c.style.display = 'none';
     }
   }
+  window.hub2DToggleChat = toggleChat;
 
   function drawJarvis(ctx){
     const pulse = (Math.sin(tick*1.8)+1)*0.5;
@@ -8696,6 +8700,26 @@ async function gnSpeak(texto){
   })();
 })();
 
+// Botão flutuante do Jarvis nos módulos — visível em qualquer tela exceto o Hub
+(function(){
+  function hubAtiva(){
+    var hub = document.getElementById('hubScreen');
+    if(!hub || getComputedStyle(hub).display === 'none') return false;
+    var sobrepostas = ['screenClientes','screenGestaoEquipe'];
+    for(var i=0;i<sobrepostas.length;i++){
+      var el = document.getElementById(sobrepostas[i]);
+      if(el && getComputedStyle(el).display !== 'none') return false;
+    }
+    return true;
+  }
+  function tick(){
+    var btn = document.getElementById('hubModuleJarvisBtn');
+    if(!btn) return;
+    btn.style.display = (window._currentUser && !hubAtiva()) ? 'flex' : 'none';
+  }
+  setInterval(tick, 400);
+  tick();
+})();
 </script>
 
 <!-- ══ TELA DOCUMENTAÇÃO ══ -->
