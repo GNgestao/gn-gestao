@@ -7519,6 +7519,13 @@ function gnStartContinuous(){
   gnWatchdog();
 }
 
+// Liga a escuta contínua por wake-word automaticamente (pós-login e em toda navegação de tela),
+// sem depender de nenhum botão flutuante — só para superadmin (mesmo escopo do Jarvis).
+function gnAutoStartVoz(){
+  if(!window._currentUser || window._currentUser.role !== 'superadmin') return;
+  if(typeof gnStartContinuous === 'function' && !gnContinuousMode) gnStartContinuous();
+}
+
 let _gnSpeakingStart = 0;
 function gnWatchdog(){
   if(!gnContinuousMode) return;
@@ -8757,19 +8764,20 @@ async function gnSpeak(texto){
   }
 
   const orig = window.showApp;
-  window.showApp = function(){ if(orig) orig(); setTimeout(initHub2D,200); };
+  window.showApp = function(){ if(orig) orig(); setTimeout(initHub2D,200); setTimeout(function(){ if(typeof gnAutoStartVoz==='function') gnAutoStartVoz(); },1200); };
 
-  // Garantir que hubCanvas suma junto com os módulos
+  // Garantir que hubCanvas suma junto com os módulos + religa a escuta contínua em toda navegação
   (function(){
     function _hideHubCanvas(){ var hc=document.getElementById('hubCanvas'); if(hc){ hc.style.display='none'; } }
     function _showHubCanvas(){ var hc=document.getElementById('hubCanvas'); if(hc){ hc.style.display=''; } }
+    function _autoVoz(){ if(typeof gnAutoStartVoz==='function') gnAutoStartVoz(); }
     ['enterModule','enterReconhece','enterReparo','enterPlano','enterDocumentacao','enterGN','enterCIPA'].forEach(function(n){
       var o=window[n]; if(!o) return;
-      window[n]=function(){ _hideHubCanvas(); o.apply(this,arguments); };
+      window[n]=function(){ _hideHubCanvas(); o.apply(this,arguments); setTimeout(_autoVoz,150); };
     });
     ['backToHub','backFromReconhece','backFromReparo','backFromDocumentacao','backFromGN','gnVoltarHub','backToModule','backFromCIPA'].forEach(function(n){
       var o=window[n]; if(!o) return;
-      window[n]=function(){ o.apply(this,arguments); setTimeout(_showHubCanvas,50); };
+      window[n]=function(){ o.apply(this,arguments); setTimeout(_showHubCanvas,50); setTimeout(_autoVoz,150); };
     });
   })();
 
