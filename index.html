@@ -928,6 +928,19 @@ tr:hover td{background:rgba(91,33,182,.05)}
     <div style="position:absolute;bottom:2rem;font-family:'DM Sans',sans-serif;font-size:.72rem;color:rgba(196,181,253,.3);cursor:pointer;letter-spacing:.08em;text-transform:uppercase" onclick="hubLogout()">⬅ Sair</div>
   </div>
   <div id="hubUserCorner" style="display:none;position:fixed;top:1rem;right:1.5rem;z-index:20;background:rgba(10,4,30,.75);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(124,58,237,.2);border-radius:10px;padding:.35rem .85rem;font-family:'DM Sans',sans-serif;font-size:.7rem;color:rgba(196,181,253,.65);align-items:center;gap:.5rem"><span id="hubCornerRole"></span>&nbsp;<span id="hubCornerName"></span></div>
+
+  <!-- Chat Jarvis do Hub 2D -->
+  <div id="hub2dChat" style="display:none;position:fixed;right:20px;bottom:130px;width:300px;height:400px;background:rgba(8,8,20,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(124,58,237,.3);border-radius:14px;z-index:10005;box-shadow:0 12px 40px rgba(0,0,0,.55);flex-direction:column;overflow:hidden;font-family:'DM Sans',sans-serif">
+    <div id="hub2dChatHeader" style="cursor:grab;display:flex;align-items:center;justify-content:space-between;padding:.6rem .85rem;background:rgba(124,58,237,.15);border-bottom:1px solid rgba(124,58,237,.2);flex-shrink:0">
+      <span style="font-family:'Syne',sans-serif;font-size:.75rem;font-weight:700;color:#fff;letter-spacing:.1em">JARVIS</span>
+      <button onclick="hub2DCloseChat()" style="background:transparent;border:none;color:#fff;font-size:1.1rem;cursor:pointer;line-height:1;padding:0">×</button>
+    </div>
+    <div id="hub2dChatMsgs" style="flex:1;overflow-y:auto;padding:.6rem;display:flex;flex-direction:column;gap:.4rem"></div>
+    <div style="display:flex;gap:.4rem;padding:.55rem;border-top:1px solid rgba(124,58,237,.15);flex-shrink:0">
+      <input id="hub2dChatInput" type="text" placeholder="Fale com o Jarvis..." autocomplete="off" style="flex:1;min-width:0;background:rgba(255,255,255,.06);border:1px solid rgba(124,58,237,.25);border-radius:8px;color:#fff;padding:.45rem .6rem;font-size:.8rem;outline:none">
+      <button onclick="hub2DSendChat()" style="background:#7c3aed;border:none;color:#fff;border-radius:8px;padding:.45rem .8rem;font-size:.78rem;cursor:pointer;flex-shrink:0">Enviar</button>
+    </div>
+  </div>
 </div>
 
 <div id="appScreen">
@@ -8316,272 +8329,384 @@ async function gnSpeak(texto){
   draw();
 })();
 
-(function hubNeural(){
-  function initHub(){
+(function hub2D(){
+  // ── Quadrantes (cada um ocupa exatamente PI/2) ──
+  const QUADRANTS = [
+    { nome:'PESSOAL', cor:'#c084fc', sa:Math.PI, ea:Math.PI*1.5,
+      itens:['Saúde','Família','Agenda','Metas','Finanças','Bem-estar','Lazer','Esportes','Leituras','Cursos','Viagens','Espiritualidade'] },
+    { nome:'TRABALHO', cor:'#4ade80', sa:-Math.PI/2, ea:0,
+      itens:['Escala','Férias','HE','OS abertas','Equipe','Clientes','Documentos','Reparo','Reconhece+','Plano Ação','CIPA','Manutenção Pred.','TK Mobile'] },
+    { nome:'INVESTIMENTOS', cor:'#fb923c', sa:Math.PI/2, ea:Math.PI,
+      itens:['Ações','FIIs','Criptos','Patrimônio','Aportes','Carteira','Renda Fixa','Reserva','Dividendos','Metas Fin.','Previdência','Câmbio'] },
+    { nome:'PROJETOS', cor:'#38bdf8', sa:0, ea:Math.PI/2,
+      itens:['GN Gestão','Jarvis IA','Automações','n8n','Perito Judicial','Documentação','Laudos','ARTs','Claude Code','VPS','GitHub','WhatsApp Bot','Evolution API'] },
+  ];
+
+  // ── Nós com navegação real para módulos já existentes no app ──
+  const MODULE_ACTIONS = {
+    'Escala': function(){ if(typeof window.enterGestaoEquipe==='function') window.enterGestaoEquipe(); if(typeof window.geTabEscala==='function') window.geTabEscala(); },
+    'Férias': function(){ if(typeof window.enterGestaoEquipe==='function') window.enterGestaoEquipe(); if(typeof window.geTabFerias==='function') window.geTabFerias(); },
+    'Clientes': function(){ if(typeof window.cliAbrir==='function') window.cliAbrir(); },
+    'Documentos': function(){ if(typeof enterDocumentacao==='function') enterDocumentacao(); },
+    'Reparo': function(){ if(typeof enterReparo==='function') enterReparo(); },
+    'Reconhece+': function(){ if(typeof enterReconhece==='function') enterReconhece(); },
+    'Plano Ação': function(){ if(typeof enterPlano==='function') enterPlano(); },
+    'CIPA': function(){ if(typeof enterCIPA==='function') enterCIPA(); },
+    'Manutenção Pred.': function(){ if(typeof enterModule==='function') enterModule('preditiva'); },
+  };
+
+  function hexToRgba(hex, alpha){
+    const h = hex.replace('#','');
+    const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+    return 'rgba('+r+','+g+','+b+','+alpha+')';
+  }
+
+  let toastTimer = null;
+  function hub2DToast(msg){
+    let t = document.getElementById('hub2dToast');
+    if(!t){
+      t = document.createElement('div');
+      t.id = 'hub2dToast';
+      t.style.cssText = 'position:fixed;bottom:2.5rem;left:50%;transform:translateX(-50%);background:rgba(20,10,40,.92);border:1px solid rgba(196,181,253,.3);color:#fff;padding:.6rem 1.2rem;border-radius:10px;font-family:"DM Sans",sans-serif;font-size:.82rem;z-index:10010;opacity:0;transition:opacity .25s;pointer-events:none';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.opacity = '1';
+    if(toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.style.opacity='0'; }, 2000);
+  }
+
+  function nodeClick(label){
+    const fn = MODULE_ACTIONS[label];
+    if(fn) fn(); else hub2DToast('Em breve, Senhor.');
+  }
+
+  // ── Layout: anéis por quadrante + repulsão ──
+  let nodes = [], stars = [], W = 0, H = 0;
+  const jarvis = {x:0, y:0};
+  let dragJarvis = false, jarvisMoved = false;
+  let hoverNode = null, tick = 0, rafId = null;
+
+  function buildLayout(){
+    W = window.innerWidth; H = window.innerHeight;
+    jarvis.x = W/2; jarvis.y = H/2;
+    const base = Math.min(W, H);
+    const ringR = [base*0.17, base*0.28, base*0.40];
+    nodes = [];
+    QUADRANTS.forEach(function(q){
+      const n = q.itens.length;
+      const pad = (q.ea - q.sa) * 0.08;
+      const sa = q.sa + pad, ea = q.ea - pad;
+      const porAnel = Math.ceil(n/3);
+      for(let i=0;i<n;i++){
+        const ring = Math.floor(i/porAnel);
+        const idxInRing = i % porAnel;
+        const itemsInRing = Math.min(porAnel, n - ring*porAnel);
+        const t = itemsInRing>1 ? idxInRing/(itemsInRing-1) : 0.5;
+        const ang = sa + (ea-sa)*t;
+        const r = ringR[ring] !== undefined ? ringR[ring] : ringR[ringR.length-1];
+        nodes.push({ label:q.itens[i], cor:q.cor, x:jarvis.x+r*Math.cos(ang), y:jarvis.y+r*Math.sin(ang) });
+      }
+    });
+    // Algoritmo de repulsão: minDist 46px, 150 iterações
+    const minDist = 46;
+    for(let iter=0; iter<150; iter++){
+      for(let i=0;i<nodes.length;i++){
+        for(let j=i+1;j<nodes.length;j++){
+          const a=nodes[i], b=nodes[j];
+          let dx=b.x-a.x, dy=b.y-a.y;
+          let dist=Math.sqrt(dx*dx+dy*dy);
+          if(dist<1) dist=1;
+          if(dist<minDist){
+            const push=(minDist-dist)/2, ux=dx/dist, uy=dy/dist;
+            a.x-=ux*push; a.y-=uy*push;
+            b.x+=ux*push; b.y+=uy*push;
+          }
+        }
+      }
+    }
+    const nStars = 180;
+    stars = [];
+    for(let i=0;i<nStars;i++){
+      stars.push({x:Math.random()*W, y:Math.random()*H, r:Math.random()*1.3+.2, alpha:Math.random(), speed:Math.random()*.004+.001});
+    }
+  }
+
+  function hitTestNode(mx,my){
+    for(let i=0;i<nodes.length;i++){ if(Math.hypot(mx-nodes[i].x, my-nodes[i].y) < 10) return nodes[i]; }
+    return null;
+  }
+  function hitTestJarvis(mx,my){ return Math.hypot(mx-jarvis.x, my-jarvis.y) < 16; }
+
+  function toggleChat(){
+    const c = document.getElementById('hub2dChat');
+    if(!c) return;
+    if(c.style.display==='none' || !c.style.display){
+      c.style.display = 'flex';
+      const inp = document.getElementById('hub2dChatInput');
+      if(inp) inp.focus();
+    } else {
+      c.style.display = 'none';
+    }
+  }
+
+  function drawJarvis(ctx){
+    const pulse = (Math.sin(tick*1.8)+1)*0.5;
+    const radius = 14 + pulse*2;
+    const haloGrad = ctx.createRadialGradient(jarvis.x,jarvis.y,0,jarvis.x,jarvis.y,radius*2.4);
+    haloGrad.addColorStop(0,'rgba(140,210,255,.38)');
+    haloGrad.addColorStop(1,'rgba(140,210,255,0)');
+    ctx.beginPath(); ctx.arc(jarvis.x,jarvis.y,radius*2.4,0,Math.PI*2);
+    ctx.fillStyle = haloGrad; ctx.fill();
+
+    const nRays = 8;
+    ctx.strokeStyle = 'rgba(190,225,255,.55)';
+    ctx.lineWidth = 1;
+    for(let i=0;i<nRays;i++){
+      const ang = tick*0.4 + i*(Math.PI*2/nRays);
+      const len = radius*1.9 + Math.sin(tick*2+i)*3;
+      ctx.beginPath();
+      ctx.moveTo(jarvis.x+Math.cos(ang)*radius*1.1, jarvis.y+Math.sin(ang)*radius*1.1);
+      ctx.lineTo(jarvis.x+Math.cos(ang)*len, jarvis.y+Math.sin(ang)*len);
+      ctx.stroke();
+    }
+
+    const grad = ctx.createRadialGradient(jarvis.x,jarvis.y,0,jarvis.x,jarvis.y,radius);
+    grad.addColorStop(0,'#ffffff');
+    grad.addColorStop(0.6,'#bfe3ff');
+    grad.addColorStop(1,'#3aa0ff');
+    ctx.beginPath(); ctx.arc(jarvis.x,jarvis.y,radius,0,Math.PI*2);
+    ctx.fillStyle = grad; ctx.fill();
+
+    ctx.font = '13px "Syne", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('Jarvis', jarvis.x, jarvis.y+radius+6);
+  }
+
+  function draw(ctx, canvas){
+    rafId = requestAnimationFrame(function(){ draw(ctx, canvas); });
+    const hs = document.getElementById('hubScreen');
+    if(!hs || hs.style.display==='none') return;
+    tick += 0.016;
+
+    ctx.fillStyle = '#04030d';
+    ctx.fillRect(0,0,W,H);
+
+    stars.forEach(function(s){
+      s.alpha += s.speed; if(s.alpha>1||s.alpha<0.05) s.speed*=-1;
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,255,'+Math.max(0,Math.min(1,s.alpha))+')';
+      ctx.fill();
+    });
+
+    ctx.font = '8px "DM Sans", sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,.2)';
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';  ctx.fillText('PESSOAL', 20, 20);
+    ctx.textAlign = 'right'; ctx.fillText('TRABALHO', W-20, 20);
+    ctx.textAlign = 'left';  ctx.fillText('INVESTIMENTOS', 20, H-26);
+    ctx.textAlign = 'right'; ctx.fillText('PROJETOS', W-20, H-26);
+
+    ctx.lineWidth = 0.3;
+    nodes.forEach(function(n){
+      ctx.beginPath();
+      ctx.moveTo(jarvis.x, jarvis.y);
+      ctx.lineTo(n.x, n.y);
+      ctx.strokeStyle = hexToRgba(n.cor, 0.28);
+      ctx.stroke();
+    });
+
+    nodes.forEach(function(n){
+      const isHover = hoverNode===n;
+      const nr = isHover ? 7 : 5;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, nr*1.6, 0, Math.PI*2);
+      ctx.fillStyle = hexToRgba(n.cor, isHover?0.35:0.18);
+      ctx.fill();
+
+      const grad = ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,nr);
+      grad.addColorStop(0,'#ffffff');
+      grad.addColorStop(0.55,n.cor);
+      grad.addColorStop(1,hexToRgba(n.cor,0.4));
+      ctx.beginPath(); ctx.arc(n.x,n.y,nr,0,Math.PI*2);
+      ctx.fillStyle = grad; ctx.fill();
+
+      ctx.font = '9px "DM Sans", sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,.8)';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText(n.label, n.x, n.y - nr - 5);
+    });
+
+    drawJarvis(ctx);
+  }
+
+  function initHub2D(){
     const canvas = document.getElementById('hubCanvas');
     if(!canvas) return;
-    if(!window.THREE){ console.warn('Three.js not loaded'); return; }
 
-    // Garantir que o canvas está dentro do #hubScreen com posição correta
     const hubScreen = document.getElementById('hubScreen');
     if(hubScreen && canvas.parentElement !== hubScreen) hubScreen.insertBefore(canvas, hubScreen.firstChild);
     canvas.style.position = 'absolute';
     canvas.style.display = '';
 
-    // Cleanup previous
-    if(window._hubAnimFrame){ cancelAnimationFrame(window._hubAnimFrame); window._hubAnimFrame = null; }
-    if(window._hubRenderer){ window._hubRenderer.dispose(); window._hubRenderer = null; }
-    if(window._hubWindowListeners){ window.removeEventListener('mouseup', window._hubWindowListeners.mouseup); window.removeEventListener('mousemove', window._hubWindowListeners.mousemove); }
-    if(window._hubResizeHandler) window.removeEventListener('resize', window._hubResizeHandler);
+    if(rafId){ cancelAnimationFrame(rafId); rafId = null; }
 
-    const W0 = window.innerWidth, H0 = window.innerHeight;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const ctx = canvas.getContext('2d');
 
-    // --- Scene ---
-    const scene = new THREE.Scene();
+    buildLayout();
 
-    const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
-    renderer.setSize(W0, H0, false);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    window._hubRenderer = renderer;
+    if(!canvas._hub2dBound){
+      canvas._hub2dBound = true;
 
-    const camera = new THREE.PerspectiveCamera(55, W0/H0, 0.1, 4000);
-    camera.position.set(0, 0, 350);
+      canvas.addEventListener('mousedown', function(e){
+        const r = canvas.getBoundingClientRect();
+        const mx = e.clientX-r.left, my = e.clientY-r.top;
+        if(hitTestJarvis(mx,my)){ dragJarvis = true; jarvisMoved = false; }
+      });
+      window.addEventListener('mousemove', function(e){
+        if(!dragJarvis) return;
+        const r = canvas.getBoundingClientRect();
+        jarvis.x = e.clientX-r.left; jarvis.y = e.clientY-r.top;
+        jarvisMoved = true;
+      });
+      window.addEventListener('mouseup', function(){ dragJarvis = false; });
 
-    // Lights — ambient dim + cyan point at origin for Jarvis glow
-    scene.add(new THREE.AmbientLight(0xffffff, 0.12));
-    const cyanLight = new THREE.PointLight(0x00ffff, 2.5, 320);
-    cyanLight.position.set(0, 0, 0);
-    scene.add(cyanLight);
-
-    // 1000 stars
-    (function(){
-      const pos = new Float32Array(1000*3);
-      for(let i=0;i<1000;i++){ pos[i*3]=(Math.random()-.5)*3200; pos[i*3+1]=(Math.random()-.5)*3200; pos[i*3+2]=(Math.random()-.5)*2200-600; }
-      const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3));
-      scene.add(new THREE.Points(g, new THREE.PointsMaterial({color:0xffffff,size:0.75,transparent:true,opacity:0.65,sizeAttenuation:true})));
-    })();
-
-    // Jarvis center sphere: radius 6, white + cyan emissive
-    const centerMat = new THREE.MeshStandardMaterial({color:0xffffff, emissive:0xff6600, emissiveIntensity:1.2, roughness:0.2, metalness:0.8});
-    const centerMesh = new THREE.Mesh(new THREE.SphereGeometry(8, 32, 32), centerMat);
-    scene.add(centerMesh);
-
-    // --- Modules ---
-    const MODS = [
-      {id:'preditiva',    label:'Manutenção\nPreditiva', theta:0,   baseY: 22, action:()=>enterModule('preditiva'),                                              roles:['superadmin','admin','viewer']},
-      {id:'n8n',          label:'n8n',                   theta:30,  baseY:-30, action:()=>window.open('https://n8n.srv1610251.hstgr.cloud','_blank'),             roles:['superadmin']},
-      {id:'reconhece',    label:'Reconhece+',            theta:60,  baseY:-24, action:()=>enterReconhece(),                                                      roles:['superadmin','admin','viewer']},
-      {id:'whatsapp',     label:'WhatsApp',              theta:90,  baseY: 18, action:()=>window.open('http://187.127.26.136:8081','_blank'),                     roles:['superadmin']},
-      {id:'reparo',       label:'Reparo',                theta:120, baseY: 10, action:()=>enterReparo(),                                                         roles:['superadmin','admin','viewer']},
-      {id:'deepgram',     label:'Deepgram',              theta:150, baseY: -8, action:()=>window.open('https://console.deepgram.com','_blank'),                   roles:['superadmin']},
-      {id:'plano',        label:'Plano de\nAção',        theta:180, baseY: 30, action:()=>enterPlano(),                                                          roles:['superadmin','admin','viewer']},
-      {id:'documentacao', label:'Documentação',          theta:240, baseY:-16, action:()=>enterDocumentacao(),                                                       roles:['superadmin','admin']},
-      {id:'cipa',         label:'CIPA',                  theta:225, baseY: 12, action:()=>enterCIPA(),                                                             roles:['superadmin','admin']},
-      {id:'clientes',     label:'Clientes',              theta:285, baseY: -5, action:()=>cliAbrir(),                                                           roles:['superadmin','admin']},
-      {id:'gestaoEquipe', label:'Gestão de\nEquipe',     theta:300, baseY:  8, action:()=>enterGestaoEquipe(),                                                  roles:['superadmin','admin']},
-      {id:'github',       label:'GitHub',                theta:210, baseY: 26, action:()=>window.open('https://github.com/GNgestao/gn-gestao','_blank'),           roles:['superadmin']},
-      {id:'firebase',     label:'Firebase',              theta:255, baseY:-20, action:()=>window.open('https://console.firebase.google.com','_blank'),             roles:['superadmin']},
-      {id:'vps',          label:'VPS',                   theta:270, baseY: 14, action:()=>window.open('https://hpanel.hostinger.com','_blank'),                    roles:['superadmin']},
-      {id:'tkmobile',     label:'TKE Mobile',            theta:315, baseY:-25, action:()=>window.open('https://tkmobile.tkelevatorbr.com.br','_blank'),            roles:['superadmin']},
-      {id:'senior',       label:'Senior',                theta:330, baseY: 20, action:()=>window.open('https://platform.senior.com.br','_blank'),                  roles:['superadmin']},
-      {id:'anthropic',    label:'Anthropic',             theta:345, baseY: -5, action:()=>window.open('https://console.anthropic.com','_blank'),                   roles:['superadmin']},
-    ];
-    const R = 100, role = window._currentUser?.role || 'viewer';
-    const nodeMeshes = [], nodeData = [];
-
-    MODS.forEach((m, i) => {
-      const tR = m.theta*Math.PI/180;
-      const x = R*Math.cos(tR), y = m.baseY, z = R*Math.sin(tR);
-      const accessible = m.roles.includes(role);
-      const nMat = new THREE.MeshStandardMaterial({color:0xffffff, emissive:accessible?0x4488ff:0x223355, emissiveIntensity:accessible?0.65:0.15, metalness:0.1, roughness:0.4});
-      const nMesh = new THREE.Mesh(new THREE.SphereGeometry(4, 32, 32), nMat);
-      nMesh.position.set(x, y, z);
-      nMesh.userData = {moduleIndex:i, accessible};
-      scene.add(nMesh); nodeMeshes.push(nMesh);
-      nodeData.push({...m, x, y, z, accessible, floatOff:Math.random()*Math.PI*2, floatSpd:0.003+Math.random()*0.002, pulsePhase:Math.random()*Math.PI*2});
-    });
-
-    // --- Lines: hub→module (6) + cross-connections between modules (8) ---
-    // lineSegs: {fromIdx (-1=center | 0-5=module), toIdx, line, mat, parts[], accessible, baseOpacity}
-    const lineSegs = [];
-
-    function makeSeg(fromIdx, toIdx){
-      const fPos = fromIdx===-1 ? new THREE.Vector3(0,0,0) : nodeMeshes[fromIdx].position.clone();
-      const tPos = nodeMeshes[toIdx].position.clone();
-      const geom = new THREE.BufferGeometry().setFromPoints([fPos, tPos]);
-      const accessible = (fromIdx===-1 || nodeData[fromIdx].accessible) && nodeData[toIdx].accessible;
-      const base = accessible ? 0.12 : 0.04;
-      const mat  = new THREE.LineBasicMaterial({color:0xffffff, transparent:true, opacity:base});
-      const line = new THREE.Line(geom, mat);
-      scene.add(line);
-      const parts = [];
-      for(let j=0;j<2;j++){
-        const pm = new THREE.Mesh(new THREE.SphereGeometry(0.55, 4, 4), new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0}));
-        scene.add(pm);
-        parts.push({mesh:pm, t:j*0.5+Math.random()*0.08, spd:0.006+Math.random()*0.005});
-      }
-      lineSegs.push({fromIdx, toIdx, line, mat, parts, accessible, baseOpacity:base});
-    }
-
-    // Hub → each module
-    MODS.forEach((m,i) => makeSeg(-1, i));
-    // Cross-connections forming a neural teia
-    [[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[0,3],[1,4]].forEach(([a,b]) => makeSeg(a, b));
-
-    // --- Labels overlay ---
-    let labelsEl = document.getElementById('hub3DLabels');
-    if(!labelsEl){ labelsEl=document.createElement('div'); labelsEl.id='hub3DLabels'; labelsEl.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden'; canvas.parentElement.appendChild(labelsEl); }
-    labelsEl.innerHTML = '';
-
-    // Center label
-    const clabel = document.createElement('div'); clabel.id='hub3DCenterLabel';
-    clabel.style.cssText='position:absolute;transform:translate(-50%,-50%);pointer-events:none;text-align:center';
-    clabel.innerHTML = `<div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#ffffff;letter-spacing:.06em">Jarvis</div>`;
-    labelsEl.appendChild(clabel);
-
-    // Module labels
-    MODS.forEach((m, i) => {
-      const d = document.createElement('div'); d.dataset.nodeIndex=i;
-      d.style.cssText='position:absolute;transform:translate(-50%,-50%);text-align:center;pointer-events:none';
-      const accessible = nodeData[i].accessible;
-      d.innerHTML=`<div style="font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;color:#ffffff;opacity:${accessible?.7:.28};line-height:1.4">${m.label.replace('\n','<br>')}</div>${accessible?'':'<div style="font-size:8px;color:rgba(255,255,255,.25)">🔒</div>'}`;
-      labelsEl.appendChild(d);
-    });
-
-    // --- Mouse orbit + zoom ---
-    let isDragging=false, prevX=0, prevY=0, lastDrag=0;
-    let rotX=0.1, rotY=0, tRotX=0.1, tRotY=0, zoom=350, tZoom=350;
-    const mouse=new THREE.Vector2(), raycaster=new THREE.Raycaster();
-    let hoveredIdx=-1;
-
-    const onMouseUp   = ()=>{ isDragging=false; };
-    const onMouseMove = e=>{ if(!isDragging)return; tRotY+=(e.clientX-prevX)*0.005; tRotX+=(e.clientY-prevY)*0.005; tRotX=Math.max(-Math.PI/3,Math.min(Math.PI/3,tRotX)); prevX=e.clientX; prevY=e.clientY; lastDrag=Date.now(); };
-    window.addEventListener('mouseup', onMouseUp); window.addEventListener('mousemove', onMouseMove);
-    window._hubWindowListeners = {mouseup:onMouseUp, mousemove:onMouseMove};
-    canvas.addEventListener('mousedown', e=>{isDragging=true;prevX=e.clientX;prevY=e.clientY;lastDrag=Date.now();});
-    canvas.addEventListener('wheel', e=>{e.preventDefault(); tZoom=Math.max(200,Math.min(900,tZoom+e.deltaY*.3));},{passive:false});
-
-    function doRaycast(){ raycaster.setFromCamera(mouse,camera); const h=raycaster.intersectObjects(nodeMeshes); return(h.length>0&&h[0].object.userData.accessible)?h[0].object.userData.moduleIndex:-1; }
-
-    canvas.addEventListener('mousemove', e=>{
-      const rect=canvas.getBoundingClientRect();
-      mouse.x=((e.clientX-rect.left)/rect.width)*2-1; mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;
-      const ni=doRaycast();
-      if(ni!==hoveredIdx){
-        if(hoveredIdx>=0){
-          nodeMeshes[hoveredIdx].scale.setScalar(1);
-          nodeMeshes[hoveredIdx].material.emissiveIntensity = nodeData[hoveredIdx].accessible?0.65:0.15;
-          lineSegs.forEach(s=>{ if(s.fromIdx===hoveredIdx||s.toIdx===hoveredIdx){ s.mat.opacity=s.baseOpacity; s.mat.color.setHex(0xffffff); } });
-        }
-        hoveredIdx=ni;
-        if(ni>=0){
-          nodeMeshes[ni].scale.setScalar(1.4);
-          nodeMeshes[ni].material.emissiveIntensity=1.3;
-          lineSegs.forEach(s=>{ if(s.fromIdx===ni||s.toIdx===ni){ s.mat.opacity=0.9; s.mat.color.setHex(0x00ffff); } });
-        }
-      }
-      canvas.style.cursor=ni>=0?'pointer':'default';
-    });
-
-    canvas.addEventListener('click', e=>{ const rect=canvas.getBoundingClientRect(); mouse.x=((e.clientX-rect.left)/rect.width)*2-1; mouse.y=-((e.clientY-rect.top)/rect.height)*2+1; const idx=doRaycast(); if(idx>=0){const nd=nodeData[idx];if(nd.accessible&&nd.action)nd.action();} });
-    canvas.addEventListener('touchend', e=>{ e.preventDefault(); const rect=canvas.getBoundingClientRect(),t=e.changedTouches[0]; mouse.x=((t.clientX-rect.left)/rect.width)*2-1; mouse.y=-((t.clientY-rect.top)/rect.height)*2+1; const idx=doRaycast(); if(idx>=0){const nd=nodeData[idx];if(nd.accessible&&nd.action)nd.action();} });
-
-    const onResize=()=>{ const W=window.innerWidth,H=window.innerHeight; renderer.setSize(W,H,false); camera.aspect=W/H; camera.updateProjectionMatrix(); };
-    window.addEventListener('resize',onResize); window._hubResizeHandler=onResize;
-
-    function toScreen(pos){ const v=pos.clone().project(camera); const rect=canvas.getBoundingClientRect(); return{x:(v.x+1)/2*rect.width,y:(-v.y+1)/2*rect.height,vis:v.z<1}; }
-
-    const labelDivs = labelsEl.querySelectorAll('[data-node-index]');
-    const clabelEl  = document.getElementById('hub3DCenterLabel');
-    let tick=0;
-
-    function animate(){
-      window._hubAnimFrame=requestAnimationFrame(animate);
-      const _hs=document.getElementById('hubScreen');
-      if(!_hs||_hs.style.display==='none') return;
-      tick+=0.016;
-
-      // Auto-rotation when idle > 1.5s
-      if(!isDragging && Date.now()-lastDrag > 1500) tRotY+=0.001;
-
-      // Smooth camera (damping 0.05)
-      rotX+=(tRotX-rotX)*0.05; rotY+=(tRotY-rotY)*0.05; zoom+=(tZoom-zoom)*0.05;
-      camera.position.set(zoom*Math.sin(rotY)*Math.cos(rotX), zoom*Math.sin(rotX), zoom*Math.cos(rotY)*Math.cos(rotX));
-      camera.lookAt(0,0,0);
-
-      // Jarvis center: scale pulse 0.9→1.1 + cyanLight pulse
-      const cp=(Math.sin(tick*1.8)+1)*.5;
-      centerMesh.scale.setScalar(0.9+cp*0.2);
-      centerMat.emissiveIntensity=0.6+cp*0.5;
-      cyanLight.intensity=2.0+cp*1.8;
-
-      // Nodes: float + individual emissive pulse
-      nodeData.forEach((nd,i)=>{
-        const fy=Math.sin(tick*nd.floatSpd*60+nd.floatOff)*4;
-        nodeMeshes[i].position.y=nd.y+fy;
-        if(hoveredIdx!==i && nd.accessible){
-          const np=(Math.sin(tick*1.1+nd.pulsePhase)+1)*.5;
-          nodeMeshes[i].material.emissiveIntensity=0.45+np*0.4;
-        }
+      canvas.addEventListener('mousemove', function(e){
+        const r = canvas.getBoundingClientRect();
+        const mx = e.clientX-r.left, my = e.clientY-r.top;
+        hoverNode = hitTestNode(mx,my);
+        canvas.style.cursor = (hoverNode || hitTestJarvis(mx,my)) ? 'pointer' : 'default';
       });
 
-      // Lines: update endpoints each frame + particles lerp
-      lineSegs.forEach(seg=>{
-        const from=seg.fromIdx===-1?centerMesh.position:nodeMeshes[seg.fromIdx].position;
-        const to=nodeMeshes[seg.toIdx].position;
-        const pa=seg.line.geometry.attributes.position;
-        pa.setXYZ(0,from.x,from.y,from.z); pa.setXYZ(1,to.x,to.y,to.z); pa.needsUpdate=true;
-        seg.parts.forEach(p=>{
-          p.t+=p.spd; if(p.t>1)p.t=0;
-          p.mesh.position.lerpVectors(from,to,p.t);
-          p.mesh.material.opacity=Math.sin(p.t*Math.PI)*(seg.accessible?.9:.25);
-        });
+      canvas.addEventListener('click', function(e){
+        if(jarvisMoved){ jarvisMoved = false; return; }
+        const r = canvas.getBoundingClientRect();
+        const mx = e.clientX-r.left, my = e.clientY-r.top;
+        if(hitTestJarvis(mx,my)){ toggleChat(); return; }
+        const n = hitTestNode(mx,my);
+        if(n) nodeClick(n.label);
       });
 
-      // Labels
-      labelDivs.forEach((div,i)=>{ const s=toScreen(nodeMeshes[i].position); div.style.left=s.x+'px'; div.style.top=(s.y+7)+'px'; div.style.opacity=s.vis?'1':'0'; });
-      if(clabelEl){ const sc=toScreen(centerMesh.position); clabelEl.style.left=sc.x+'px'; clabelEl.style.top=(sc.y+11)+'px'; }
-
-      renderer.render(scene,camera);
+      canvas.addEventListener('touchstart', function(e){
+        const t = e.touches[0], r = canvas.getBoundingClientRect();
+        const mx = t.clientX-r.left, my = t.clientY-r.top;
+        if(hitTestJarvis(mx,my)){ dragJarvis = true; jarvisMoved = false; }
+      }, {passive:true});
+      canvas.addEventListener('touchmove', function(e){
+        if(!dragJarvis) return;
+        const t = e.touches[0], r = canvas.getBoundingClientRect();
+        jarvis.x = t.clientX-r.left; jarvis.y = t.clientY-r.top;
+        jarvisMoved = true;
+      }, {passive:true});
+      canvas.addEventListener('touchend', function(e){
+        dragJarvis = false;
+        if(jarvisMoved){ jarvisMoved = false; return; }
+        const t = e.changedTouches[0], r = canvas.getBoundingClientRect();
+        const mx = t.clientX-r.left, my = t.clientY-r.top;
+        if(hitTestJarvis(mx,my)){ toggleChat(); return; }
+        const n = hitTestNode(mx,my);
+        if(n) nodeClick(n.label);
+      });
     }
-    animate();
 
-    // User display
+    if(!window._hub2dResizeBound){
+      window._hub2dResizeBound = true;
+      window.addEventListener('resize', function(){
+        const c = document.getElementById('hubCanvas');
+        if(!c) return;
+        c.width = window.innerWidth; c.height = window.innerHeight;
+        buildLayout();
+      });
+    }
+
+    draw(ctx, canvas);
+
+    // User display (nome/role no canto)
     if(window._currentUser){
-      const u=window._currentUser;
-      const n2=document.getElementById('hubUserName2'),b2=document.getElementById('hubRoleBadge2');
-      if(n2) n2.textContent='Olá, '+(u.name||u.email);
-      if(b2){ const r=u.role||'viewer'; b2.textContent=r==='superadmin'?'👑 SuperAdmin':r==='admin'?'🔧 Admin':'👁 Viewer'; b2.style.cssText=`font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:99px;background:${r==='superadmin'?'rgba(255,98,0,.2)':'rgba(196,181,253,.1)'};color:${r==='superadmin'?'#FF6200':'#c4b5fd'}`; }
-      const corner=document.getElementById('hubUserCorner'),cr=document.getElementById('hubCornerRole'),cn=document.getElementById('hubCornerName');
-      if(corner&&cr&&cn){ const r=u.role||'viewer'; cr.textContent=r==='superadmin'?'👑':r==='admin'?'🔧':'👁'; cn.textContent=u.name||u.email; corner.style.display='flex'; }
+      const u = window._currentUser;
+      const n2 = document.getElementById('hubUserName2'), b2 = document.getElementById('hubRoleBadge2');
+      if(n2) n2.textContent = 'Olá, '+(u.name||u.email);
+      if(b2){ const r=u.role||'viewer'; b2.textContent = r==='superadmin'?'👑 SuperAdmin':r==='admin'?'🔧 Admin':'👁 Viewer'; b2.style.cssText = `font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:99px;background:${r==='superadmin'?'rgba(255,98,0,.2)':'rgba(196,181,253,.1)'};color:${r==='superadmin'?'#FF6200':'#c4b5fd'}`; }
+      const corner = document.getElementById('hubUserCorner'), cr = document.getElementById('hubCornerRole'), cn = document.getElementById('hubCornerName');
+      if(corner&&cr&&cn){ const r=u.role||'viewer'; cr.textContent = r==='superadmin'?'👑':r==='admin'?'🔧':'👁'; cn.textContent = u.name||u.email; corner.style.display='flex'; }
     }
   }
 
-  const orig=window.showApp;
-  window.showApp=function(){ if(orig) orig(); setTimeout(initHub,200); };
+  const orig = window.showApp;
+  window.showApp = function(){ if(orig) orig(); setTimeout(initHub2D,200); };
 
-  // Garantir que hubCanvas e hub3DLabels sumam junto com os módulos
+  // Garantir que hubCanvas suma junto com os módulos
   (function(){
-    function _hideHubCanvas(){
-      var hc=document.getElementById('hubCanvas'), hl=document.getElementById('hub3DLabels');
-      if(hc){ hc.style.display='none'; }
-      if(hl){ hl.style.display='none'; }
-    }
-    function _showHubCanvas(){
-      var hc=document.getElementById('hubCanvas'), hl=document.getElementById('hub3DLabels');
-      if(hc){ hc.style.display=''; }
-      if(hl){ hl.style.display=''; }
-    }
-    // Ocultar canvas ao entrar em qualquer módulo
+    function _hideHubCanvas(){ var hc=document.getElementById('hubCanvas'); if(hc){ hc.style.display='none'; } }
+    function _showHubCanvas(){ var hc=document.getElementById('hubCanvas'); if(hc){ hc.style.display=''; } }
     ['enterModule','enterReconhece','enterReparo','enterPlano','enterDocumentacao','enterGN','enterCIPA'].forEach(function(n){
       var o=window[n]; if(!o) return;
       window[n]=function(){ _hideHubCanvas(); o.apply(this,arguments); };
     });
-    // Reexibir canvas ao voltar para o hub
     ['backToHub','backFromReconhece','backFromReparo','backFromDocumentacao','backFromGN','gnVoltarHub','backToModule','backFromCIPA'].forEach(function(n){
       var o=window[n]; if(!o) return;
       window[n]=function(){ o.apply(this,arguments); setTimeout(_showHubCanvas,50); };
     });
+  })();
+
+  // ── Chat Jarvis (painel arrastável conectado ao webhook real) ──
+  function hub2DAddMsg(role, text){
+    const box = document.getElementById('hub2dChatMsgs');
+    if(!box) return;
+    const div = document.createElement('div');
+    div.className = 'gj-msg ' + (role==='user' ? 'gj-msg-user' : 'gj-msg-bot');
+    div.textContent = text;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  window.hub2DCloseChat = function(){ var c=document.getElementById('hub2dChat'); if(c) c.style.display='none'; };
+
+  window.hub2DSendChat = async function(){
+    const input = document.getElementById('hub2dChatInput');
+    if(!input) return;
+    const texto = (input.value||'').trim();
+    if(!texto) return;
+    input.value = '';
+    hub2DAddMsg('user', texto);
+    try{
+      const res = await fetch(GN_WEBHOOK, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({comando:texto, historico: gnSessionHistory.slice(-10)})});
+      const data = await res.json();
+      const resposta = (data.resposta||data.response||'').replace(/\*+/g,'').replace(/#+/g,'').replace(/_{2,}/g,'').trim() || 'Não consegui processar o comando.';
+      gnSessionHistory.push({role:'user', content:texto});
+      gnSessionHistory.push({role:'assistant', content:resposta});
+      hub2DAddMsg('bot', resposta);
+    }catch(err){
+      hub2DAddMsg('bot', 'Falha ao conectar com o Jarvis, Senhor.');
+    }
+  };
+
+  (function setupChatDrag(){
+    const chatEl = document.getElementById('hub2dChat');
+    const header = document.getElementById('hub2dChatHeader');
+    const input = document.getElementById('hub2dChatInput');
+    if(!chatEl || !header || header._hub2dBound) return;
+    header._hub2dBound = true;
+    let dragging=false, startX=0, startY=0, curL=0, curT=0;
+    header.addEventListener('mousedown', function(e){
+      e.preventDefault();
+      dragging = true;
+      startX = e.clientX; startY = e.clientY;
+      const rect = chatEl.getBoundingClientRect();
+      curL = rect.left; curT = rect.top;
+      chatEl.style.right = 'auto'; chatEl.style.bottom = 'auto';
+      chatEl.style.left = curL+'px'; chatEl.style.top = curT+'px';
+    });
+    window.addEventListener('mousemove', function(e){
+      if(!dragging) return;
+      chatEl.style.left = (curL+e.clientX-startX)+'px';
+      chatEl.style.top  = (curT+e.clientY-startY)+'px';
+    });
+    window.addEventListener('mouseup', function(){ dragging = false; });
+    if(input) input.addEventListener('keydown', function(e){ if(e.key==='Enter') window.hub2DSendChat(); });
   })();
 })();
 
