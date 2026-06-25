@@ -177,8 +177,6 @@ body.light-mode .sum-card{background:#fff}
 body.light-mode .chart-box,body.light-mode .recent-box{background:#fff}
 body.light-mode .table-wrap{background:#fff}
 body.light-mode .modal{background:#fff}
-body.light-mode .login-box{background:#fff}
-body.light-mode #loginScreen{background:#F0EEFF}
 body.light-mode .client-card{background:#fff}
 body.light-mode .users-panel{background:#fff}
 body.light-mode .sched-card{background:#fff}
@@ -583,24 +581,44 @@ tr:hover td{background:rgba(91,33,182,.05)}
 .client-actions{display:flex;gap:.4rem}
 
 /* ── LOGIN SCREEN ── */
-#loginScreen{position:fixed;inset:0;background:transparent;z-index:1;display:flex;align-items:center;justify-content:center;padding:1.5rem;overflow:hidden}
+#loginScreen{position:fixed;inset:0;background:#04030d;z-index:1;display:flex;align-items:center;justify-content:center;padding:1.5rem;overflow:hidden}
 #appScreen{display:none;position:relative;z-index:1;background:#1e1040;min-height:100vh}
-.login-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2.5rem 2rem;width:100%;max-width:400px;text-align:center}
-.login-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;margin-bottom:.25rem}
-.login-logo span{color:var(--orange)}
-.login-sub{font-size:.82rem;color:var(--muted);margin-bottom:2rem}
-.login-tabs{display:flex;gap:0;background:rgba(13,1,24,.5);border-radius:8px;padding:.25rem;margin-bottom:1.5rem}
-.login-tab{flex:1;padding:.5rem;border:none;background:transparent;color:var(--muted);font-family:'Syne',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;border-radius:6px;transition:all .2s}
-.login-tab.active{background:var(--purple-lt);color:#fff}
-.login-form{display:flex;flex-direction:column;gap:.85rem;text-align:left}
-.login-form input{background:rgba(13,1,24,.8);border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;color:var(--white);font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s;width:100%}
-.login-form input:focus{border-color:var(--purple-lt)}
-.login-form input::placeholder{color:var(--muted)}
-.btn-login{width:100%;background:var(--orange);color:#fff;border:none;border-radius:8px;padding:.85rem;font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;margin-top:.5rem;transition:background .2s}
-.btn-login:hover{background:var(--orange-lt)}
-.login-msg{font-size:.8rem;min-height:1.2rem;text-align:center;margin-top:.25rem}
-.login-forgot{font-size:.78rem;color:var(--muted);cursor:pointer;text-align:right;margin-top:-.5rem}
-.login-forgot:hover{color:var(--gray)}
+#loginCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block}
+.flogin-scanline{position:absolute;left:0;right:0;top:-2px;height:2px;background:linear-gradient(90deg,transparent,rgba(106,180,255,.65),transparent);box-shadow:0 0 14px rgba(106,180,255,.65);z-index:1;pointer-events:none;animation:floginScan 6s linear infinite}
+@keyframes floginScan{0%{top:-2px}100%{top:100%}}
+.flogin-arcs{position:fixed;top:50%;left:50%;width:1px;height:1px;z-index:1;pointer-events:none}
+.flogin-arc{position:absolute;top:50%;left:50%;border-radius:50%;transform:translate(-50%,-50%);border:1px solid rgba(106,180,255,.16);border-top-color:transparent;border-right-color:transparent;animation:floginRotate linear infinite}
+.flogin-arc-1{width:460px;height:460px;animation-duration:28s}
+.flogin-arc-2{width:560px;height:560px;border-color:rgba(106,180,255,.1);border-left-color:transparent;border-bottom-color:transparent;animation-duration:42s;animation-direction:reverse}
+@keyframes floginRotate{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+.flogin-box{position:relative;z-index:2;width:300px;max-width:90vw;text-align:center;padding:2rem 1.75rem 1.6rem;background:rgba(8,10,24,.55);border:1px solid rgba(106,180,255,.18);border-radius:6px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 0 60px rgba(106,180,255,.08)}
+.flogin-logo{font-family:'Syne',sans-serif;font-weight:700;font-size:38px;letter-spacing:.15em;color:#fff;text-shadow:0 0 30px rgba(106,180,255,.8);margin-bottom:.4rem}
+.flogin-tagline{font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:.4em;color:rgba(106,180,255,.6);text-transform:uppercase;margin-bottom:1.75rem}
+.flogin-tabs{display:flex;gap:.4rem;margin-bottom:1.4rem}
+.login-tab{flex:1;background:transparent;border:1px solid rgba(106,180,255,.18);color:rgba(106,180,255,.5);font-family:'DM Sans',sans-serif;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;padding:.45rem;border-radius:3px;cursor:pointer;transition:all .25s}
+.login-tab.active{background:rgba(106,180,255,.12);color:#6ab4ff;border-color:rgba(106,180,255,.4)}
+.login-form{display:flex;flex-direction:column;text-align:left}
+.flogin-label{font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:.2em;color:rgba(106,180,255,.5);text-transform:uppercase;margin-bottom:.35rem;text-align:left}
+.flogin-input-wrap{position:relative;margin-bottom:1rem}
+.flogin-input-wrap .lcorner{position:absolute;width:8px;height:8px;border:1px solid rgba(106,180,255,.5);pointer-events:none}
+.flogin-input-wrap .lcorner.tl{top:-1px;left:-1px;border-right:none;border-bottom:none}
+.flogin-input-wrap .lcorner.tr{top:-1px;right:-1px;border-left:none;border-bottom:none}
+.flogin-input-wrap .lcorner.bl{bottom:-1px;left:-1px;border-right:none;border-top:none}
+.flogin-input-wrap .lcorner.br{bottom:-1px;right:-1px;border-left:none;border-top:none}
+.login-form input{background:rgba(6,180,255,.04);border:1px solid rgba(106,180,255,.2);border-radius:2px;padding:.65rem .8rem;color:#fff;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;transition:all .25s;width:100%;box-sizing:border-box}
+.login-form input:focus{border-color:rgba(106,180,255,.7);box-shadow:0 0 0 1px rgba(106,180,255,.25),0 0 18px rgba(106,180,255,.35)}
+.login-form input::placeholder{color:rgba(168,200,255,.3)}
+.btn-login{position:relative;overflow:hidden;width:100%;background:linear-gradient(135deg,#0a1e3d,#123a6b);border:1px solid rgba(106,180,255,.4);color:#bfe3ff;font-family:'DM Sans',sans-serif;font-weight:700;font-size:.78rem;letter-spacing:.25em;text-transform:uppercase;border-radius:3px;padding:.75rem;cursor:pointer;margin-top:.2rem;transition:all .25s}
+.btn-login:hover{box-shadow:0 0 20px rgba(106,180,255,.4);border-color:rgba(106,180,255,.7)}
+.btn-login:disabled{opacity:.6;cursor:default}
+.flogin-btn-shine{position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.25),transparent);animation:floginShine 3.5s ease-in-out infinite;pointer-events:none}
+@keyframes floginShine{0%{left:-60%}100%{left:130%}}
+.login-msg{font-size:.75rem;min-height:1.1rem;text-align:center;margin-top:.5rem;font-family:'DM Sans',sans-serif}
+.login-forgot{font-size:.72rem;color:rgba(168,200,255,.4);cursor:pointer;text-align:right;margin-top:-.3rem;margin-bottom:.3rem;letter-spacing:.03em}
+.login-forgot:hover{color:#6ab4ff}
+.flogin-status{display:flex;align-items:center;justify-content:center;gap:.45rem;margin-top:1.6rem;font-family:'DM Sans',sans-serif;font-size:.68rem;letter-spacing:.05em;color:rgba(168,200,255,.45)}
+.flogin-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px #22c55e;animation:floginPulseDot 2s ease-in-out infinite}
+@keyframes floginPulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
 /* USER MENU */
 .user-badge{display:flex;align-items:center;gap:.5rem;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.25);border-radius:99px;padding:.3rem .75rem .3rem .4rem;cursor:pointer;transition:background .2s}
 .user-badge:hover{background:rgba(124,58,237,.22)}
@@ -884,25 +902,104 @@ tr:hover td{background:rgba(91,33,182,.05)}
 
 <!-- LOGIN SCREEN -->
 <div id="loginScreen" style="display:none">
-  <div class="login-box">
-    <div class="login-logo">GN <span>Gestão</span></div>
-    <div class="login-sub" style="color:#FF6200;letter-spacing:.12em">✦ GN Gestão ✦</div>
-    <div class="login-tabs">
+  <canvas id="loginCanvas"></canvas>
+  <div class="flogin-scanline"></div>
+  <div class="flogin-arcs"><div class="flogin-arc flogin-arc-1"></div><div class="flogin-arc flogin-arc-2"></div></div>
+  <div class="flogin-box">
+    <div class="flogin-logo">GN GESTÃO</div>
+    <div class="flogin-tagline">Sistema de Supervisão Inteligente</div>
+    <div class="flogin-tabs">
       <button class="login-tab active" id="tabLogin" onclick="switchLoginTab('login')">Entrar</button>
       <button class="login-tab" id="tabRegister" onclick="switchLoginTab('register')">Cadastrar</button>
     </div>
     <div class="login-form">
       <div id="registerNameField" style="display:none">
-        <input type="text" id="loginName" placeholder="Seu nome"/>
+        <div class="flogin-label">Nome</div>
+        <div class="flogin-input-wrap">
+          <span class="lcorner tl"></span><span class="lcorner tr"></span><span class="lcorner bl"></span><span class="lcorner br"></span>
+          <input type="text" id="loginName" placeholder="Seu nome"/>
+        </div>
       </div>
-      <input type="email" id="loginEmail" placeholder="E-mail" onkeydown="if(event.key==='Enter') doLogin()"/>
-      <input type="password" id="loginPassword" placeholder="Senha (mín. 6 caracteres)" onkeydown="if(event.key==='Enter') doLogin()"/>
+      <div class="flogin-label">Identificação</div>
+      <div class="flogin-input-wrap">
+        <span class="lcorner tl"></span><span class="lcorner tr"></span><span class="lcorner bl"></span><span class="lcorner br"></span>
+        <input type="email" id="loginEmail" placeholder="E-mail" onkeydown="if(event.key==='Enter') doLogin()"/>
+      </div>
+      <div class="flogin-label">Autenticação</div>
+      <div class="flogin-input-wrap">
+        <span class="lcorner tl"></span><span class="lcorner tr"></span><span class="lcorner bl"></span><span class="lcorner br"></span>
+        <input type="password" id="loginPassword" placeholder="Senha (mín. 6 caracteres)" onkeydown="if(event.key==='Enter') doLogin()"/>
+      </div>
       <div id="loginForgot" class="login-forgot" onclick="forgotPassword()">Esqueci minha senha</div>
-      <button class="btn-login" id="loginBtn" onclick="doLogin()">Entrar</button>
+      <button class="btn-login" id="loginBtn" onclick="doLogin()"><span class="flogin-btn-shine"></span>Acessar Sistema</button>
       <div class="login-msg" id="loginMsg"></div>
     </div>
+    <div class="flogin-status"><span class="flogin-dot"></span>Sistema online — Recife, PE</div>
   </div>
 </div>
+
+<script>
+(function(){
+  function init(){
+    var canvas = document.getElementById('loginCanvas');
+    if(!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var W=0, H=0, stars=[], particles=[], tick=0;
+
+    function build(){
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width = W; canvas.height = H;
+      stars = [];
+      for(var i=0;i<200;i++){
+        stars.push({x:Math.random()*W, y:Math.random()*H, r:Math.random()*1.3+.3, alpha:Math.random(), speed:Math.random()*.004+.001});
+      }
+      particles = [];
+      for(var i=0;i<40;i++){
+        particles.push({x:Math.random()*W, y:Math.random()*H, r:Math.random()*2+1, vx:(Math.random()-.5)*.15, vy:(Math.random()-.5)*.15, alpha:Math.random()*.4+.15});
+      }
+    }
+    build();
+    window.addEventListener('resize', build);
+
+    function draw(){
+      requestAnimationFrame(draw);
+      var ls = document.getElementById('loginScreen');
+      if(!ls || getComputedStyle(ls).display === 'none') return;
+      tick += 0.016;
+
+      var grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*0.75);
+      grad.addColorStop(0, 'rgba(6,10,30,1)');
+      grad.addColorStop(1, 'rgba(4,3,13,1)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.strokeStyle = 'rgba(106,180,255,0.04)';
+      ctx.lineWidth = 1;
+      for(var gx=0; gx<W; gx+=60){ ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,H); ctx.stroke(); }
+      for(var gy=0; gy<H; gy+=60){ ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(W,gy); ctx.stroke(); }
+
+      stars.forEach(function(s){
+        s.alpha += s.speed; if(s.alpha>1||s.alpha<0.05) s.speed*=-1;
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(255,255,255,'+Math.max(0,Math.min(1,s.alpha))+')';
+        ctx.fill();
+      });
+
+      particles.forEach(function(p){
+        p.x += p.vx; p.y += p.vy;
+        if(p.x<0) p.x=W; if(p.x>W) p.x=0;
+        if(p.y<0) p.y=H; if(p.y>H) p.y=0;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(106,180,255,'+p.alpha+')';
+        ctx.fill();
+      });
+    }
+    draw();
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
 
 <!-- APP SCREEN -->
 
