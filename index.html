@@ -9100,9 +9100,10 @@ async function gerarCarta(){
       })
     });
     const data = await response.json();
-    const textoGerado = data.texto || data.resposta || '';
+    const textoGerado = data.texto || data.resposta || data.html || '';
     if(!textoGerado){ alert('Resposta vazia do servidor. Verifique o fluxo n8n.'); btn.disabled=false; btn.textContent='Gerar Carta'; return; }
-    window._docCartaData={titulo:tituloValue,cliente:clienteValue,endereco:enderecoValue,detalhes:detalhesValue,texto:textoGerado,data:hoje};
+    const textoLimpo = textoGerado.replace(/^```(?:html)?\s*/i,'').replace(/```\s*$/i,'').trim();
+    window._docCartaData={titulo:tituloValue,cliente:clienteValue,endereco:enderecoValue,detalhes:detalhesValue,texto:textoLimpo,data:hoje};
     document.getElementById('docCartaPreview').innerHTML = _buildCartaHTML(window._docCartaData, true);
     document.getElementById('docCartaPreviewWrap').style.display='block';
     document.getElementById('docCartaPdfBtn').style.display='inline-block';
