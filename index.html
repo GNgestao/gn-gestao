@@ -860,6 +860,7 @@ html.is-mobile-light .flogin-scanline{display:none}
 #screenDocumentacao{display:none;position:fixed;inset:0;background:#080e1f;z-index:10000;overflow-y:auto;isolation:isolate}
 #screenCIPA{display:none;position:fixed;inset:0;background:#080e1f!important;min-height:100vh;z-index:10000;overflow-y:auto;isolation:isolate}
 #screenPlano{display:none;position:fixed;inset:0;background:#080e1f!important;min-height:100vh;z-index:10000;overflow-y:auto;isolation:isolate}
+#screenTkMobile{display:none;position:fixed;inset:0;background:#080e1f;z-index:10000;overflow-y:auto;isolation:isolate;font-family:'DM Sans',sans-serif}
 .doc-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;background:rgba(13,24,48,.85);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2;backdrop-filter:blur(8px)}
 .cipa-header{background:linear-gradient(135deg,#0d1830,#0a1225);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(106,180,255,.2)}
 .doc-title{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;color:var(--white)}
@@ -8472,6 +8473,7 @@ async function gnSpeak(texto){
     'Plano Ação': function(){ if(typeof enterPlano==='function') enterPlano(); },
     'CIPA': function(){ if(typeof enterCIPA==='function') enterCIPA(); },
     'Manutenção Pred.': function(){ if(typeof enterModule==='function') enterModule('preditiva'); },
+    'TK Mobile': function(){ if(typeof enterTkMobile==='function') enterTkMobile(); },
   };
 
   function hexToRgba(hex, alpha){
@@ -8771,11 +8773,11 @@ async function gnSpeak(texto){
     function _hideHubCanvas(){ var hc=document.getElementById('hubCanvas'); if(hc){ hc.style.display='none'; } }
     function _showHubCanvas(){ var hc=document.getElementById('hubCanvas'); if(hc){ hc.style.display=''; } }
     function _autoVoz(){ if(typeof gnAutoStartVoz==='function') gnAutoStartVoz(); }
-    ['enterModule','enterReconhece','enterReparo','enterPlano','enterDocumentacao','enterGN','enterCIPA'].forEach(function(n){
+    ['enterModule','enterReconhece','enterReparo','enterPlano','enterDocumentacao','enterGN','enterCIPA','enterTkMobile'].forEach(function(n){
       var o=window[n]; if(!o) return;
       window[n]=function(){ _hideHubCanvas(); o.apply(this,arguments); setTimeout(_autoVoz,150); };
     });
-    ['backToHub','backFromReconhece','backFromReparo','backFromDocumentacao','backFromGN','gnVoltarHub','backToModule','backFromCIPA'].forEach(function(n){
+    ['backToHub','backFromReconhece','backFromReparo','backFromDocumentacao','backFromGN','gnVoltarHub','backToModule','backFromCIPA','backFromTkMobile'].forEach(function(n){
       var o=window[n]; if(!o) return;
       window[n]=function(){ o.apply(this,arguments); setTimeout(_showHubCanvas,50); setTimeout(_autoVoz,150); };
     });
@@ -8844,7 +8846,7 @@ async function gnSpeak(texto){
   function hubAtiva(){
     var hub = document.getElementById('hubScreen');
     if(!hub || getComputedStyle(hub).display === 'none') return false;
-    var sobrepostas = ['screenClientes','screenGestaoEquipe'];
+    var sobrepostas = ['screenClientes','screenGestaoEquipe','screenTkMobile'];
     for(var i=0;i<sobrepostas.length;i++){
       var el = document.getElementById(sobrepostas[i]);
       if(el && getComputedStyle(el).display !== 'none') return false;
@@ -10895,5 +10897,216 @@ window.cliBuscar = function cliBuscar(){
     </div>
   </div>
 </div>
+
+<!-- ════════════════════════════════════════════════════════════
+     TELA TK MOBILE — Processamento em lote de OS de troca de peças
+     ════════════════════════════════════════════════════════════ -->
+<div id="screenTkMobile">
+  <!-- HEADER -->
+  <div style="background:linear-gradient(135deg,#0d1830,#0a1225);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(106,180,255,.2);">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <button onclick="backFromTkMobile()" style="background:rgba(106,180,255,.15);color:#6ab4ff;border:1px solid rgba(106,180,255,.35);border-radius:8px;padding:.35rem .8rem;font-size:.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;">← GN Gestão</button>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;letter-spacing:-.01em;">TK Mobile <span style="font-weight:400;font-size:.82rem;color:rgba(106,180,255,.5);margin-left:.4rem;">/ OS Troca de Peças</span></div>
+    </div>
+    <button id="tkm-btn-processar" onclick="tkmProcessarTodas()" style="display:none;background:#6ab4ff;color:#fff;border:none;border-radius:8px;padding:.4rem 1rem;cursor:pointer;font-size:.82rem;font-weight:700;font-family:'DM Sans',sans-serif;">▶ Processar Todas</button>
+  </div>
+
+  <div style="max-width:900px;margin:0 auto;padding:1.5rem;">
+
+    <!-- UPLOAD -->
+    <div id="tkm-upload-area" style="border:2px dashed rgba(106,180,255,.35);border-radius:12px;padding:2.5rem;text-align:center;cursor:pointer;background:rgba(106,180,255,.04);transition:border-color .2s;" onclick="document.getElementById('tkm-file-input').click()" ondragover="event.preventDefault();this.style.borderColor='#6ab4ff'" ondragleave="this.style.borderColor='rgba(106,180,255,.35)'" ondrop="tkmDrop(event)">
+      <div style="font-size:2.2rem;margin-bottom:.5rem;">📄</div>
+      <div style="color:#6ab4ff;font-weight:600;font-size:.95rem;margin-bottom:.3rem;">Clique ou arraste a planilha aqui</div>
+      <div style="color:rgba(255,255,255,.35);font-size:.78rem;">Excel (.xlsx, .xls) ou CSV — coluna "Nº OS" ou "numeroOs"</div>
+      <input id="tkm-file-input" type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="tkmCarregarArquivo(this.files[0])">
+    </div>
+
+    <!-- RESUMO -->
+    <div id="tkm-resumo" style="display:none;margin-top:1rem;padding:.6rem 1rem;background:rgba(106,180,255,.07);border:1px solid rgba(106,180,255,.2);border-radius:8px;font-size:.82rem;color:rgba(255,255,255,.7);gap:1.5rem;flex-wrap:wrap;"></div>
+
+    <!-- BARRA DE PROGRESSO -->
+    <div id="tkm-prog-wrap" style="display:none;margin-top:1rem;">
+      <div style="height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;">
+        <div id="tkm-prog-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#3b82f6,#6ab4ff);transition:width .3s;border-radius:3px;"></div>
+      </div>
+      <div id="tkm-prog-label" style="font-size:.75rem;color:rgba(255,255,255,.45);margin-top:.3rem;text-align:right;"></div>
+    </div>
+
+    <!-- TABELA -->
+    <div id="tkm-tabela-wrap" style="display:none;margin-top:1.25rem;">
+      <table style="width:100%;border-collapse:collapse;font-size:.83rem;">
+        <thead>
+          <tr style="color:rgba(106,180,255,.7);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid rgba(106,180,255,.15);">
+            <th style="padding:.5rem .6rem;text-align:left;width:3rem;">#</th>
+            <th style="padding:.5rem .6rem;text-align:left;">Nº OS</th>
+            <th style="padding:.5rem .6rem;text-align:left;">Status</th>
+            <th style="padding:.5rem .6rem;text-align:left;">Detalhe</th>
+          </tr>
+        </thead>
+        <tbody id="tkm-tbody"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── TK Mobile — lote de OS ──────────────────────────────────────
+var _tkmLista = [];
+var _tkmRunning = false;
+
+function enterTkMobile(){
+  document.getElementById('hubScreen').style.cssText = 'display:none!important';
+  ['appScreen','screenReconhece','screenPlano','screenReparo','screenDocumentacao','screenCIPA'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.style.display = 'none';
+  });
+  // Reset da tela ao entrar
+  var ua = document.getElementById('tkm-upload-area');
+  var tw = document.getElementById('tkm-tabela-wrap');
+  var pw = document.getElementById('tkm-prog-wrap');
+  var rs = document.getElementById('tkm-resumo');
+  var bp = document.getElementById('tkm-btn-processar');
+  if(ua){ ua.style.display='block'; }
+  if(tw){ tw.style.display='none'; }
+  if(pw){ pw.style.display='none'; }
+  if(rs){ rs.style.display='none'; }
+  if(bp){ bp.style.display='none'; bp.disabled=false; bp.textContent='▶ Processar Todas'; bp.style.background='#6ab4ff'; bp.style.color='#fff'; }
+  _tkmLista = []; _tkmRunning = false;
+  var s = document.getElementById('screenTkMobile'); if(s) s.style.display = 'block';
+}
+
+function backFromTkMobile(){
+  var s = document.getElementById('screenTkMobile'); if(s) s.style.display = 'none';
+  var hs = document.getElementById('hubScreen'); if(hs) hs.style.cssText = 'display:flex!important';
+}
+
+function tkmDrop(e){
+  e.preventDefault();
+  document.getElementById('tkm-upload-area').style.borderColor = 'rgba(106,180,255,.35)';
+  var file = e.dataTransfer.files[0]; if(file) tkmCarregarArquivo(file);
+}
+
+function tkmCarregarArquivo(file){
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var data = new Uint8Array(e.target.result);
+    var wb;
+    try { wb = XLSX.read(data, {type:'array'}); }
+    catch(err){ alert('Erro ao ler arquivo: ' + err.message); return; }
+    var ws = wb.Sheets[wb.SheetNames[0]];
+    var rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+    var lista = [];
+    rows.forEach(function(row){
+      var keys = Object.keys(row);
+      var val = '';
+      // Busca coluna com nome relacionado a OS
+      for(var k=0;k<keys.length;k++){
+        var kn = keys[k].toString().toLowerCase().replace(/[^\w]/g,'');
+        if(['nos','numeroos','os','nros'].indexOf(kn) >= 0 || /^n[^a-z]/.test(keys[k].toString().toLowerCase())){
+          var v = String(row[keys[k]]).trim().replace(/\D/g,'');
+          if(v.length >= 5){ val = v; break; }
+        }
+      }
+      // Fallback: primeira coluna com 5+ dígitos
+      if(!val){
+        for(var k=0;k<keys.length;k++){
+          var v = String(row[keys[k]]).trim().replace(/\D/g,'');
+          if(v.length >= 5){ val = v; break; }
+        }
+      }
+      if(val) lista.push({numeroOs: val, status: 'pendente', detalhe: ''});
+    });
+    if(!lista.length){ alert('Nenhuma OS encontrada. Verifique se a planilha tem coluna "Nº OS" ou "numeroOs".'); return; }
+    _tkmLista = lista;
+    tkmRenderTabela();
+    document.getElementById('tkm-upload-area').style.display = 'none';
+    document.getElementById('tkm-tabela-wrap').style.display = 'block';
+    document.getElementById('tkm-btn-processar').style.display = 'block';
+    tkmAtualizarResumo();
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function tkmRenderTabela(){
+  var tbody = document.getElementById('tkm-tbody');
+  tbody.innerHTML = '';
+  _tkmLista.forEach(function(item, i){
+    var tr = document.createElement('tr');
+    tr.id = 'tkm-row-' + i;
+    tr.style.borderBottom = '1px solid rgba(255,255,255,.05)';
+    tr.innerHTML = tkmRowHtml(item, i);
+    tbody.appendChild(tr);
+  });
+}
+
+function tkmRowHtml(item, i){
+  var cor = item.status==='concluida' ? '#4ade80' : item.status==='erro' ? '#f87171' : item.status==='processando' ? '#fbbf24' : 'rgba(255,255,255,.35)';
+  var label = item.status==='concluida' ? '✔ Concluída' : item.status==='erro' ? '✖ Erro' : item.status==='processando' ? '⟳ Processando…' : '— Pendente';
+  return '<td style="padding:.45rem .6rem;color:rgba(255,255,255,.3);">'+(i+1)+'</td>'+
+    '<td style="padding:.45rem .6rem;color:#e2e8f0;font-weight:600;letter-spacing:.03em;">'+item.numeroOs+'</td>'+
+    '<td style="padding:.45rem .6rem;color:'+cor+';font-weight:600;">'+label+'</td>'+
+    '<td style="padding:.45rem .6rem;color:rgba(255,255,255,.4);font-size:.78rem;">'+(item.detalhe||'')+'</td>';
+}
+
+function tkmAtualizarLinha(i){
+  var tr = document.getElementById('tkm-row-'+i); if(!tr) return;
+  tr.innerHTML = tkmRowHtml(_tkmLista[i], i);
+  tr.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function tkmAtualizarResumo(){
+  var total=_tkmLista.length, ok=0, err=0, pend=0, proc=0;
+  _tkmLista.forEach(function(x){ if(x.status==='concluida') ok++; else if(x.status==='erro') err++; else if(x.status==='processando') proc++; else pend++; });
+  var el = document.getElementById('tkm-resumo');
+  el.style.display = 'flex';
+  el.innerHTML = '<span>Total: <strong style="color:#e2e8f0">'+total+'</strong></span>'+
+    '<span>Pendente: <strong style="color:rgba(255,255,255,.5)">'+pend+'</strong></span>'+
+    (proc?'<span>Processando: <strong style="color:#fbbf24">'+proc+'</strong></span>':'')+
+    (ok?'<span>Concluídas: <strong style="color:#4ade80">'+ok+'</strong></span>':'')+
+    (err?'<span>Erros: <strong style="color:#f87171">'+err+'</strong></span>':'');
+}
+
+async function tkmProcessarTodas(){
+  if(_tkmRunning) return;
+  var pendentes = _tkmLista.filter(function(x){ return x.status==='pendente'; });
+  if(!pendentes.length){ alert('Nenhuma OS pendente.'); return; }
+  _tkmRunning = true;
+  var btn = document.getElementById('tkm-btn-processar');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Processando…'; }
+  var pw=document.getElementById('tkm-prog-wrap'), pb=document.getElementById('tkm-prog-bar'), pl=document.getElementById('tkm-prog-label');
+  if(pw) pw.style.display='block';
+  var total=_tkmLista.length;
+  var feitos=_tkmLista.filter(function(x){ return x.status!=='pendente'; }).length;
+
+  for(var i=0;i<_tkmLista.length;i++){
+    var item=_tkmLista[i]; if(item.status!=='pendente') continue;
+    item.status='processando'; tkmAtualizarLinha(i); tkmAtualizarResumo();
+    try{
+      var resp = await fetch('http://localhost:5053/tac/os-troca-peca',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({numeroOs: item.numeroOs})
+      });
+      var data = await resp.json();
+      var arr = Array.isArray(data) ? data : [data];
+      var r = arr[0];
+      if(r && r.sucesso===true){ item.status='concluida'; item.detalhe=''; }
+      else { item.status='erro'; item.detalhe=r.mensagem||r.erro||'Falha'; }
+    }catch(err){ item.status='erro'; item.detalhe=err.message; }
+    feitos++;
+    tkmAtualizarLinha(i); tkmAtualizarResumo();
+    var pct=Math.round(feitos/total*100);
+    if(pb) pb.style.width=pct+'%';
+    if(pl) pl.textContent=feitos+' / '+total+' ('+pct+'%)';
+  }
+
+  _tkmRunning=false;
+  if(btn){
+    var rest=_tkmLista.filter(function(x){ return x.status==='pendente'; }).length;
+    if(rest){ btn.disabled=false; btn.textContent='▶ Processar Restantes ('+rest+')'; }
+    else { btn.textContent='✔ Concluído'; btn.style.background='#4ade80'; btn.style.color='#0a1a0a'; }
+  }
+}
+</script>
 
 </body>
