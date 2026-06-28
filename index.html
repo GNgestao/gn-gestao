@@ -3340,6 +3340,7 @@ function enterPlano(){
   var hs=document.getElementById('hubScreen');
   if(hs) hs.style.cssText='display:none!important';
   showPlanoScreen();
+  _loadPlans();
 }
 function backToHub(){
   localStorage.setItem('repTelaAtiva', 'hub');
@@ -5055,11 +5056,46 @@ function backToModule(){
   if(hs) hs.style.cssText='display:flex!important';
 }
 // ── STATE ──
-var _plans = JSON.parse(localStorage.getItem('gn_planos') || '[]');
+var _plans = [];
 var _currentPlanId = null;
 var _editingItemId = null;
+var _plansLoaded = false;
 
-function savePlans(){ localStorage.setItem('gn_planos', JSON.stringify(_plans)); }
+var _PA_BASE = 'https://n8n.srv1610251.hstgr.cloud/webhook';
+
+async function _loadPlans(){
+  var grid = document.getElementById('plansGrid');
+  if(grid) grid.innerHTML='<div class="pa-empty-state">⏳ Carregando planos...</div>';
+  try{
+    var r = await fetch(_PA_BASE+'/gn-planos-load');
+    var data = await r.json();
+    _plans = Array.isArray(data) ? data : [];
+    _plansLoaded = true;
+  } catch(e){
+    console.error('planos load:', e);
+    _plans = [];
+    _plansLoaded = true;
+  }
+  renderList();
+}
+
+function _savePlan(planId){
+  var plan = _plans.find(function(p){ return p.id===planId; });
+  if(!plan) return;
+  fetch(_PA_BASE+'/gn-planos-save',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(plan)
+  }).catch(function(e){ console.error('planos save:', e); });
+}
+
+function _delPlanRemote(planId){
+  fetch(_PA_BASE+'/gn-planos-delete',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:planId})
+  }).catch(function(e){ console.error('planos delete:', e); });
+}
+
+function savePlans(){ if(_currentPlanId) _savePlan(_currentPlanId); }
 function getApiKey(){ return localStorage.getItem('gnpredictive_apikey') || ''; }
 function fmtDate(d){ if(!d) return '—'; return new Date(d+'T12:00:00').toLocaleDateString('pt-BR'); }
 function genId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2); }
@@ -5300,7 +5336,7 @@ function savePlan(){
     items: [], _added: Date.now()
   };
   _plans.unshift(plan);
-  savePlans();
+  _savePlan(plan.id);
   closeModal('newPlanOverlay');
   renderList();
 }
@@ -5383,7 +5419,7 @@ function deletePlan(planId, event){
   if(event) event.stopPropagation();
   if(!confirm('Excluir este plano de ação? Esta ação não pode ser desfeita.')) return;
   _plans = _plans.filter(function(p){ return p.id!==planId; });
-  savePlans();
+  _delPlanRemote(planId);
   renderList();
 }
 
@@ -5392,7 +5428,7 @@ function updatePlanStatus(planId, newStatus, event){
   var p = _plans.find(function(x){ return x.id===planId; });
   if(!p) return;
   p.status = newStatus;
-  savePlans();
+  _savePlan(planId);
   // If we're in detail view, update the badge
   if(_currentPlanId === planId){
     var statusEl = document.getElementById('dStatus');
@@ -5554,7 +5590,7 @@ function saveImportedPlan(){
     items: itemsCopy, _added: Date.now()
   };
   _plans.unshift(plan);
-  savePlans();
+  _savePlan(plan.id);
   closeModal('importExcelOverlay');
   renderList();
   alert('✅ Plano "'+name+'" criado com '+itemsCopy.length+' itens!');
@@ -5735,7 +5771,7 @@ async function saveAiPlan(){
     _added: Date.now()
   };
   _plans.unshift(plan);
-  savePlans();
+  _savePlan(plan.id);
   closeModal('aiModalOverlay');
   renderList();
   document.getElementById('aiSaveStatus').innerHTML='<span style="color:var(--green)">✅ Plano criado com sucesso!</span>';
