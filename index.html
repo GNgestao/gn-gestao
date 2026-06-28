@@ -11083,7 +11083,7 @@ async function tkmProcessarTodas(){
     var item=_tkmLista[i]; if(item.status!=='pendente') continue;
     item.status='processando'; tkmAtualizarLinha(i); tkmAtualizarResumo();
     try{
-      var resp = await fetch('http://localhost:5053/tac/os-troca-peca',{
+      var resp = await fetch('https://n8n.srv1610251.hstgr.cloud/webhook/gn-os-peca',{
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({numeroOs: item.numeroOs})
       });
