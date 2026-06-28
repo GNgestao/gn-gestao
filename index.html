@@ -8372,6 +8372,14 @@ document.addEventListener('keydown', function(e){
 async function gnSpeak(texto){
   if(window._gjModoTexto) return Promise.resolve();
   if(gnSpeaking) return Promise.resolve();
+  // Expandir siglas maiúsculas isoladas para pronúncia correta no Edge TTS
+  texto = texto
+    .replace(/\bOS\b/g,  'Ó Ésse')
+    .replace(/\bHE\b/g,  'Agá É')
+    .replace(/\bTKE\b/g, 'TêKá É')
+    .replace(/\bVPS\b/g, 'Vê Pê Ésse')
+    .replace(/\bPDF\b/g, 'Pê Dê Éfe')
+    .replace(/\bAPI\b/g, 'Á Pê Í');
   document.getElementById('gnCore').classList.add('speaking');
   gnSpeaking = true;
   window._gnSpeakAborted = false;
