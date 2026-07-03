@@ -8519,6 +8519,7 @@ async function gnSpeak(texto){
     'CIPA': function(){ if(typeof enterCIPA==='function') enterCIPA(); },
     'Manutenção Pred.': function(){ if(typeof enterModule==='function') enterModule('preditiva'); },
     'TK Mobile': function(){ if(typeof enterTkMobile==='function') enterTkMobile(); },
+    'Perito Judicial': function(){ if(typeof enterPerito==='function') enterPerito(); },
   };
 
   function hexToRgba(hex, alpha){
@@ -8818,11 +8819,11 @@ async function gnSpeak(texto){
     function _hideHubCanvas(){ var hc=document.getElementById('hubCanvas'); if(hc){ hc.style.display='none'; } }
     function _showHubCanvas(){ var hc=document.getElementById('hubCanvas'); if(hc){ hc.style.display=''; } }
     function _autoVoz(){ if(typeof gnAutoStartVoz==='function') gnAutoStartVoz(); }
-    ['enterModule','enterReconhece','enterReparo','enterPlano','enterDocumentacao','enterGN','enterCIPA','enterTkMobile'].forEach(function(n){
+    ['enterModule','enterReconhece','enterReparo','enterPlano','enterDocumentacao','enterGN','enterCIPA','enterTkMobile','enterPerito'].forEach(function(n){
       var o=window[n]; if(!o) return;
       window[n]=function(){ _hideHubCanvas(); o.apply(this,arguments); setTimeout(_autoVoz,150); };
     });
-    ['backToHub','backFromReconhece','backFromReparo','backFromDocumentacao','backFromGN','gnVoltarHub','backToModule','backFromCIPA','backFromTkMobile'].forEach(function(n){
+    ['backToHub','backFromReconhece','backFromReparo','backFromDocumentacao','backFromGN','gnVoltarHub','backToModule','backFromCIPA','backFromTkMobile','backFromPerito'].forEach(function(n){
       var o=window[n]; if(!o) return;
       window[n]=function(){ o.apply(this,arguments); setTimeout(_showHubCanvas,50); setTimeout(_autoVoz,150); };
     });
@@ -8891,7 +8892,7 @@ async function gnSpeak(texto){
   function hubAtiva(){
     var hub = document.getElementById('hubScreen');
     if(!hub || getComputedStyle(hub).display === 'none') return false;
-    var sobrepostas = ['screenClientes','screenGestaoEquipe','screenTkMobile'];
+    var sobrepostas = ['screenClientes','screenGestaoEquipe','screenTkMobile','screenPerito'];
     for(var i=0;i<sobrepostas.length;i++){
       var el = document.getElementById(sobrepostas[i]);
       if(el && getComputedStyle(el).display !== 'none') return false;
@@ -11153,5 +11154,402 @@ async function tkmProcessarTodas(){
   }
 }
 </script>
+
+<!-- ════════════════════════════════════════════════════════════
+     TELA PERITO JUDICIAL — Nomeações, laudos e documentos
+     ════════════════════════════════════════════════════════════ -->
+<div id="screenPerito" style="display:none;position:fixed;inset:0;background:#080e1f;z-index:10000;overflow-y:auto;font-family:'DM Sans',sans-serif;isolation:isolate;">
+  <!-- HEADER -->
+  <div style="background:linear-gradient(135deg,#0d1830,#0a1225);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(106,180,255,.2);flex-wrap:wrap;gap:.6rem;">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <button onclick="periBack()" style="background:rgba(106,180,255,.15);color:#6ab4ff;border:1px solid rgba(106,180,255,.35);border-radius:8px;padding:.35rem .8rem;font-size:.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;"><span id="periBackLabel">← GN Gestão</span></button>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;letter-spacing:-.01em;color:#fff;">Perito <span style="color:#6ab4ff;">Judicial</span></div>
+    </div>
+    <button id="periBtnNovo" onclick="periNovo()" style="background:#6ab4ff;color:#fff;border:none;border-radius:8px;padding:.4rem .9rem;cursor:pointer;font-size:.82rem;font-weight:700;font-family:'DM Sans',sans-serif;">+ Nova Nomeação</button>
+  </div>
+
+  <div style="max-width:1100px;margin:0 auto;padding:1.25rem;">
+
+    <!-- ═══ LISTA ═══ -->
+    <div id="periListaWrap">
+      <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:1rem;gap:.6rem;">
+        <label style="color:rgba(196,181,253,.7);font-size:.75rem;">Filtrar por status:</label>
+        <select id="periFiltroStatus" onchange="periRenderLista()" style="background:rgba(13,24,48,.8);color:#F5F0FF;border:1px solid rgba(106,180,255,.25);border-radius:8px;padding:.35rem .6rem;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;">
+          <option value="">Todos</option>
+          <option value="Aguardando">Aguardando</option>
+          <option value="Em andamento">Em andamento</option>
+          <option value="Laudo entregue">Laudo entregue</option>
+          <option value="Honorários recebidos">Honorários recebidos</option>
+        </select>
+      </div>
+      <div id="periGrid"></div>
+    </div>
+
+    <!-- ═══ DETALHE ═══ -->
+    <div id="periDetalhe" style="display:none;">
+      <h2 id="periDetalheTitulo" style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:#F5F0FF;margin:0 0 1.1rem;">Nomeação</h2>
+
+      <div style="background:rgba(255,255,255,.03);border:1px solid rgba(106,180,255,.15);border-radius:12px;padding:1.25rem;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.9rem;">
+          <div>
+            <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Número do Processo *</label>
+            <input id="periProcesso" type="text" placeholder="0000000-00.2026.5.06.0000" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+          </div>
+          <div>
+            <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Vara</label>
+            <input id="periVara" type="text" placeholder="5ª Vara do Trabalho de Recife" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+          </div>
+          <div>
+            <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Tribunal</label>
+            <select id="periTribunal" style="width:100%;background:#1a0f35;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+              <option value="TRT-6">TRT-6</option>
+              <option value="TJPE">TJPE</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Tipo de Perícia</label>
+            <select id="periTipoPericia" style="width:100%;background:#1a0f35;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+              <option value="Insalubridade">Insalubridade</option>
+              <option value="Periculosidade">Periculosidade</option>
+              <option value="LTCAT">LTCAT</option>
+              <option value="Máquinas NR-12">Máquinas NR-12</option>
+              <option value="Caldeiras NR-13">Caldeiras NR-13</option>
+              <option value="Acidente de trabalho">Acidente de trabalho</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Parte Requerente</label>
+            <input id="periParteRequerente" type="text" placeholder="Nome do requerente" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+          </div>
+          <div>
+            <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Parte Requerida</label>
+            <input id="periParteRequerida" type="text" placeholder="Nome do requerido" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+          </div>
+          <div>
+            <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Data da Nomeação</label>
+            <input id="periDataNomeacao" type="date" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+          </div>
+          <div>
+            <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Prazo para Entrega do Laudo</label>
+            <input id="periPrazoLaudo" type="date" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+          </div>
+          <div>
+            <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Status</label>
+            <select id="periStatus" style="width:100%;background:#1a0f35;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+              <option value="Aguardando">Aguardando</option>
+              <option value="Em andamento">Em andamento</option>
+              <option value="Laudo entregue">Laudo entregue</option>
+              <option value="Honorários recebidos">Honorários recebidos</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Valor dos Honorários Solicitados (R$)</label>
+            <input id="periHonorariosSolicitados" type="number" step="0.01" min="0" placeholder="0,00" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+          </div>
+          <div>
+            <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Valor Recebido (R$)</label>
+            <input id="periHonorariosRecebidos" type="number" step="0.01" min="0" placeholder="0,00" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+          </div>
+        </div>
+        <div style="margin-top:.9rem;">
+          <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Observações</label>
+          <textarea id="periObservacoes" rows="3" placeholder="Notas sobre a nomeação..." style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.5rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;resize:vertical;box-sizing:border-box;"></textarea>
+        </div>
+
+        <div style="display:flex;gap:.7rem;justify-content:flex-end;margin-top:1.4rem;flex-wrap:wrap;">
+          <button id="periBtnExcluir" onclick="periExcluir()" style="background:rgba(226,80,74,.15);color:#e2504a;border:1px solid rgba(226,80,74,.35);border-radius:8px;padding:.5rem 1.1rem;cursor:pointer;font-size:.85rem;font-family:'DM Sans',sans-serif;">Excluir</button>
+          <button onclick="periAbrirDocsModal()" style="background:rgba(106,180,255,.15);color:#6ab4ff;border:1px solid rgba(106,180,255,.4);border-radius:8px;padding:.5rem 1.1rem;cursor:pointer;font-size:.85rem;font-family:'DM Sans',sans-serif;">📄 Gerar Documentos</button>
+          <button id="periBtnSalvar" onclick="periSalvar()" style="background:#6ab4ff;color:#fff;border:none;border-radius:8px;padding:.5rem 1.3rem;cursor:pointer;font-size:.85rem;font-weight:700;font-family:'DM Sans',sans-serif;">Salvar</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL GERAR DOCUMENTOS -->
+  <div id="periDocsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:10001;align-items:center;justify-content:center;">
+    <div style="background:#080e1f;border:1px solid rgba(106,180,255,.3);border-radius:12px;padding:1.5rem;width:92%;max-width:440px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.1rem;">
+        <span style="color:#F5F0FF;font-weight:700;font-size:1rem;">Gerar Documentos</span>
+        <button onclick="periFecharDocsModal()" style="background:none;border:none;color:#888;font-size:1.2rem;cursor:pointer;">×</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.6rem;">
+        <button onclick="periGerarDocumento('aceite')" style="background:rgba(106,180,255,.1);color:#F5F0FF;border:1px solid rgba(106,180,255,.3);border-radius:8px;padding:.65rem .9rem;cursor:pointer;font-size:.85rem;text-align:left;font-family:'DM Sans',sans-serif;">📝 Carta de Aceite de Nomeação</button>
+        <button onclick="periGerarDocumento('honorarios_com_adiantamento')" style="background:rgba(106,180,255,.1);color:#F5F0FF;border:1px solid rgba(106,180,255,.3);border-radius:8px;padding:.65rem .9rem;cursor:pointer;font-size:.85rem;text-align:left;font-family:'DM Sans',sans-serif;">💰 Pedido de Honorários (com adiantamento)</button>
+        <button onclick="periGerarDocumento('honorarios_sem_adiantamento')" style="background:rgba(106,180,255,.1);color:#F5F0FF;border:1px solid rgba(106,180,255,.3);border-radius:8px;padding:.65rem .9rem;cursor:pointer;font-size:.85rem;text-align:left;font-family:'DM Sans',sans-serif;">💰 Pedido de Honorários (sem adiantamento)</button>
+        <button onclick="periGerarDocumento('intimacao_conclusao')" style="background:rgba(106,180,255,.1);color:#F5F0FF;border:1px solid rgba(106,180,255,.3);border-radius:8px;padding:.65rem .9rem;cursor:pointer;font-size:.85rem;text-align:left;font-family:'DM Sans',sans-serif;">✅ Intimação de Conclusão de Laudo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Perito Judicial ──────────────────────────────────────────────
+var _periList = [];
+var _periAtual = null;
+var _periView = 'list';
+var _PERI_N8N = 'https://n8n.srv1610251.hstgr.cloud';
+var PERI_STATUS_COLORS = {
+  'Aguardando':            {bg:'rgba(251,191,36,.15)',  fg:'#fbbf24', bd:'rgba(251,191,36,.4)'},
+  'Em andamento':          {bg:'rgba(106,180,255,.15)', fg:'#6ab4ff', bd:'rgba(106,180,255,.4)'},
+  'Laudo entregue':        {bg:'rgba(74,222,128,.15)',  fg:'#4ade80', bd:'rgba(74,222,128,.4)'},
+  'Honorários recebidos':  {bg:'rgba(21,128,61,.28)',   fg:'#22c55e', bd:'rgba(21,128,61,.6)'}
+};
+
+function enterPerito(){
+  document.getElementById('hubScreen').style.cssText = 'display:none!important';
+  ['appScreen','screenReconhece','screenPlano','screenReparo','screenDocumentacao','screenCIPA','screenTkMobile'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.style.display = 'none';
+  });
+  periVoltarLista();
+  var s = document.getElementById('screenPerito'); if(s) s.style.display = 'block';
+}
+
+function backFromPerito(){
+  var s = document.getElementById('screenPerito'); if(s) s.style.display = 'none';
+  var hs = document.getElementById('hubScreen'); if(hs) hs.style.cssText = 'display:flex!important';
+}
+
+function periBack(){
+  if(_periView === 'detail'){ periVoltarLista(); } else { backFromPerito(); }
+}
+
+async function periCarregar(){
+  var grid = document.getElementById('periGrid');
+  grid.innerHTML = '<div style="color:rgba(255,255,255,.4);font-size:.85rem;padding:2rem;text-align:center">Carregando...</div>';
+  try{
+    var r = await fetch(_PERI_N8N+'/webhook/gn-pericias-load', {cache:'no-store'});
+    var txt = await r.text();
+    var lista = txt ? JSON.parse(txt) : [];
+    if(!Array.isArray(lista)) lista = [lista];
+    _periList = lista;
+    periRenderLista();
+  }catch(e){
+    grid.innerHTML = '<div style="color:#f87171;padding:2rem;text-align:center">Erro ao carregar nomeações.</div>';
+  }
+}
+
+function periDiasRestantes(prazoLaudo){
+  if(!prazoLaudo) return null;
+  var hoje = new Date(); hoje.setHours(0,0,0,0);
+  var prazo = new Date(prazoLaudo+'T00:00:00');
+  return Math.round((prazo-hoje)/86400000);
+}
+
+function periFmtDataBR(iso){
+  if(!iso) return '—';
+  var p = iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0];
+}
+
+function periBadgeHtml(status){
+  var c = PERI_STATUS_COLORS[status] || PERI_STATUS_COLORS['Aguardando'];
+  return '<span style="background:'+c.bg+';color:'+c.fg+';border:1px solid '+c.bd+';border-radius:20px;padding:.15rem .6rem;font-size:.68rem;font-weight:700;white-space:nowrap">'+status+'</span>';
+}
+
+function periRenderLista(){
+  var grid = document.getElementById('periGrid');
+  var filtro = document.getElementById('periFiltroStatus').value;
+  var lista = _periList.filter(function(p){ return !filtro || p.status===filtro; });
+  if(!lista.length){
+    grid.innerHTML = '<div style="color:rgba(255,255,255,.4);font-size:.85rem;padding:2rem;text-align:center">Nenhuma nomeação cadastrada. Clique em + Nova Nomeação para adicionar.</div>';
+    return;
+  }
+  var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.85rem">';
+  lista.forEach(function(p){
+    var dias = periDiasRestantes(p.prazoLaudo);
+    var prazoCor = 'rgba(255,255,255,.55)';
+    var prazoTag = '';
+    var prazoPeso = '400';
+    if(dias!==null){
+      if(dias<0){ prazoCor='#f87171'; prazoTag=' — VENCIDO'; prazoPeso='700'; }
+      else if(dias<=7){ prazoCor='#fb923c'; prazoTag=' — '+dias+'d restantes'; prazoPeso='700'; }
+    }
+    html += '<div onclick="periAbrir(\''+p.id+'\')" style="background:#0d1830;border:1px solid rgba(106,180,255,.18);border-radius:10px;padding:.9rem 1rem;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor=\'rgba(106,180,255,.5)\'" onmouseout="this.style.borderColor=\'rgba(106,180,255,.18)\'">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.5rem">'
+      +'<span style="color:#F5F0FF;font-weight:700;font-size:.9rem">'+p.processo+'</span>'
+      +periBadgeHtml(p.status)
+      +'</div>'
+      +(p.vara?'<div style="color:#6ab4ff;font-size:.78rem;margin-bottom:.2rem">'+p.vara+(p.tribunal?' — '+p.tribunal:'')+'</div>':'')
+      +(p.tipoPericia?'<div style="color:rgba(255,255,255,.55);font-size:.75rem;margin-bottom:.35rem">'+p.tipoPericia+'</div>':'')
+      +'<div style="font-size:.75rem;color:'+prazoCor+';font-weight:'+prazoPeso+'">Prazo do laudo: '+periFmtDataBR(p.prazoLaudo)+prazoTag+'</div>'
+      +'</div>';
+  });
+  html += '</div>';
+  grid.innerHTML = html;
+}
+
+function periVoltarLista(){
+  _periView = 'list';
+  document.getElementById('periDetalhe').style.display = 'none';
+  document.getElementById('periListaWrap').style.display = 'block';
+  document.getElementById('periBtnNovo').style.display = 'inline-block';
+  document.getElementById('periBackLabel').textContent = '← GN Gestão';
+  periCarregar();
+}
+
+function periMostrarDetalhe(isNovo){
+  _periView = 'detail';
+  document.getElementById('periListaWrap').style.display = 'none';
+  document.getElementById('periDetalhe').style.display = 'block';
+  document.getElementById('periBtnNovo').style.display = 'none';
+  document.getElementById('periBackLabel').textContent = '← Lista';
+  document.getElementById('periDetalheTitulo').textContent = isNovo ? 'Nova Nomeação' : 'Nomeação';
+  document.getElementById('periBtnExcluir').style.display = isNovo ? 'none' : 'inline-block';
+}
+
+function periPreencherForm(){
+  var d = _periAtual;
+  document.getElementById('periProcesso').value = d.processo || '';
+  document.getElementById('periVara').value = d.vara || '';
+  document.getElementById('periTribunal').value = d.tribunal || 'TRT-6';
+  document.getElementById('periTipoPericia').value = d.tipoPericia || 'Insalubridade';
+  document.getElementById('periParteRequerente').value = d.parteRequerente || '';
+  document.getElementById('periParteRequerida').value = d.parteRequerida || '';
+  document.getElementById('periDataNomeacao').value = d.dataNomeacao || '';
+  document.getElementById('periPrazoLaudo').value = d.prazoLaudo || '';
+  document.getElementById('periStatus').value = d.status || 'Aguardando';
+  document.getElementById('periHonorariosSolicitados').value = d.honorariosSolicitados || '';
+  document.getElementById('periHonorariosRecebidos').value = d.honorariosRecebidos || '';
+  document.getElementById('periObservacoes').value = d.observacoes || '';
+}
+
+function periNovo(){
+  _periAtual = { id: 'per_'+Date.now(), status:'Aguardando', addedAt: Date.now() };
+  periPreencherForm();
+  periMostrarDetalhe(true);
+}
+
+function periAbrir(id){
+  var p = _periList.find(function(x){ return x.id===id; });
+  if(!p) return;
+  _periAtual = p;
+  periPreencherForm();
+  periMostrarDetalhe(false);
+}
+
+async function periSalvar(){
+  var processo = document.getElementById('periProcesso').value.trim();
+  if(!processo){ alert('Informe o número do processo.'); return; }
+  var body = {
+    id: _periAtual.id,
+    processo: processo,
+    vara: document.getElementById('periVara').value.trim(),
+    tribunal: document.getElementById('periTribunal').value,
+    tipoPericia: document.getElementById('periTipoPericia').value,
+    parteRequerente: document.getElementById('periParteRequerente').value.trim(),
+    parteRequerida: document.getElementById('periParteRequerida').value.trim(),
+    dataNomeacao: document.getElementById('periDataNomeacao').value,
+    prazoLaudo: document.getElementById('periPrazoLaudo').value,
+    status: document.getElementById('periStatus').value,
+    honorariosSolicitados: document.getElementById('periHonorariosSolicitados').value,
+    honorariosRecebidos: document.getElementById('periHonorariosRecebidos').value,
+    observacoes: document.getElementById('periObservacoes').value.trim(),
+    addedAt: _periAtual.addedAt || Date.now()
+  };
+  var btn = document.getElementById('periBtnSalvar');
+  if(btn){ btn.disabled = true; btn.textContent = 'Salvando...'; }
+  try{
+    await fetch(_PERI_N8N+'/webhook/gn-pericias-save', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+    _periAtual = body;
+    periVoltarLista();
+  }catch(e){
+    alert('Erro ao salvar nomeação.');
+  }
+  if(btn){ btn.disabled = false; btn.textContent = 'Salvar'; }
+}
+
+async function periExcluir(){
+  if(!_periAtual || !_periAtual.id) return;
+  if(!confirm('Excluir a nomeação do processo "'+_periAtual.processo+'"? Esta ação não pode ser desfeita.')) return;
+  try{
+    await fetch(_PERI_N8N+'/webhook/gn-pericias-delete', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id:_periAtual.id})});
+  }catch(e){}
+  periVoltarLista();
+}
+
+function periAbrirDocsModal(){
+  if(!_periAtual || !_periAtual.processo){ alert('Salve a nomeação antes de gerar documentos.'); return; }
+  document.getElementById('periDocsModal').style.display = 'flex';
+}
+
+function periFecharDocsModal(){
+  document.getElementById('periDocsModal').style.display = 'none';
+}
+
+function periGerarDocumento(tipo){
+  if(!_periAtual || !_periAtual.processo){ alert('Salve a nomeação antes de gerar documentos.'); return; }
+  var d = _periAtual;
+  var esc = function(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+  var fmtMoeda = function(v){ var n=Number(v)||0; return n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); };
+  var varaTribunal = esc(d.vara||'—') + (d.tribunal ? ' — '+esc(d.tribunal) : '');
+
+  var head = '<div style="text-align:center;margin-bottom:1.6rem;border-bottom:2px solid #0d1830;padding-bottom:.8rem">'
+    +'<div style="font-weight:900;font-size:16pt;letter-spacing:.04em;color:#0d1830">GABRIEL NASCIMENTO</div>'
+    +'<div style="font-size:9pt;color:#444;margin-top:.2rem">Engenheiro Mecânico — Pós-graduado em Engenharia de Segurança do Trabalho</div>'
+    +'<div style="font-size:8.5pt;color:#666;margin-top:.15rem">Perito Judicial</div>'
+    +'</div>';
+
+  var enderecamento = '<div style="margin-bottom:1.1rem;font-size:10pt">EXCELENTÍSSIMO(A) SENHOR(A) DOUTOR(A) JUIZ(A) DE DIREITO DA '+varaTribunal.toUpperCase()+'</div>'
+    +'<div style="margin-bottom:1.3rem;font-size:9.5pt;color:#333">'
+    +'<div><strong>Processo nº:</strong> '+esc(d.processo)+'</div>'
+    +(d.parteRequerente?'<div><strong>Requerente:</strong> '+esc(d.parteRequerente)+'</div>':'')
+    +(d.parteRequerida?'<div><strong>Requerido:</strong> '+esc(d.parteRequerida)+'</div>':'')
+    +'</div>';
+
+  var assinatura = '<div style="margin-top:3.5rem;text-align:center">'
+    +'<div style="display:inline-block;border-top:1px solid #333;padding-top:.4rem;min-width:260px">'
+    +'<strong>Gabriel Nascimento</strong><br>'
+    +'<span style="font-size:9pt;color:#555">Engenheiro Mecânico — Perito Judicial</span>'
+    +'</div></div>';
+
+  var rodape = '<div style="margin-top:2.5rem;padding-top:.6rem;border-top:1px solid #ccc;font-size:8pt;color:#888;text-align:center">'
+    +'Gabriel Nascimento — Engenheiro Mecânico &nbsp;|&nbsp; gabrielnascimento1995@gmail.com &nbsp;|&nbsp; (81) 9781-8685'
+    +'</div>';
+
+  var hoje = new Date();
+  var dataExt = 'Recife, '+hoje.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})+'.';
+
+  var titulo = '', corpo = '';
+  if(tipo==='aceite'){
+    titulo = 'Termo de Aceitação de Nomeação Pericial';
+    corpo = '<p style="text-align:justify;text-indent:2em">GABRIEL NASCIMENTO, Engenheiro Mecânico, devidamente nomeado por Vossa Excelência para atuar como Perito Judicial nos autos do processo em epígrafe, referente à perícia de <strong>'+esc(d.tipoPericia||'—')+'</strong>, vem, respeitosamente, à presença de Vossa Excelência declarar que <strong>ACEITA</strong> o encargo a si conferido, comprometendo-se a bem e fielmente desempenhar suas funções, prestando as informações técnicas necessárias ao deslinde da causa, sob a fé de seu grau.</p>'
+      +'<p style="text-align:justify;text-indent:2em;margin-top:.9rem">Informa, ainda, que o prazo para entrega do laudo pericial foi fixado para <strong>'+periFmtDataBR(d.prazoLaudo)+'</strong>, permanecendo à disposição deste Juízo e das partes para prestar quaisquer esclarecimentos adicionais que se façam necessários.</p>'
+      +'<p style="margin-top:1.3rem">Termos em que, pede deferimento.</p>';
+  } else if(tipo==='honorarios_com_adiantamento'){
+    titulo = 'Pedido de Fixação e Adiantamento de Honorários Periciais';
+    corpo = '<p style="text-align:justify;text-indent:2em">GABRIEL NASCIMENTO, Engenheiro Mecânico, Perito Judicial nomeado nos autos do processo em epígrafe, vem respeitosamente perante Vossa Excelência requerer a <strong>fixação e o adiantamento</strong> dos honorários periciais, nos termos do art. 465, §4º, do Código de Processo Civil, tendo em vista a necessidade de custeio prévio das diligências técnicas indispensáveis à elaboração do laudo pericial de <strong>'+esc(d.tipoPericia||'—')+'</strong>.</p>'
+      +'<p style="text-align:justify;text-indent:2em;margin-top:.9rem">Para tanto, estima o valor dos honorários periciais em <strong>'+fmtMoeda(d.honorariosSolicitados)+'</strong>, requerendo seja determinado o depósito de adiantamento correspondente a 50% (cinquenta por cento) desse montante, ficando o saldo remanescente condicionado à entrega do laudo pericial.</p>'
+      +'<p style="margin-top:1.3rem">Termos em que, pede deferimento.</p>';
+  } else if(tipo==='honorarios_sem_adiantamento'){
+    titulo = 'Pedido de Fixação de Honorários Periciais';
+    corpo = '<p style="text-align:justify;text-indent:2em">GABRIEL NASCIMENTO, Engenheiro Mecânico, Perito Judicial nomeado nos autos do processo em epígrafe, vem respeitosamente perante Vossa Excelência requerer a <strong>fixação dos honorários periciais</strong>, nos termos do art. 465 do Código de Processo Civil, referentes à perícia de <strong>'+esc(d.tipoPericia||'—')+'</strong>.</p>'
+      +'<p style="text-align:justify;text-indent:2em;margin-top:.9rem">Estima o valor dos honorários em <strong>'+fmtMoeda(d.honorariosSolicitados)+'</strong>, a serem pagos integralmente após a entrega do laudo pericial, não havendo, no presente caso, necessidade de adiantamento para a realização das diligências técnicas.</p>'
+      +'<p style="margin-top:1.3rem">Termos em que, pede deferimento.</p>';
+  } else if(tipo==='intimacao_conclusao'){
+    titulo = 'Comunicação de Conclusão do Laudo Pericial';
+    corpo = '<p style="text-align:justify;text-indent:2em">GABRIEL NASCIMENTO, Engenheiro Mecânico, Perito Judicial nomeado nos autos do processo em epígrafe, vem respeitosamente comunicar a Vossa Excelência que os trabalhos periciais referentes à perícia de <strong>'+esc(d.tipoPericia||'—')+'</strong> foram <strong>CONCLUÍDOS</strong>, encontrando-se o respectivo laudo pericial anexo à presente petição.</p>'
+      +'<p style="text-align:justify;text-indent:2em;margin-top:.9rem">Requer, assim, seja dada ciência às partes quanto à conclusão dos trabalhos, abrindo-se o prazo legal para manifestação, nos termos do art. 477 do Código de Processo Civil.</p>'
+      +'<p style="margin-top:1.3rem">Termos em que, pede deferimento.</p>';
+  } else { return; }
+
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>'+titulo+' — Processo '+esc(d.processo)+'</title>'
+    +'<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:2cm;color:#111;font-size:11pt;line-height:1.7;background:#fff}@page{size:A4;margin:1.5cm}@media print{body{padding:0}}</style>'
+    +'</head><body>'
+    +head
+    +enderecamento
+    +'<div style="text-align:center;font-weight:700;font-size:11pt;margin-bottom:1.2rem;text-transform:uppercase;letter-spacing:.02em">'+titulo+'</div>'
+    +corpo
+    +'<p style="margin-top:2rem">'+dataExt+'</p>'
+    +assinatura
+    +rodape
+    +'</body></html>';
+
+  var w = window.open('', '_blank', 'width=800,height=900');
+  if(w){ w.document.write(html); w.document.close(); setTimeout(function(){ w.print(); }, 600); }
+}
+</script>
+
 
 </body>
