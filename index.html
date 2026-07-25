@@ -11172,13 +11172,18 @@ async function tkmProcessarTodas(){
       <button onclick="periBack()" style="background:rgba(106,180,255,.15);color:#6ab4ff;border:1px solid rgba(106,180,255,.35);border-radius:8px;padding:.35rem .8rem;font-size:.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;"><span id="periBackLabel">← GN Gestão</span></button>
       <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;letter-spacing:-.01em;color:#fff;">Perito <span style="color:#6ab4ff;">Judicial</span></div>
     </div>
-    <button id="periBtnNovo" onclick="periNovo()" style="background:#6ab4ff;color:#fff;border:none;border-radius:8px;padding:.4rem .9rem;cursor:pointer;font-size:.82rem;font-weight:700;font-family:'DM Sans',sans-serif;">+ Nova Nomeação</button>
+    <div id="periHeaderBtns" style="display:flex;gap:.5rem;flex-wrap:wrap;">
+      <button onclick="periAbrirPerfil()" style="background:rgba(106,180,255,.15);color:#6ab4ff;border:1px solid rgba(106,180,255,.35);border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.82rem;font-family:'DM Sans',sans-serif;">👤 Perfil</button>
+      <button onclick="periAbrirFinanceiro()" style="background:rgba(106,180,255,.15);color:#6ab4ff;border:1px solid rgba(106,180,255,.35);border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.82rem;font-family:'DM Sans',sans-serif;">💰 Financeiro</button>
+      <button id="periBtnNovo" onclick="periNovo()" style="background:#6ab4ff;color:#fff;border:none;border-radius:8px;padding:.4rem .9rem;cursor:pointer;font-size:.82rem;font-weight:700;font-family:'DM Sans',sans-serif;">+ Nova Nomeação</button>
+    </div>
   </div>
 
   <div style="max-width:1100px;margin:0 auto;padding:1.25rem;">
 
     <!-- ═══ LISTA ═══ -->
     <div id="periListaWrap">
+      <div id="periAlertaBanner"></div>
       <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:1rem;gap:.6rem;">
         <label style="color:rgba(196,181,253,.7);font-size:.75rem;">Filtrar por status:</label>
         <select id="periFiltroStatus" onchange="periRenderLista()" style="background:rgba(13,24,48,.8);color:#F5F0FF;border:1px solid rgba(106,180,255,.25);border-radius:8px;padding:.35rem .6rem;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;">
@@ -11190,6 +11195,40 @@ async function tkmProcessarTodas(){
         </select>
       </div>
       <div id="periGrid"></div>
+    </div>
+
+    <!-- ═══ FINANCEIRO ═══ -->
+    <div id="periFinanceiro" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.6rem;">
+        <h2 style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;color:#F5F0FF;margin:0;">Financeiro do Perito</h2>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+          <select id="periFinFiltro" onchange="periRenderFinanceiro()" style="background:rgba(13,24,48,.8);color:#F5F0FF;border:1px solid rgba(106,180,255,.25);border-radius:8px;padding:.35rem .6rem;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;">
+            <option value="">Todos os status</option>
+            <option value="Pendente">Pendente</option>
+            <option value="Adiantamento recebido">Adiantamento recebido</option>
+            <option value="Pago integral">Pago integral</option>
+            <option value="Inadimplente">Inadimplente</option>
+          </select>
+          <button onclick="periExportarRelatorio()" style="background:rgba(106,180,255,.15);color:#6ab4ff;border:1px solid rgba(106,180,255,.4);border-radius:8px;padding:.4rem .9rem;cursor:pointer;font-size:.82rem;font-family:'DM Sans',sans-serif;">📄 Exportar Relatório</button>
+        </div>
+      </div>
+
+      <div id="periFinCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.85rem;margin-bottom:1.3rem;"></div>
+
+      <div id="periFinTabelaWrap" style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:.8rem;">
+          <thead>
+            <tr style="border-bottom:1px solid rgba(106,180,255,.2);">
+              <th style="text-align:left;padding:.5rem;color:rgba(196,181,253,.7);font-weight:600;">Processo</th>
+              <th style="text-align:left;padding:.5rem;color:rgba(196,181,253,.7);font-weight:600;">Status Pagamento</th>
+              <th style="text-align:right;padding:.5rem;color:rgba(196,181,253,.7);font-weight:600;">Solicitado</th>
+              <th style="text-align:right;padding:.5rem;color:rgba(196,181,253,.7);font-weight:600;">Recebido</th>
+              <th style="text-align:right;padding:.5rem;color:rgba(196,181,253,.7);font-weight:600;">Pendente</th>
+            </tr>
+          </thead>
+          <tbody id="periFinTabelaBody"></tbody>
+        </table>
+      </div>
     </div>
 
     <!-- ═══ DETALHE ═══ -->
@@ -11256,10 +11295,42 @@ async function tkmProcessarTodas(){
             <input id="periHonorariosSolicitados" type="number" step="0.01" min="0" placeholder="0,00" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
           </div>
           <div>
-            <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Valor Recebido (R$)</label>
+            <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Valor Final Recebido (R$)</label>
             <input id="periHonorariosRecebidos" type="number" step="0.01" min="0" placeholder="0,00" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
           </div>
         </div>
+
+        <div style="margin-top:1.2rem;padding-top:1rem;border-top:1px solid rgba(106,180,255,.15);">
+          <div style="color:#F5F0FF;font-weight:700;font-size:.85rem;margin-bottom:.8rem;">💰 Honorários e Controle Financeiro</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.9rem;">
+            <div>
+              <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Status do Pagamento</label>
+              <select id="periStatusPagamento" style="width:100%;background:#1a0f35;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+                <option value="Pendente">Pendente</option>
+                <option value="Adiantamento recebido">Adiantamento recebido</option>
+                <option value="Pago integral">Pago integral</option>
+                <option value="Inadimplente">Inadimplente</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Data do Pedido de Honorários</label>
+              <input id="periDataPedidoHonorarios" type="date" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Valor do Adiantamento Solicitado (R$)</label>
+              <input id="periValorAdiantamento" type="number" step="0.01" min="0" placeholder="0,00" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Data de Recebimento do Adiantamento</label>
+              <input id="periDataRecebimentoAdiantamento" type="date" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Data do Recebimento Final</label>
+              <input id="periDataRecebimentoFinal" type="date" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+            </div>
+          </div>
+        </div>
+
         <div style="margin-top:.9rem;">
           <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Observações</label>
           <textarea id="periObservacoes" rows="3" placeholder="Notas sobre a nomeação..." style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.5rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;resize:vertical;box-sizing:border-box;"></textarea>
@@ -11290,6 +11361,34 @@ async function tkmProcessarTodas(){
       </div>
     </div>
   </div>
+
+  <!-- MODAL PERFIL (dados bancários / PIX) -->
+  <div id="periPerfilModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:10001;align-items:center;justify-content:center;">
+    <div style="background:#080e1f;border:1px solid rgba(106,180,255,.3);border-radius:12px;padding:1.5rem;width:92%;max-width:420px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.1rem;">
+        <span style="color:#F5F0FF;font-weight:700;font-size:1rem;">Perfil do Perito</span>
+        <button onclick="periFecharPerfil()" style="background:none;border:none;color:#888;font-size:1.2rem;cursor:pointer;">×</button>
+      </div>
+      <div style="margin-bottom:.6rem;">
+        <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Nome Completo</label>
+        <input id="periPerfilNome" type="text" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:.6rem;">
+        <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">CPF</label>
+        <input id="periPerfilCpf" type="text" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:.6rem;">
+        <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Banco</label>
+        <input id="periPerfilBanco" type="text" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Chave PIX</label>
+        <input id="periPerfilPix" type="text" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+      </div>
+      <button onclick="periSalvarPerfil()" style="width:100%;background:#6ab4ff;color:#fff;border:none;border-radius:8px;padding:.55rem 1.1rem;cursor:pointer;font-size:.85rem;font-weight:700;font-family:'DM Sans',sans-serif;">Salvar</button>
+      <div style="margin-top:.6rem;font-size:.72rem;color:rgba(196,181,253,.55);">Esses dados aparecem automaticamente nos pedidos de honorários gerados em "Gerar Documentos".</div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -11304,6 +11403,28 @@ var PERI_STATUS_COLORS = {
   'Laudo entregue':        {bg:'rgba(74,222,128,.15)',  fg:'#4ade80', bd:'rgba(74,222,128,.4)'},
   'Honorários recebidos':  {bg:'rgba(21,128,61,.28)',   fg:'#22c55e', bd:'rgba(21,128,61,.6)'}
 };
+var PERI_PAGAMENTO_COLORS = {
+  'Pendente':               {bg:'rgba(251,191,36,.15)',  fg:'#fbbf24', bd:'rgba(251,191,36,.4)'},
+  'Adiantamento recebido':  {bg:'rgba(106,180,255,.15)', fg:'#6ab4ff', bd:'rgba(106,180,255,.4)'},
+  'Pago integral':          {bg:'rgba(74,222,128,.15)',  fg:'#4ade80', bd:'rgba(74,222,128,.4)'},
+  'Inadimplente':           {bg:'rgba(248,113,113,.15)', fg:'#f87171', bd:'rgba(248,113,113,.4)'}
+};
+
+function periBadgePagamentoHtml(statusPagamento){
+  var st = statusPagamento || 'Pendente';
+  var c = PERI_PAGAMENTO_COLORS[st] || PERI_PAGAMENTO_COLORS['Pendente'];
+  return '<span style="background:'+c.bg+';color:'+c.fg+';border:1px solid '+c.bd+';border-radius:20px;padding:.15rem .6rem;font-size:.68rem;font-weight:700;white-space:nowrap">'+st+'</span>';
+}
+
+// Dias desde o pedido de honorários, só relevante enquanto o pagamento não foi concluído.
+function periDiasHonorariosPendentes(p){
+  if(!p || p.statusPagamento === 'Pago integral') return null;
+  var base = p.dataPedidoHonorarios || p.dataNomeacao;
+  if(!base) return null;
+  var hoje = new Date(); hoje.setHours(0,0,0,0);
+  var d = new Date(base+'T00:00:00');
+  return Math.round((hoje-d)/86400000);
+}
 
 function enterPerito(){
   document.getElementById('hubScreen').style.cssText = 'display:none!important';
@@ -11320,7 +11441,7 @@ function backFromPerito(){
 }
 
 function periBack(){
-  if(_periView === 'detail'){ periVoltarLista(); } else { backFromPerito(); }
+  if(_periView === 'detail' || _periView === 'financeiro'){ periVoltarLista(); } else { backFromPerito(); }
 }
 
 async function periCarregar(){
@@ -11357,8 +11478,19 @@ function periBadgeHtml(status){
 
 function periRenderLista(){
   var grid = document.getElementById('periGrid');
+  var alertaBox = document.getElementById('periAlertaBanner');
   var filtro = document.getElementById('periFiltroStatus').value;
   var lista = _periList.filter(function(p){ return !filtro || p.status===filtro; });
+
+  var vencidos = _periList.filter(function(p){ var d = periDiasRestantes(p.prazoLaudo); return d!==null && d<0 && p.status!=='Laudo entregue' && p.status!=='Honorários recebidos'; }).length;
+  var honorPendentes = _periList.filter(function(p){ var d = periDiasHonorariosPendentes(p); return d!==null && d>30; }).length;
+  if(alertaBox){
+    var partes = [];
+    if(vencidos>0) partes.push('<div style="color:#f87171;font-weight:700;">🔴 '+vencidos+' laudo(s) com prazo vencido</div>');
+    if(honorPendentes>0) partes.push('<div style="color:#fb923c;font-weight:700;">🟠 '+honorPendentes+' honorário(s) pendente(s) há mais de 30 dias</div>');
+    alertaBox.innerHTML = partes.length ? '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(248,113,113,.25);border-radius:10px;padding:.7rem 1rem;margin-bottom:1rem;display:flex;flex-direction:column;gap:.3rem;font-size:.82rem;">'+partes.join('')+'</div>' : '';
+  }
+
   if(!lista.length){
     grid.innerHTML = '<div style="color:rgba(255,255,255,.4);font-size:.85rem;padding:2rem;text-align:center">Nenhuma nomeação cadastrada. Clique em + Nova Nomeação para adicionar.</div>';
     return;
@@ -11373,14 +11505,18 @@ function periRenderLista(){
       if(dias<0){ prazoCor='#f87171'; prazoTag=' — VENCIDO'; prazoPeso='700'; }
       else if(dias<=7){ prazoCor='#fb923c'; prazoTag=' — '+dias+'d restantes'; prazoPeso='700'; }
     }
-    html += '<div onclick="periAbrir(\''+p.id+'\')" style="background:#0d1830;border:1px solid rgba(106,180,255,.18);border-radius:10px;padding:.9rem 1rem;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor=\'rgba(106,180,255,.5)\'" onmouseout="this.style.borderColor=\'rgba(106,180,255,.18)\'">'
+    var diasHonor = periDiasHonorariosPendentes(p);
+    var alertaHonor = (diasHonor!==null && diasHonor>30)
+      ? '<div style="font-size:.72rem;color:#fb923c;font-weight:700;margin-top:.3rem;">🟠 Honorários pendentes há '+diasHonor+' dias</div>' : '';
+    html += '<div onclick="periAbrir(\''+p.id+'\')" style="background:#0d1830;border:1px solid '+(dias!==null&&dias<0?'rgba(248,113,113,.4)':'rgba(106,180,255,.18)')+';border-radius:10px;padding:.9rem 1rem;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor=\'rgba(106,180,255,.5)\'" onmouseout="this.style.borderColor=\''+(dias!==null&&dias<0?'rgba(248,113,113,.4)':'rgba(106,180,255,.18)')+'\'">'
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.5rem">'
       +'<span style="color:#F5F0FF;font-weight:700;font-size:.9rem">'+p.processo+'</span>'
-      +periBadgeHtml(p.status)
+      +'<div style="display:flex;flex-direction:column;gap:.25rem;align-items:flex-end;">'+periBadgeHtml(p.status)+periBadgePagamentoHtml(p.statusPagamento)+'</div>'
       +'</div>'
       +(p.vara?'<div style="color:#6ab4ff;font-size:.78rem;margin-bottom:.2rem">'+p.vara+(p.tribunal?' — '+p.tribunal:'')+'</div>':'')
       +(p.tipoPericia?'<div style="color:rgba(255,255,255,.55);font-size:.75rem;margin-bottom:.35rem">'+p.tipoPericia+'</div>':'')
       +'<div style="font-size:.75rem;color:'+prazoCor+';font-weight:'+prazoPeso+'">Prazo do laudo: '+periFmtDataBR(p.prazoLaudo)+prazoTag+'</div>'
+      +alertaHonor
       +'</div>';
   });
   html += '</div>';
@@ -11390,8 +11526,9 @@ function periRenderLista(){
 function periVoltarLista(){
   _periView = 'list';
   document.getElementById('periDetalhe').style.display = 'none';
+  document.getElementById('periFinanceiro').style.display = 'none';
   document.getElementById('periListaWrap').style.display = 'block';
-  document.getElementById('periBtnNovo').style.display = 'inline-block';
+  document.getElementById('periHeaderBtns').style.display = 'flex';
   document.getElementById('periBackLabel').textContent = '← GN Gestão';
   periCarregar();
 }
@@ -11399,11 +11536,150 @@ function periVoltarLista(){
 function periMostrarDetalhe(isNovo){
   _periView = 'detail';
   document.getElementById('periListaWrap').style.display = 'none';
+  document.getElementById('periFinanceiro').style.display = 'none';
   document.getElementById('periDetalhe').style.display = 'block';
-  document.getElementById('periBtnNovo').style.display = 'none';
+  document.getElementById('periHeaderBtns').style.display = 'none';
   document.getElementById('periBackLabel').textContent = '← Lista';
   document.getElementById('periDetalheTitulo').textContent = isNovo ? 'Nova Nomeação' : 'Nomeação';
   document.getElementById('periBtnExcluir').style.display = isNovo ? 'none' : 'inline-block';
+}
+
+async function periAbrirFinanceiro(){
+  _periView = 'financeiro';
+  document.getElementById('periListaWrap').style.display = 'none';
+  document.getElementById('periDetalhe').style.display = 'none';
+  document.getElementById('periFinanceiro').style.display = 'block';
+  document.getElementById('periHeaderBtns').style.display = 'none';
+  document.getElementById('periBackLabel').textContent = '← Lista';
+  try{
+    var r = await fetch(_PERI_N8N+'/webhook/gn-pericias-load', {cache:'no-store'});
+    var txt = await r.text();
+    var lista = txt ? JSON.parse(txt) : [];
+    if(!Array.isArray(lista)) lista = [lista];
+    _periList = lista;
+  }catch(e){}
+  periRenderFinanceiro();
+}
+
+function periCalcularPendente(p){
+  var solicitado = Number(p.honorariosSolicitados)||0;
+  var recebido = Number(p.honorariosRecebidos)||0;
+  return Math.max(0, solicitado - recebido);
+}
+
+function periFinCard(label, valor, cor){
+  return '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(106,180,255,.15);border-radius:12px;padding:1rem;">'
+    + '<div style="font-size:.72rem;color:rgba(196,181,253,.7);margin-bottom:.4rem;">'+label+'</div>'
+    + '<div style="font-size:1.25rem;font-weight:800;color:'+cor+';font-family:\'Syne\',sans-serif;">'+valor+'</div>'
+    + '</div>';
+}
+
+function periRenderFinanceiro(){
+  var filtro = document.getElementById('periFinFiltro').value;
+  var lista = _periList.filter(function(p){ return !filtro || (p.statusPagamento||'Pendente')===filtro; });
+  var fmt = function(v){ return (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); };
+
+  var totalSolicitado = 0, totalRecebido = 0, totalPendente = 0, comValor = 0;
+  lista.forEach(function(p){
+    var sol = Number(p.honorariosSolicitados)||0;
+    totalSolicitado += sol;
+    totalRecebido += Number(p.honorariosRecebidos)||0;
+    totalPendente += periCalcularPendente(p);
+    if(sol>0) comValor++;
+  });
+  var media = comValor>0 ? totalSolicitado/comValor : 0;
+
+  document.getElementById('periFinCards').innerHTML =
+    periFinCard('Total Solicitado', fmt(totalSolicitado), '#6ab4ff') +
+    periFinCard('Total Recebido', fmt(totalRecebido), '#4ade80') +
+    periFinCard('Total Pendente', fmt(totalPendente), '#fb923c') +
+    periFinCard('Média por Perícia', fmt(media), '#c084fc');
+
+  var body = document.getElementById('periFinTabelaBody');
+  if(!lista.length){
+    body.innerHTML = '<tr><td colspan="5" style="padding:1.5rem;text-align:center;color:rgba(255,255,255,.4);">Nenhuma nomeação encontrada.</td></tr>';
+    return;
+  }
+  body.innerHTML = lista.map(function(p){
+    var pendente = periCalcularPendente(p);
+    return '<tr style="border-bottom:1px solid rgba(106,180,255,.08);cursor:pointer;" onclick="periAbrir(\''+p.id+'\')">'
+      + '<td style="padding:.5rem;color:#F5F0FF;">'+p.processo+'</td>'
+      + '<td style="padding:.5rem;">'+periBadgePagamentoHtml(p.statusPagamento)+'</td>'
+      + '<td style="padding:.5rem;text-align:right;color:#F5F0FF;">'+fmt(p.honorariosSolicitados)+'</td>'
+      + '<td style="padding:.5rem;text-align:right;color:#4ade80;">'+fmt(p.honorariosRecebidos)+'</td>'
+      + '<td style="padding:.5rem;text-align:right;color:'+(pendente>0?'#fb923c':'rgba(255,255,255,.4)')+';">'+fmt(pendente)+'</td>'
+      + '</tr>';
+  }).join('');
+}
+
+function periExportarRelatorio(){
+  var filtro = document.getElementById('periFinFiltro').value;
+  var lista = _periList.filter(function(p){ return !filtro || (p.statusPagamento||'Pendente')===filtro; });
+  var fmt = function(v){ return (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); };
+  var totalSolicitado=0, totalRecebido=0, totalPendente=0;
+  lista.forEach(function(p){ totalSolicitado+=Number(p.honorariosSolicitados)||0; totalRecebido+=Number(p.honorariosRecebidos)||0; totalPendente+=periCalcularPendente(p); });
+
+  var linhas = lista.map(function(p){
+    return '<tr>'
+      + '<td style="padding:.4rem;border-bottom:1px solid #ddd;">'+(p.processo||'')+'</td>'
+      + '<td style="padding:.4rem;border-bottom:1px solid #ddd;">'+(p.statusPagamento||'Pendente')+'</td>'
+      + '<td style="padding:.4rem;border-bottom:1px solid #ddd;text-align:right;">'+fmt(p.honorariosSolicitados)+'</td>'
+      + '<td style="padding:.4rem;border-bottom:1px solid #ddd;text-align:right;">'+fmt(p.honorariosRecebidos)+'</td>'
+      + '<td style="padding:.4rem;border-bottom:1px solid #ddd;text-align:right;">'+fmt(periCalcularPendente(p))+'</td>'
+      + '</tr>';
+  }).join('');
+
+  var hoje = new Date();
+  var html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório Financeiro — Perito Judicial</title>'
+    + '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:2cm;color:#111;font-size:10.5pt;background:#fff}@page{size:A4;margin:1.5cm}table{width:100%;border-collapse:collapse;margin-top:1rem}th{text-align:left;padding:.4rem;border-bottom:2px solid #333;font-size:9.5pt}</style>'
+    + '</head><body>'
+    + '<div style="text-align:center;margin-bottom:1.4rem;border-bottom:2px solid #0d1830;padding-bottom:.8rem"><div style="font-weight:900;font-size:16pt;color:#0d1830">GABRIEL NASCIMENTO</div><div style="font-size:9pt;color:#444">Relatório Financeiro — Perito Judicial</div></div>'
+    + '<div style="margin-bottom:1rem;font-size:9.5pt;color:#555">Gerado em '+hoje.toLocaleDateString('pt-BR')+'</div>'
+    + '<div style="display:flex;gap:1.5rem;margin-bottom:1rem;font-size:10pt;">'
+    + '<div><strong>Total Solicitado:</strong> '+fmt(totalSolicitado)+'</div>'
+    + '<div><strong>Total Recebido:</strong> '+fmt(totalRecebido)+'</div>'
+    + '<div><strong>Total Pendente:</strong> '+fmt(totalPendente)+'</div>'
+    + '</div>'
+    + '<table><thead><tr><th>Processo</th><th>Status Pagamento</th><th style="text-align:right">Solicitado</th><th style="text-align:right">Recebido</th><th style="text-align:right">Pendente</th></tr></thead><tbody>'+linhas+'</tbody></table>'
+    + '</body></html>';
+
+  var w = window.open('', '_blank', 'width=900,height=1000');
+  if(w){ w.document.write(html); w.document.close(); setTimeout(function(){ w.print(); }, 600); }
+}
+
+// ── Perfil do perito (dados bancários / PIX) ──────────────────────
+var PERI_PERFIL_PADRAO = { nome: 'Gabriel da Silva Nascimento', cpf: '098.089.724-62', banco: 'Santander', pix: '(81) 99781-8685' };
+
+function periCarregarPerfil(){
+  try{
+    var raw = localStorage.getItem('peri_perfil');
+    if(raw) return Object.assign({}, PERI_PERFIL_PADRAO, JSON.parse(raw));
+  }catch(e){}
+  return PERI_PERFIL_PADRAO;
+}
+
+function periAbrirPerfil(){
+  var perfil = periCarregarPerfil();
+  document.getElementById('periPerfilNome').value = perfil.nome;
+  document.getElementById('periPerfilCpf').value = perfil.cpf;
+  document.getElementById('periPerfilBanco').value = perfil.banco;
+  document.getElementById('periPerfilPix').value = perfil.pix;
+  document.getElementById('periPerfilModal').style.display = 'flex';
+}
+
+function periFecharPerfil(){
+  document.getElementById('periPerfilModal').style.display = 'none';
+}
+
+function periSalvarPerfil(){
+  var perfil = {
+    nome: document.getElementById('periPerfilNome').value.trim() || PERI_PERFIL_PADRAO.nome,
+    cpf: document.getElementById('periPerfilCpf').value.trim() || PERI_PERFIL_PADRAO.cpf,
+    banco: document.getElementById('periPerfilBanco').value.trim() || PERI_PERFIL_PADRAO.banco,
+    pix: document.getElementById('periPerfilPix').value.trim() || PERI_PERFIL_PADRAO.pix
+  };
+  localStorage.setItem('peri_perfil', JSON.stringify(perfil));
+  periFecharPerfil();
 }
 
 function periPreencherForm(){
@@ -11419,11 +11695,16 @@ function periPreencherForm(){
   document.getElementById('periStatus').value = d.status || 'Aguardando';
   document.getElementById('periHonorariosSolicitados').value = d.honorariosSolicitados || '';
   document.getElementById('periHonorariosRecebidos').value = d.honorariosRecebidos || '';
+  document.getElementById('periStatusPagamento').value = d.statusPagamento || 'Pendente';
+  document.getElementById('periDataPedidoHonorarios').value = d.dataPedidoHonorarios || '';
+  document.getElementById('periValorAdiantamento').value = d.valorAdiantamento || '';
+  document.getElementById('periDataRecebimentoAdiantamento').value = d.dataRecebimentoAdiantamento || '';
+  document.getElementById('periDataRecebimentoFinal').value = d.dataRecebimentoFinal || '';
   document.getElementById('periObservacoes').value = d.observacoes || '';
 }
 
 function periNovo(){
-  _periAtual = { id: 'per_'+Date.now(), status:'Aguardando', addedAt: Date.now() };
+  _periAtual = { id: 'per_'+Date.now(), status:'Aguardando', statusPagamento:'Pendente', addedAt: Date.now() };
   periPreencherForm();
   periMostrarDetalhe(true);
 }
@@ -11452,6 +11733,11 @@ async function periSalvar(){
     status: document.getElementById('periStatus').value,
     honorariosSolicitados: document.getElementById('periHonorariosSolicitados').value,
     honorariosRecebidos: document.getElementById('periHonorariosRecebidos').value,
+    statusPagamento: document.getElementById('periStatusPagamento').value,
+    dataPedidoHonorarios: document.getElementById('periDataPedidoHonorarios').value,
+    valorAdiantamento: document.getElementById('periValorAdiantamento').value,
+    dataRecebimentoAdiantamento: document.getElementById('periDataRecebimentoAdiantamento').value,
+    dataRecebimentoFinal: document.getElementById('periDataRecebimentoFinal').value,
     observacoes: document.getElementById('periObservacoes').value.trim(),
     addedAt: _periAtual.addedAt || Date.now()
   };
@@ -11518,6 +11804,15 @@ function periGerarDocumento(tipo){
   var hoje = new Date();
   var dataExt = 'Recife, '+hoje.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'})+'.';
 
+  var perfil = periCarregarPerfil();
+  var dadosBancarios = '<div style="margin-top:1.2rem;padding:.9rem 1.1rem;background:#f4f6fa;border:1px solid #ccd6e8;border-radius:6px;font-size:9.5pt;">'
+    +'<div style="font-weight:700;margin-bottom:.4rem;">Dados bancários para depósito:</div>'
+    +'<div>Nome: '+esc(perfil.nome)+'</div>'
+    +'<div>CPF: '+esc(perfil.cpf)+'</div>'
+    +'<div>Banco: '+esc(perfil.banco)+'</div>'
+    +'<div>Chave PIX: '+esc(perfil.pix)+'</div>'
+    +'</div>';
+
   var titulo = '', corpo = '';
   if(tipo==='aceite'){
     titulo = 'Termo de Aceitação de Nomeação Pericial';
@@ -11528,11 +11823,13 @@ function periGerarDocumento(tipo){
     titulo = 'Pedido de Fixação e Adiantamento de Honorários Periciais';
     corpo = '<p style="text-align:justify;text-indent:2em">GABRIEL NASCIMENTO, Engenheiro Mecânico, Perito Judicial nomeado nos autos do processo em epígrafe, vem respeitosamente perante Vossa Excelência requerer a <strong>fixação e o adiantamento</strong> dos honorários periciais, nos termos do art. 465, §4º, do Código de Processo Civil, tendo em vista a necessidade de custeio prévio das diligências técnicas indispensáveis à elaboração do laudo pericial de <strong>'+esc(d.tipoPericia||'—')+'</strong>.</p>'
       +'<p style="text-align:justify;text-indent:2em;margin-top:.9rem">Para tanto, estima o valor dos honorários periciais em <strong>'+fmtMoeda(d.honorariosSolicitados)+'</strong>, requerendo seja determinado o depósito de adiantamento correspondente a 50% (cinquenta por cento) desse montante, ficando o saldo remanescente condicionado à entrega do laudo pericial.</p>'
+      +dadosBancarios
       +'<p style="margin-top:1.3rem">Termos em que, pede deferimento.</p>';
   } else if(tipo==='honorarios_sem_adiantamento'){
     titulo = 'Pedido de Fixação de Honorários Periciais';
     corpo = '<p style="text-align:justify;text-indent:2em">GABRIEL NASCIMENTO, Engenheiro Mecânico, Perito Judicial nomeado nos autos do processo em epígrafe, vem respeitosamente perante Vossa Excelência requerer a <strong>fixação dos honorários periciais</strong>, nos termos do art. 465 do Código de Processo Civil, referentes à perícia de <strong>'+esc(d.tipoPericia||'—')+'</strong>.</p>'
       +'<p style="text-align:justify;text-indent:2em;margin-top:.9rem">Estima o valor dos honorários em <strong>'+fmtMoeda(d.honorariosSolicitados)+'</strong>, a serem pagos integralmente após a entrega do laudo pericial, não havendo, no presente caso, necessidade de adiantamento para a realização das diligências técnicas.</p>'
+      +dadosBancarios
       +'<p style="margin-top:1.3rem">Termos em que, pede deferimento.</p>';
   } else if(tipo==='intimacao_conclusao'){
     titulo = 'Comunicação de Conclusão do Laudo Pericial';
