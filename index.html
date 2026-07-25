@@ -11667,6 +11667,41 @@ function periGerarDocumento(tipo){
     </div>
 
   </div>
+
+  <!-- MODAL EDITAR ATIVO -->
+  <div id="invEditModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:10001;align-items:center;justify-content:center;">
+    <div style="background:#080e1f;border:1px solid rgba(106,180,255,.3);border-radius:12px;padding:1.5rem;width:92%;max-width:420px;max-height:88vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.1rem;">
+        <span style="color:#F5F0FF;font-weight:700;font-size:1rem;">Editar <span id="invEditTicker" style="color:#6ab4ff;"></span></span>
+        <button onclick="invFecharEditar()" style="background:none;border:none;color:#888;font-size:1.2rem;cursor:pointer;">×</button>
+      </div>
+
+      <div style="margin-bottom:.6rem;">
+        <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Quantidade de cotas</label>
+        <input id="invEditQtd" type="number" min="0" step="1" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:.9rem;">
+        <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Preço médio (R$)</label>
+        <input id="invEditPrecoMedio" type="number" min="0" step="0.01" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+      </div>
+      <button onclick="invSalvarEdicao()" id="invBtnSalvarEdicao" style="width:100%;background:#6ab4ff;color:#fff;border:none;border-radius:8px;padding:.55rem 1.1rem;cursor:pointer;font-size:.85rem;font-weight:700;font-family:'DM Sans',sans-serif;">Salvar</button>
+      <div id="invEditMsg" style="margin-top:.6rem;font-size:.8rem;"></div>
+
+      <div style="border-top:1px solid rgba(106,180,255,.15);margin:1.2rem 0 1rem;padding-top:1rem;">
+        <div style="color:#F5F0FF;font-weight:700;font-size:.85rem;margin-bottom:.7rem;">Registrar venda</div>
+        <div style="margin-bottom:.6rem;">
+          <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Quantidade a vender</label>
+          <input id="invVendaQtd" type="number" min="1" step="1" placeholder="ex: 500" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:.9rem;">
+          <label style="display:block;font-size:.7rem;color:rgba(196,181,253,.7);margin-bottom:.3rem;">Preço de venda (R$)</label>
+          <input id="invVendaPreco" type="number" min="0" step="0.01" placeholder="ex: 9,80" style="width:100%;background:#04070f;border:1px solid #0d1830;border-radius:6px;padding:.45rem .7rem;color:#F5F0FF;font-size:.85rem;outline:none;font-family:'DM Sans',sans-serif;box-sizing:border-box;">
+        </div>
+        <button onclick="invRegistrarVenda()" id="invBtnRegistrarVenda" style="width:100%;background:rgba(226,80,74,.15);color:#e2504a;border:1px solid rgba(226,80,74,.4);border-radius:8px;padding:.55rem 1.1rem;cursor:pointer;font-size:.85rem;font-weight:700;font-family:'DM Sans',sans-serif;">Registrar Venda</button>
+        <div id="invVendaMsg" style="margin-top:.6rem;font-size:.8rem;"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -11749,11 +11784,99 @@ async function invCarregarCarteira(forcar){
         + '<div style="font-size:.85rem;color:rgba(196,181,253,.9);margin-top:.25rem;">Posição: ' + invFmtR(a.valorPosicao) + '</div>'
         + '<div style="font-size:.85rem;font-weight:700;color:' + pnlCor + ';margin-top:.25rem;">P&L: ' + invFmtR(a.pnl) + ' (' + invFmtPct(a.pnlPct) + ')</div>'
         + (a.precoTeto ? '<div style="font-size:.75rem;color:rgba(196,181,253,.6);margin-top:.5rem;border-top:1px solid rgba(106,180,255,.1);padding-top:.45rem;">Preço teto: ' + invFmtR(a.precoTeto) + '</div>' : '')
+        + '<button onclick="invAbrirEditar(\'' + a.ticker + '\',' + a.quantidade + ',' + a.precoMedio + ')" style="width:100%;margin-top:.7rem;background:rgba(106,180,255,.12);color:#6ab4ff;border:1px solid rgba(106,180,255,.35);border-radius:8px;padding:.4rem;cursor:pointer;font-size:.78rem;font-family:\'DM Sans\',sans-serif;">✏️ Editar</button>'
         + '</div>';
     }).join('');
   }catch(e){
     grid.innerHTML = '<div style="color:#e2504a;">Erro ao carregar: ' + e.message + '</div>';
   }
+}
+
+// ── Editar / Vender ativo ────────────────────────────────────────
+var _invEditTicker = null;
+
+function invAbrirEditar(ticker, quantidade, precoMedio){
+  _invEditTicker = ticker;
+  document.getElementById('invEditTicker').textContent = ticker;
+  document.getElementById('invEditQtd').value = quantidade;
+  document.getElementById('invEditPrecoMedio').value = precoMedio;
+  document.getElementById('invEditMsg').textContent = '';
+  document.getElementById('invVendaQtd').value = '';
+  document.getElementById('invVendaPreco').value = '';
+  document.getElementById('invVendaMsg').textContent = '';
+  document.getElementById('invEditModal').style.display = 'flex';
+}
+
+function invFecharEditar(){
+  document.getElementById('invEditModal').style.display = 'none';
+  _invEditTicker = null;
+}
+
+async function invSalvarEdicao(){
+  var ticker = _invEditTicker;
+  var qtd = Number(document.getElementById('invEditQtd').value);
+  var precoMedio = Number(document.getElementById('invEditPrecoMedio').value);
+  var msg = document.getElementById('invEditMsg');
+  if(!ticker || qtd < 0 || !precoMedio || precoMedio <= 0){
+    msg.style.color = '#e2504a'; msg.textContent = 'Preencha quantidade e preço médio corretamente.'; return;
+  }
+  var btn = document.getElementById('invBtnSalvarEdicao');
+  btn.disabled = true; btn.textContent = 'Salvando…';
+  msg.textContent = '';
+  try{
+    var r = await fetch(_INV_N8N + '/webhook/gn-investimentos-save', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticker: ticker, quantidade: qtd, precoMedio: precoMedio })
+    });
+    var d = await r.json();
+    if(d && d.ok){
+      msg.style.color = '#4ade80';
+      msg.textContent = d.removido ? (ticker + ' removido da carteira.') : 'Salvo com sucesso.';
+      _invLoaded.carteira = false;
+      invCarregarCarteira();
+      setTimeout(invFecharEditar, 900);
+    } else {
+      msg.style.color = '#e2504a'; msg.textContent = (d && d.erro) || 'Erro ao salvar.';
+    }
+  }catch(e){
+    msg.style.color = '#e2504a'; msg.textContent = 'Erro: ' + e.message;
+  }
+  btn.disabled = false; btn.textContent = 'Salvar';
+}
+
+async function invRegistrarVenda(){
+  var ticker = _invEditTicker;
+  var qtd = Number(document.getElementById('invVendaQtd').value);
+  var preco = Number(document.getElementById('invVendaPreco').value);
+  var msg = document.getElementById('invVendaMsg');
+  if(!ticker || !qtd || qtd <= 0 || !preco || preco <= 0){
+    msg.style.color = '#e2504a'; msg.textContent = 'Preencha quantidade e preço de venda corretamente.'; return;
+  }
+  var btn = document.getElementById('invBtnRegistrarVenda');
+  btn.disabled = true; btn.textContent = 'Registrando…';
+  msg.textContent = '';
+  try{
+    var r = await fetch(_INV_N8N + '/webhook/gn-investimentos-venda', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticker: ticker, quantidade: qtd, preco: preco })
+    });
+    var d = await r.json();
+    if(d && d.ok){
+      msg.style.color = '#4ade80';
+      msg.textContent = d.removido ? (ticker + ' totalmente vendido e removido da carteira.') : ('Venda registrada. Restam ' + d.quantidade + ' cotas.');
+      _invLoaded.carteira = false;
+      _invLoaded.aportes = false;
+      invCarregarCarteira();
+      invCarregarHistorico();
+      invCarregarSugestao();
+      setTimeout(invFecharEditar, 1200);
+    } else {
+      msg.style.color = '#e2504a'; msg.textContent = (d && d.erro) || 'Erro ao registrar venda.';
+    }
+  }catch(e){
+    msg.style.color = '#e2504a'; msg.textContent = 'Erro: ' + e.message;
+  }
+  btn.disabled = false; btn.textContent = 'Registrar Venda';
 }
 
 // ── Aportes ──────────────────────────────────────────────────────
@@ -11791,8 +11914,14 @@ async function invCarregarHistorico(){
     var lista = (d && d.compras) || [];
     if(!lista.length){ el.innerHTML = '<div style="color:rgba(196,181,253,.6);">Nenhuma compra registrada.</div>'; return; }
     el.innerHTML = '<div style="max-height:340px;overflow-y:auto;">' + lista.map(function(c){
-      return '<div style="display:flex;justify-content:space-between;gap:.5rem;font-size:.82rem;color:#F5F0FF;padding:.45rem .2rem;border-bottom:1px solid rgba(106,180,255,.08);">'
-        + '<span style="color:rgba(196,181,253,.7);">' + c.data + '</span><span style="font-weight:700;">' + c.ticker + '</span><span>' + c.quantidade + ' cotas</span><span>' + invFmtR(c.preco) + '</span>'
+      var venda = c.quantidade < 0;
+      var cor = venda ? '#e2504a' : '#4ade80';
+      var label = venda ? 'VENDA' : 'COMPRA';
+      return '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem;font-size:.82rem;color:#F5F0FF;padding:.45rem .2rem;border-bottom:1px solid rgba(106,180,255,.08);">'
+        + '<span style="color:rgba(196,181,253,.7);">' + c.data + '</span>'
+        + '<span style="font-weight:700;">' + c.ticker + '</span>'
+        + '<span style="color:' + cor + ';font-weight:700;">' + label + ': ' + c.quantidade + ' cotas</span>'
+        + '<span>' + invFmtR(c.preco) + '</span>'
         + '</div>';
     }).join('') + '</div>';
   }catch(e){ el.innerHTML = '<div style="color:#e2504a;">Erro: ' + e.message + '</div>'; }
