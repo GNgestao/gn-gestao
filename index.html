@@ -8504,7 +8504,7 @@ async function gnSpeak(texto){
     { nome:'INVESTIMENTOS', cor:'#fb923c', sa:Math.PI/2, ea:Math.PI,
       itens:['Ações','FIIs','Criptos','Patrimônio','Aportes','Carteira','Renda Fixa','Reserva','Dividendos','Metas Fin.','Previdência','Câmbio'] },
     { nome:'PROJETOS', cor:'#38bdf8', sa:0, ea:Math.PI/2,
-      itens:['GN Gestão','Jarvis IA','Automações','n8n','Perito Judicial','Documentação','Laudos','ARTs','Claude Code','VPS','GitHub','WhatsApp Bot','Evolution API'] },
+      itens:['GN Gestão','Jarvis IA','Automações','n8n','MAX','Perito Judicial','Documentação','Laudos','ARTs','Claude Code','VPS','GitHub','WhatsApp Bot','Evolution API'] },
   ];
 
   // ── Nós com navegação real para módulos já existentes no app ──
@@ -8527,6 +8527,7 @@ async function gnSpeak(texto){
     'Dividendos': function(){ if(typeof enterInvestimentos==='function') enterInvestimentos('dividendos'); },
     'Metas Fin.': function(){ if(typeof enterInvestimentos==='function') enterInvestimentos('metas'); },
     'Câmbio': function(){ if(typeof enterInvestimentos==='function') enterInvestimentos('cambio'); },
+    'MAX': function(){ if(typeof enterMax==='function') enterMax(); },
   };
 
   function hexToRgba(hex, alpha){
@@ -8826,11 +8827,11 @@ async function gnSpeak(texto){
     function _hideHubCanvas(){ var hc=document.getElementById('hubCanvas'); if(hc){ hc.style.display='none'; } }
     function _showHubCanvas(){ var hc=document.getElementById('hubCanvas'); if(hc){ hc.style.display=''; } }
     function _autoVoz(){ if(typeof gnAutoStartVoz==='function') gnAutoStartVoz(); }
-    ['enterModule','enterReconhece','enterReparo','enterPlano','enterDocumentacao','enterGN','enterCIPA','enterTkMobile','enterPerito','enterInvestimentos'].forEach(function(n){
+    ['enterModule','enterReconhece','enterReparo','enterPlano','enterDocumentacao','enterGN','enterCIPA','enterTkMobile','enterPerito','enterInvestimentos','enterMax'].forEach(function(n){
       var o=window[n]; if(!o) return;
       window[n]=function(){ _hideHubCanvas(); o.apply(this,arguments); setTimeout(_autoVoz,150); };
     });
-    ['backToHub','backFromReconhece','backFromReparo','backFromDocumentacao','backFromGN','gnVoltarHub','backToModule','backFromCIPA','backFromTkMobile','backFromPerito','backFromInvestimentos'].forEach(function(n){
+    ['backToHub','backFromReconhece','backFromReparo','backFromDocumentacao','backFromGN','gnVoltarHub','backToModule','backFromCIPA','backFromTkMobile','backFromPerito','backFromInvestimentos','backFromMax'].forEach(function(n){
       var o=window[n]; if(!o) return;
       window[n]=function(){ o.apply(this,arguments); setTimeout(_showHubCanvas,50); setTimeout(_autoVoz,150); };
     });
@@ -8899,7 +8900,7 @@ async function gnSpeak(texto){
   function hubAtiva(){
     var hub = document.getElementById('hubScreen');
     if(!hub || getComputedStyle(hub).display === 'none') return false;
-    var sobrepostas = ['screenClientes','screenGestaoEquipe','screenTkMobile','screenPerito','screenInvestimentos'];
+    var sobrepostas = ['screenClientes','screenGestaoEquipe','screenTkMobile','screenPerito','screenInvestimentos','screenMax'];
     for(var i=0;i<sobrepostas.length;i++){
       var el = document.getElementById(sobrepostas[i]);
       if(el && getComputedStyle(el).display !== 'none') return false;
@@ -12334,6 +12335,59 @@ async function invCarregarMetas(){
   }
 }
 
+// ══════════════════════════════════════════════════════════════════
+// MAX — Análise de Falhas (Cockpit TKE MAX)
+// ══════════════════════════════════════════════════════════════════
+
+var _MAX_N8N = 'https://n8n.srv1610251.hstgr.cloud';
+
+function enterMax(){
+  document.getElementById('hubScreen').style.cssText = 'display:none!important';
+  ['appScreen','screenReconhece','screenPlano','screenReparo','screenDocumentacao','screenCIPA','screenTkMobile','screenPerito','screenInvestimentos'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.style.display = 'none';
+  });
+  var s = document.getElementById('screenMax'); if(s) s.style.display = 'block';
+  maxCarregarHistorico();
+}
+
+function backFromMax(){
+  var s = document.getElementById('screenMax'); if(s) s.style.display = 'none';
+  var hs = document.getElementById('hubScreen'); if(hs) hs.style.cssText = 'display:flex!important';
+}
+
+async function maxCarregarHistorico(){
+  var container = document.getElementById('maxHistoricoContainer');
+  if(!container) return;
+  container.innerHTML = '<div style="color:rgba(56,189,248,.6);padding:1rem 0;">Carregando histórico…</div>';
+  try{
+    var r = await fetch(_MAX_N8N + '/webhook/gn-max-historico');
+    var d = await r.json();
+    var lista = d.registros || [];
+    if(!lista.length){
+      container.innerHTML = '<div style="color:rgba(255,255,255,.4);padding:1rem 0;">Nenhuma consulta registrada ainda. Use o Jarvis para analisar um equipamento.</div>';
+      return;
+    }
+    container.innerHTML = lista.map(function(reg){
+      var dt = new Date(reg.dataHora);
+      var dtStr = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      var corFalhas = reg.totalFalhas === 0 ? '#4ade80' : (reg.totalFalhas <= 3 ? '#fbbf24' : '#e2504a');
+      var origemBadge = reg.origem === 'jarvis_texto' ? '🎙 Jarvis' : reg.origem === 'teste' ? '🔧 Teste' : '🔍 ' + reg.origem;
+      return '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(56,189,248,.15);border-radius:10px;padding:.85rem 1rem;display:grid;grid-template-columns:1fr auto;gap:.5rem;align-items:start;">'
+        + '<div>'
+        + '<div style="font-weight:700;font-size:.95rem;color:#F5F0FF;font-family:\'Syne\',sans-serif;">Equipamento ' + maxEsc(reg.unitId) + '</div>'
+        + '<div style="font-size:.78rem;color:rgba(255,255,255,.5);margin-top:.15rem;">' + dtStr + ' · ' + reg.horasPeriodo + 'h · ' + origemBadge + '</div>'
+        + '<div style="font-size:.8rem;color:rgba(56,189,248,.8);margin-top:.3rem;">' + maxEsc(reg.resumo) + '</div>'
+        + '</div>'
+        + '<div style="font-size:1.4rem;font-weight:800;color:' + corFalhas + ';text-align:right;line-height:1;">' + reg.totalFalhas + '<div style="font-size:.65rem;font-weight:400;color:rgba(255,255,255,.4);">falhas</div></div>'
+        + '</div>';
+    }).join('');
+  }catch(e){
+    container.innerHTML = '<div style="color:#e2504a;">Erro ao carregar histórico: ' + maxEsc(e.message) + '</div>';
+  }
+}
+
+function maxEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
 // ── Câmbio ───────────────────────────────────────────────────────
 async function invCarregarCambio(){
   _invLoaded.cambio = true;
@@ -12367,5 +12421,39 @@ async function invAtualizarCambio(){
   }
 }
 </script>
+
+<!-- ══ TELA MAX — Análise de Falhas TKE MAX ══ -->
+<div id="screenMax" style="display:none;position:fixed;inset:0;background:#080e1f;z-index:10000;overflow-y:auto;font-family:'DM Sans',sans-serif;isolation:isolate;">
+  <!-- HEADER -->
+  <div style="background:linear-gradient(135deg,#071624,#0a1e30);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(56,189,248,.2);flex-wrap:wrap;gap:.6rem;">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <button onclick="backFromMax()" style="background:rgba(56,189,248,.15);color:#38bdf8;border:1px solid rgba(56,189,248,.35);border-radius:8px;padding:.35rem .8rem;font-size:.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;">← GN Gestão</button>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;letter-spacing:-.01em;color:#fff;">MAX — Análise de Falhas</div>
+    </div>
+    <button onclick="maxCarregarHistorico()" style="background:rgba(56,189,248,.15);color:#38bdf8;border:1px solid rgba(56,189,248,.35);border-radius:8px;padding:.4rem .9rem;cursor:pointer;font-size:.8rem;font-family:'DM Sans',sans-serif;">🔄 Atualizar</button>
+  </div>
+
+  <div style="max-width:900px;margin:0 auto;padding:1.25rem;">
+
+    <!-- Dica Jarvis -->
+    <div style="background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.15);border-radius:12px;padding:.9rem 1.1rem;margin-bottom:1.3rem;display:flex;align-items:flex-start;gap:.7rem;">
+      <span style="font-size:1.3rem;">🎙</span>
+      <div>
+        <div style="font-size:.85rem;font-weight:700;color:#38bdf8;margin-bottom:.2rem;">Como usar</div>
+        <div style="font-size:.82rem;color:rgba(255,255,255,.65);">Diga ao Jarvis: <em style="color:#F5F0FF;">"Analise o elevador 157333"</em> ou <em style="color:#F5F0FF;">"Falhas do elevador 12345 nas últimas 48 horas"</em>. O histórico de todas as consultas aparece abaixo.</div>
+      </div>
+    </div>
+
+    <!-- Histórico de Consultas -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem;">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;color:#F5F0FF;">Histórico de Consultas</div>
+      <div style="font-size:.75rem;color:rgba(56,189,248,.6);">últimas 50 análises</div>
+    </div>
+    <div id="maxHistoricoContainer" style="display:flex;flex-direction:column;gap:.6rem;">
+      <div style="color:rgba(56,189,248,.5);padding:.5rem 0;">Carregando…</div>
+    </div>
+
+  </div>
+</div>
 
 </body>
