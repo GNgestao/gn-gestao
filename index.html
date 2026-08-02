@@ -12558,7 +12558,9 @@ function maxAbrirRelatorio(reg){
     }
 
     var modal = document.getElementById('maxRelatorioModal');
-    if(modal){ modal.style.display = 'flex'; modal.scrollTop = 0; }
+    if(modal){ modal.style.display = 'flex'; }
+    var body = document.getElementById('maxRelBody');
+    if(body) body.scrollTop = 0;
     setTimeout(function(){ maxRenderChart(falhas); }, 60);
   } catch(err) {
     console.error('[maxAbrirRelatorio]', err);
@@ -12730,10 +12732,11 @@ async function invAtualizarCambio(){
 </script>
 
 <!-- ══ MODAL RELATÓRIO MAX ══ -->
-<div id="maxRelatorioModal" style="display:none;position:fixed;inset:0;background:rgba(4,3,13,.82);z-index:11000;overflow-y:auto;backdrop-filter:blur(6px);font-family:'DM Sans',sans-serif;">
-  <div style="max-width:860px;margin:2rem auto 3rem;background:#0d1a2e;border:1px solid rgba(56,189,248,.3);border-radius:14px;overflow:hidden;">
-    <!-- Header modal -->
-    <div style="background:linear-gradient(135deg,#071624,#0a1e30);padding:1rem 1.4rem;display:flex;align-items:flex-start;justify-content:space-between;border-bottom:1px solid rgba(56,189,248,.15);flex-wrap:wrap;gap:.6rem;">
+<div id="maxRelatorioModal" style="display:none;position:fixed;inset:0;background:rgba(4,3,13,.82);z-index:11000;overflow:hidden;backdrop-filter:blur(6px);font-family:'DM Sans',sans-serif;align-items:flex-start;justify-content:center;padding:2rem 1rem;">
+  <!-- Card container: altura máxima 90vh, cabeçalho fixo + corpo rolável -->
+  <div style="width:100%;max-width:860px;max-height:90vh;background:#0d1a2e;border:1px solid rgba(56,189,248,.3);border-radius:14px;display:flex;flex-direction:column;overflow:hidden;">
+    <!-- Header fixo -->
+    <div style="flex-shrink:0;background:linear-gradient(135deg,#071624,#0a1e30);padding:1rem 1.4rem;display:flex;align-items:flex-start;justify-content:space-between;border-bottom:1px solid rgba(56,189,248,.15);flex-wrap:wrap;gap:.6rem;">
       <div>
         <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;color:#fff;">Relatório — Elevador <span id="maxRelUnitId" style="color:#38bdf8;"></span></div>
         <div style="font-size:.76rem;color:rgba(255,255,255,.45);margin-top:.25rem;">
@@ -12746,15 +12749,18 @@ async function invAtualizarCambio(){
         <button onclick="maxFecharRelatorio()" style="background:rgba(255,255,255,.07);color:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:.4rem .75rem;cursor:pointer;font-size:.85rem;font-family:'DM Sans',sans-serif;">✕</button>
       </div>
     </div>
-    <!-- Gráfico -->
-    <div style="padding:1.1rem 1.4rem;border-bottom:1px solid rgba(56,189,248,.08);">
-      <div style="font-size:.78rem;font-weight:700;color:rgba(56,189,248,.7);margin-bottom:.55rem;letter-spacing:.03em;">OCORRÊNCIAS POR CÓDIGO DE ERRO</div>
-      <canvas id="maxBarCanvas" style="width:100%;display:block;"></canvas>
-    </div>
-    <!-- Lista detalhada -->
-    <div style="padding:1.1rem 1.4rem;">
-      <div style="font-size:.78rem;font-weight:700;color:rgba(56,189,248,.7);margin-bottom:.75rem;letter-spacing:.03em;">DETALHAMENTO POR FALHA</div>
-      <div id="maxRelLista"></div>
+    <!-- Corpo rolável (gráfico + lista) -->
+    <div id="maxRelBody" style="flex:1;min-height:0;overflow-y:auto;">
+      <!-- Gráfico -->
+      <div style="padding:1.1rem 1.4rem;border-bottom:1px solid rgba(56,189,248,.08);">
+        <div style="font-size:.78rem;font-weight:700;color:rgba(56,189,248,.7);margin-bottom:.55rem;letter-spacing:.03em;">OCORRÊNCIAS POR CÓDIGO DE ERRO</div>
+        <canvas id="maxBarCanvas" style="width:100%;display:block;"></canvas>
+      </div>
+      <!-- Lista detalhada -->
+      <div style="padding:1.1rem 1.4rem 1.5rem;">
+        <div style="font-size:.78rem;font-weight:700;color:rgba(56,189,248,.7);margin-bottom:.75rem;letter-spacing:.03em;">DETALHAMENTO POR FALHA</div>
+        <div id="maxRelLista"></div>
+      </div>
     </div>
   </div>
 </div>
