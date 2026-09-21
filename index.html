@@ -12642,11 +12642,37 @@ function maxRenderChart(falhas){
 function maxExportarPDF(){
   if(!_maxRelAtual) return;
   var reg=_maxRelAtual;
-  var falhas=reg.falhasJson||[];
+  var falhasRaw=Array.isArray(reg.falhasJson)?reg.falhasJson:(typeof reg.falhasJson==='string'?JSON.parse(reg.falhasJson):[]);
   var dt=new Date(reg.dataHora);
   var dtStr=dt.toLocaleDateString('pt-BR')+' '+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 
-  // Gráfico em canvas off-screen com fundo branco (para PDF)
+  // 1. Agrupar episódios por código (um item por código no PDF)
+  var mapa={};
+  falhasRaw.forEach(function(f){
+    var k=String(f.codigo!=null?f.codigo:'?');
+    if(!mapa[k]){
+      mapa[k]={codigo:f.codigo,descricao:f.descricao||'',ocorrencias:0,
+                causaProvavel:f.causaProvavel||'',acaoSugerida:f.acaoSugerida||'',
+                pavimentos:{},estados:{}};
+    }
+    var g=mapa[k];
+    g.ocorrencias+=(f.ocorrencias||1);
+    if(f.pavimento)       g.pavimentos[f.pavimento]=(g.pavimentos[f.pavimento]||0)+1;
+    if(f.estadoNoMomento) g.estados[f.estadoNoMomento]=(g.estados[f.estadoNoMomento]||0)+1;
+    // Prefer non-empty causa/acao if current slot is blank
+    if(!g.causaProvavel && f.causaProvavel) g.causaProvavel=f.causaProvavel;
+    if(!g.acaoSugerida  && f.acaoSugerida)  g.acaoSugerida=f.acaoSugerida;
+  });
+  // Ordenar por ocorrências desc
+  var falhas=Object.values(mapa).sort(function(a,b){ return b.ocorrencias-a.ocorrencias; });
+
+  // Helper: chave com maior contagem num objeto de frequências
+  function topKey(obj){
+    var ks=Object.keys(obj); if(!ks.length) return null;
+    return ks.reduce(function(a,b){ return obj[a]>=obj[b]?a:b; });
+  }
+
+  // 2. Gráfico off-screen com dados agrupados e fundo branco (para PDF)
   var chartImg='';
   if(falhas.length){
     var oc=document.createElement('canvas');
@@ -12657,15 +12683,38 @@ function maxExportarPDF(){
     chartImg=oc.toDataURL('image/png');
   }
 
+  var totalOcorrencias=falhas.reduce(function(s,f){ return s+(f.ocorrencias||0); },0);
+  var totalRecorrentes=falhas.filter(function(f){ return f.ocorrencias>20; }).length;
   var origemLabel=reg.origem==='jarvis_texto'?'Jarvis (voz/texto)':reg.origem||'—';
 
+  // 3. Tabela de ranking (resumo, sem causa/ação — só código, descrição, contagem)
+  var rankRows=falhas.map(function(f,i){
+    var rec=f.ocorrencias>20;
+    return '<tr'+(rec?' style="background:#fff3cd;"':'')+'>'
+      +'<td style="padding:.3rem .5rem;text-align:center;color:#6b7280;font-weight:700;">'+(i+1)+'</td>'
+      +'<td style="padding:.3rem .5rem;font-weight:700;color:#1e3a5f;white-space:nowrap;">'+maxEsc(f.codigo)
+      +(rec?' <span style="background:#dc2626;color:#fff;font-size:6.5pt;padding:1px 4px;border-radius:2px;vertical-align:middle;font-weight:700;">RECORRENTE</span>':'')
+      +'</td>'
+      +'<td style="padding:.3rem .5rem;">'+maxEsc(f.descricao)+'</td>'
+      +'<td style="padding:.3rem .5rem;text-align:center;font-weight:700;color:'+(rec?'#dc2626':'#111')+';">'+f.ocorrencias+'</td>'
+      +'</tr>';
+  }).join('');
+
+  // 4. Tabela detalhada (1 linha por código agrupado)
   var rowsHtml=falhas.map(function(f){
-    return '<tr>'
+    var rec=f.ocorrencias>20;
+    var pavPred=topKey(f.pavimentos);
+    var estPred=topKey(f.estados);
+    var pavStr=pavPred?(Object.keys(f.pavimentos).length>1?pavPred+' (pred.)':pavPred):'—';
+    var estStr=estPred?(Object.keys(f.estados).length>1?estPred+' (pred.)':estPred):'—';
+    return '<tr'+(rec?' style="background:#fff3cd;"':'')+'>'
       +'<td style="padding:.35rem .5rem;font-weight:700;color:#1e3a5f;white-space:nowrap;">'+maxEsc(f.codigo)+'</td>'
-      +'<td style="padding:.35rem .5rem;">'+maxEsc(f.descricao||'')+'</td>'
-      +'<td style="padding:.35rem .5rem;text-align:center;font-weight:700;">'+(f.ocorrencias||0)+'</td>'
-      +'<td style="padding:.35rem .5rem;">'+maxEsc(f.pavimento||'—')+'</td>'
-      +'<td style="padding:.35rem .5rem;">'+maxEsc(f.estadoNoMomento||'—')+'</td>'
+      +'<td style="padding:.35rem .5rem;">'+maxEsc(f.descricao)+'</td>'
+      +'<td style="padding:.35rem .5rem;text-align:center;font-weight:700;color:'+(rec?'#dc2626':'#111')+';">'+f.ocorrencias
+      +(rec?' <span style="background:#dc2626;color:#fff;font-size:6pt;padding:1px 3px;border-radius:2px;">●</span>':'')
+      +'</td>'
+      +'<td style="padding:.35rem .5rem;">'+maxEsc(pavStr)+'</td>'
+      +'<td style="padding:.35rem .5rem;">'+maxEsc(estStr)+'</td>'
       +'<td style="padding:.35rem .5rem;color:#92400e;">'+maxEsc(f.causaProvavel||'—')+'</td>'
       +'<td style="padding:.35rem .5rem;color:#065f46;">'+maxEsc(f.acaoSugerida||'—')+'</td>'
       +'</tr>';
@@ -12673,23 +12722,39 @@ function maxExportarPDF(){
 
   var html='<!DOCTYPE html><html><head><meta charset="utf-8">'
     +'<title>Relatório MAX — Elevador '+reg.unitId+'</title>'
-    +'<style>body{font-family:Arial,sans-serif;margin:0;padding:20px;color:#111;font-size:10pt;}'
+    +'<style>'
+    +'body{font-family:Arial,sans-serif;margin:0;padding:20px;color:#111;font-size:10pt;}'
     +'h1{font-size:14pt;color:#1e3a5f;margin-bottom:4px;border-bottom:2px solid #1e3a5f;padding-bottom:6px;}'
-    +'.meta{font-size:9pt;color:#444;margin-bottom:14px;}'
-    +'table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-top:14px;}'
+    +'h2{font-size:10.5pt;color:#1e3a5f;margin:18px 0 5px;border-bottom:1px solid #c0d0e0;padding-bottom:3px;}'
+    +'.meta{font-size:9pt;color:#444;margin-bottom:10px;}'
+    +'.stats{display:flex;gap:14px;margin-bottom:14px;flex-wrap:wrap;}'
+    +'.sc{background:#f0f4f8;border:1px solid #d0dcea;border-radius:5px;padding:7px 14px;text-align:center;min-width:90px;}'
+    +'.sc .v{font-size:15pt;font-weight:700;color:#1e3a5f;line-height:1.2;}'
+    +'.sc .l{font-size:7.5pt;color:#666;}'
+    +'table{width:100%;border-collapse:collapse;font-size:8.5pt;}'
     +'th{background:#1e3a5f;color:#fff;padding:.35rem .5rem;text-align:left;font-size:8pt;}'
-    +'tr:nth-child(even){background:#f0f4f8;}'
+    +'tr:nth-child(even):not([style*="background"]){background:#f0f4f8;}'
     +'td{border-bottom:1px solid #ddd;vertical-align:top;}'
     +'.footer{font-size:7.5pt;color:#999;margin-top:18px;border-top:1px solid #eee;padding-top:6px;}'
-    +'@media print{@page{margin:1.5cm;size:A4 landscape}body{padding:0}}'
+    +'@media print{@page{margin:1.5cm;size:A4 landscape}body{padding:0}.nb{page-break-inside:avoid}}'
     +'</style></head><body>'
     +'<h1>Relatório de Falhas — Elevador '+maxEsc(reg.unitId)+'</h1>'
-    +'<div class="meta">Data da análise: '+dtStr+' &nbsp;·&nbsp; Período analisado: '+reg.horasPeriodo+'h'
-    +' &nbsp;·&nbsp; Total de tipos de falha: '+reg.totalFalhas+' &nbsp;·&nbsp; Origem: '+maxEsc(origemLabel)+'</div>'
-    +(chartImg?'<div style="margin-bottom:12px;"><div style="font-size:9pt;font-weight:bold;color:#1e3a5f;margin-bottom:4px;">Ocorrências por código de erro</div><img src="'+chartImg+'" style="max-width:100%;height:auto;border:1px solid #e0e0e0;"></div>':'')
-    +'<table><thead><tr><th>Código</th><th>Descrição</th><th>Ocorr.</th><th>Pavimento</th><th>Estado no momento</th><th>Causa provável</th><th>Ação sugerida</th></tr></thead>'
+    +'<div class="meta">Análise: '+dtStr+' &nbsp;·&nbsp; Período: '+reg.horasPeriodo+'h &nbsp;·&nbsp; Origem: '+maxEsc(origemLabel)+'</div>'
+    +'<div class="stats">'
+    +'<div class="sc"><div class="v">'+falhas.length+'</div><div class="l">Tipos de falha</div></div>'
+    +'<div class="sc"><div class="v">'+totalOcorrencias+'</div><div class="l">Total ocorrências</div></div>'
+    +'<div class="sc"><div class="v" style="color:'+(totalRecorrentes>0?'#dc2626':'#1e3a5f')+';">'+totalRecorrentes+'</div><div class="l">Padrões recorrentes<br>(>20 ocorr.)</div></div>'
+    +'</div>'
+    +'<div class="nb">'
+    +(chartImg?'<div style="margin-bottom:10px;"><div style="font-size:8.5pt;font-weight:bold;color:#1e3a5f;margin-bottom:3px;">Ranking de ocorrências por código</div><img src="'+chartImg+'" style="max-width:100%;height:auto;border:1px solid #e0e0e0;display:block;"></div>':'')
+    +'<h2>Ranking resumido</h2>'
+    +'<table><thead><tr><th>#</th><th>Código</th><th>Descrição</th><th>Ocorrências</th></tr></thead>'
+    +'<tbody>'+rankRows+'</tbody></table>'
+    +'</div>'
+    +'<h2>Detalhamento por código (agrupado)</h2>'
+    +'<table><thead><tr><th>Código</th><th>Descrição</th><th>Ocorr.</th><th>Pavimento</th><th>Estado predominante</th><th>Causa provável</th><th>Ação sugerida</th></tr></thead>'
     +'<tbody>'+rowsHtml+'</tbody></table>'
-    +'<div class="footer">Gerado pelo GN Gestão &nbsp;·&nbsp; TK Elevator &nbsp;·&nbsp; Recife-PE</div>'
+    +'<div class="footer">Gerado pelo GN Gestão &nbsp;·&nbsp; TK Elevator &nbsp;·&nbsp; Recife-PE &nbsp;·&nbsp; '+new Date().toLocaleString('pt-BR')+'</div>'
     +'<script>window.print();<\/script>'
     +'</body></html>';
 
