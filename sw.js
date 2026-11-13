@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gn-gestao-20260628';
+const CACHE_NAME = 'gn-gestao-20261113';
 const PRECACHE_URLS = ['/gn-gestao/index.html', '/gn-gestao/manifest.json'];
 const N8N_ORIGIN = 'https://n8n.srv1610251.hstgr.cloud';
 

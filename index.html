@@ -7583,7 +7583,7 @@ function gnWatchdog(){
   }
   _gnSpeakingStart = 0;
   const diff = Date.now() - gnLastActivity;
-  if(diff > 45000 && !gnExecutando){
+  if(diff > 75000 && !gnExecutando && !gnListening && !gnSpeaking){
     console.log('Watchdog: reiniciando loop travado...');
     gnListening = false;
     gnSpeaking = false;
@@ -7642,13 +7642,19 @@ async function gnListen(){
       const dataArray = new Uint8Array(analyser.frequencyBinCount);
       let silenceStart = null;
       const _gnVadMobile = (typeof detectMobile === 'function') && detectMobile();
-      const _gnVadThreshold = _gnVadMobile ? 25 : 15;
-      const _gnVadSilenceMs = _gnVadMobile ? 2500 : 2000;
+      const _gnVadThreshold = _gnVadMobile ? 45 : 38;
+      const _gnVadSilenceMs = _gnVadMobile ? 3500 : 3000;
 
+      let _gnVadLogTimer = Date.now();
       function checkSilence(){
         if(!gnListening) return;
         analyser.getByteFrequencyData(dataArray);
         const volume = dataArray.reduce((a,b)=>a+b,0) / dataArray.length;
+
+        if(Date.now() - _gnVadLogTimer >= 2000){
+          console.log('VAD nível atual: ' + Math.round(volume) + ' (threshold: ' + _gnVadThreshold + ')');
+          _gnVadLogTimer = Date.now();
+        }
 
         if(volume < _gnVadThreshold){
           if(!silenceStart) silenceStart = Date.now();
@@ -7691,11 +7697,11 @@ async function gnListen(){
     // Timeout máximo de 90s para evitar acúmulo de áudio em ambientes ruidosos
     window._gnMaxRecTimeout = setTimeout(function(){
       if(gnMediaRecorder && gnMediaRecorder.state === 'recording'){
-        console.warn('Timeout máximo de gravação (90s) — parando MediaRecorder');
+        console.warn('Timeout máximo de gravação (20s) — parando MediaRecorder');
         gnMediaRecorder.stop();
         if(gnStream){ gnStream.getTracks().forEach(t=>t.stop()); gnStream=null; }
       }
-    }, 90000);
+    }, 20000);
 
   } catch(err) {
     console.error('Erro ao acessar microfone:', err);
@@ -7784,7 +7790,7 @@ function gnReiniciar(){
   }
   setTimeout(()=>{
     if(gnContinuousMode && !gnListening && !gnSpeaking) gnListen();
-  }, 300);
+  }, 700);
 }
 
 async function gnProgramarFerias(cmdLower, textoOriginal){
@@ -12653,12 +12659,14 @@ function maxExportarPDF(){
     if(!mapa[k]){
       mapa[k]={codigo:f.codigo,descricao:f.descricao||'',ocorrencias:0,
                 causaProvavel:f.causaProvavel||'',acaoSugerida:f.acaoSugerida||'',
-                pavimentos:{},estados:{}};
+                pavimentos:{},estados:{},ondeResumos:[],ondeDistAll:[]};
     }
     var g=mapa[k];
     g.ocorrencias+=(f.ocorrencias||1);
     if(f.pavimento)       g.pavimentos[f.pavimento]=(g.pavimentos[f.pavimento]||0)+1;
     if(f.estadoNoMomento) g.estados[f.estadoNoMomento]=(g.estados[f.estadoNoMomento]||0)+1;
+    if(f.onde && f.onde.resumoOnde) g.ondeResumos.push(f.onde.resumoOnde);
+    if(f.onde && f.onde.distribuicaoAndares) g.ondeDistAll=g.ondeDistAll.concat(f.onde.distribuicaoAndares);
     // Prefer non-empty causa/acao if current slot is blank
     if(!g.causaProvavel && f.causaProvavel) g.causaProvavel=f.causaProvavel;
     if(!g.acaoSugerida  && f.acaoSugerida)  g.acaoSugerida=f.acaoSugerida;
@@ -12703,20 +12711,29 @@ function maxExportarPDF(){
   // 4. Tabela detalhada (1 linha por código agrupado)
   var rowsHtml=falhas.map(function(f){
     var rec=f.ocorrencias>20;
-    var pavPred=topKey(f.pavimentos);
     var estPred=topKey(f.estados);
-    var pavStr=pavPred?(Object.keys(f.pavimentos).length>1?pavPred+' (pred.)':pavPred):'—';
-    var estStr=estPred?(Object.keys(f.estados).length>1?estPred+' (pred.)':estPred):'—';
+    var estStr=estPred?(Object.keys(f.estados).length>1?estPred+' (pred.)':estPred):'\u2014';
+    // Coluna "Onde": resumoOnde (preferência do primeiro episódio) + distribuição
+    var ondeResumo=f.ondeResumos.length>0?f.ondeResumos[0]:'\u2014';
+    var distText='';
+    if(f.ondeDistAll&&f.ondeDistAll.length>0){
+      // Agrupar distribuições de todos os episódios
+      var dm={};f.ondeDistAll.forEach(function(a){var ck=a.andar+'|'+(a.lado||'');if(!dm[ck])dm[ck]={andar:a.andar,lado:a.lado,ocorrencias:0,parado:0};dm[ck].ocorrencias+=a.ocorrencias;dm[ck].parado+=(a.parado||0);});
+      var da=Object.values(dm).sort(function(a,b){return b.ocorrencias-a.ocorrencias;}).slice(0,4);
+      distText=da.map(function(a){var l=a.lado==='Frente'?'Fr':a.lado==='Fundo'?'Fd':'';return a.andar+(l?' '+l:'')+':'+a.ocorrencias+(a.parado?' (p:'+a.parado+')':'');}).join(' \u00B7 ');
+    }
+    var ondeCel='<div style="font-weight:700;font-size:8pt;">'+maxEsc(ondeResumo)+'</div>'
+      +(distText?'<div style="font-size:7pt;color:#666;margin-top:2px;">'+maxEsc(distText)+'</div>':'');
     return '<tr'+(rec?' style="background:#fff3cd;"':'')+'>'
       +'<td style="padding:.35rem .5rem;font-weight:700;color:#1e3a5f;white-space:nowrap;">'+maxEsc(f.codigo)+'</td>'
       +'<td style="padding:.35rem .5rem;">'+maxEsc(f.descricao)+'</td>'
       +'<td style="padding:.35rem .5rem;text-align:center;font-weight:700;color:'+(rec?'#dc2626':'#111')+';">'+f.ocorrencias
-      +(rec?' <span style="background:#dc2626;color:#fff;font-size:6pt;padding:1px 3px;border-radius:2px;">●</span>':'')
+      +(rec?' <span style="background:#dc2626;color:#fff;font-size:6pt;padding:1px 3px;border-radius:2px;">\u25CF</span>':'')
       +'</td>'
-      +'<td style="padding:.35rem .5rem;">'+maxEsc(pavStr)+'</td>'
+      +'<td style="padding:.35rem .5rem;max-width:220px;">'+ondeCel+'</td>'
       +'<td style="padding:.35rem .5rem;">'+maxEsc(estStr)+'</td>'
-      +'<td style="padding:.35rem .5rem;color:#92400e;">'+maxEsc(f.causaProvavel||'—')+'</td>'
-      +'<td style="padding:.35rem .5rem;color:#065f46;">'+maxEsc(f.acaoSugerida||'—')+'</td>'
+      +'<td style="padding:.35rem .5rem;color:#92400e;">'+maxEsc(f.causaProvavel||'\u2014')+'</td>'
+      +'<td style="padding:.35rem .5rem;color:#065f46;">'+maxEsc(f.acaoSugerida||'\u2014')+'</td>'
       +'</tr>';
   }).join('');
 
@@ -12752,7 +12769,7 @@ function maxExportarPDF(){
     +'<tbody>'+rankRows+'</tbody></table>'
     +'</div>'
     +'<h2>Detalhamento por código (agrupado)</h2>'
-    +'<table><thead><tr><th>Código</th><th>Descrição</th><th>Ocorr.</th><th>Pavimento</th><th>Estado predominante</th><th>Causa provável</th><th>Ação sugerida</th></tr></thead>'
+    +'<table><thead><tr><th>Código</th><th>Descrição</th><th>Ocorr.</th><th>Onde</th><th>Estado predominante</th><th>Causa provável</th><th>Ação sugerida</th></tr></thead>'
     +'<tbody>'+rowsHtml+'</tbody></table>'
     +'<div class="footer">Gerado pelo GN Gestão &nbsp;·&nbsp; TK Elevator &nbsp;·&nbsp; Recife-PE &nbsp;·&nbsp; '+new Date().toLocaleString('pt-BR')+'</div>'
     +'<script>window.print();<\/script>'
