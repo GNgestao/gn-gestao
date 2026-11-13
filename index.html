@@ -12666,7 +12666,9 @@ function maxExportarPDF(){
     if(f.pavimento)       g.pavimentos[f.pavimento]=(g.pavimentos[f.pavimento]||0)+1;
     if(f.estadoNoMomento) g.estados[f.estadoNoMomento]=(g.estados[f.estadoNoMomento]||0)+1;
     if(f.onde && f.onde.resumoOnde) g.ondeResumos.push(f.onde.resumoOnde);
-    if(f.onde && f.onde.distribuicaoAndares) g.ondeDistAll=g.ondeDistAll.concat(f.onde.distribuicaoAndares);
+    // Usar distribuição consolidada apenas do primeiro episódio — todos os episódios do mesmo
+    // código carregam a mesma distConsolidada; concatenar múltiplos multiplicaria os valores.
+    if(f.onde && f.onde.distribuicaoAndares && g.ondeDistAll.length===0) g.ondeDistAll=f.onde.distribuicaoAndares.slice();
     // Prefer non-empty causa/acao if current slot is blank
     if(!g.causaProvavel && f.causaProvavel) g.causaProvavel=f.causaProvavel;
     if(!g.acaoSugerida  && f.acaoSugerida)  g.acaoSugerida=f.acaoSugerida;
