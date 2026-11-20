@@ -12550,6 +12550,7 @@ async function maxExcluirRegistro(reg, wrapEl){
 
 // ── Relatório detalhado ───────────────────────────────────────────
 var _maxRelAtual = null;
+var _maxComparativoReg = null;
 
 function maxAbrirRelatorio(reg){
   try {
@@ -12621,11 +12622,24 @@ function maxAbrirRelatorio(reg){
 function maxFecharRelatorio(){
   var m = document.getElementById('maxRelatorioModal');
   if(m) m.style.display = 'none';
+  if (_maxComparativoReg) {
+    _maxComparativoReg = null;
+    var tl = document.getElementById('maxRelTipoLabel');
+    if (tl) tl.textContent = 'Relatório — Elevador ';
+    var uid = document.getElementById('maxRelUnitId');
+    if (uid) uid.style.color = '#38bdf8';
+    var sub = document.getElementById('maxRelSubtitulo');
+    if (sub) sub.innerHTML = '<span id="maxRelDataHora"></span> &nbsp;·&nbsp; Período: <span id="maxRelPeriodo"></span> &nbsp;·&nbsp; <span id="maxRelTotal" style="color:#38bdf8;font-weight:700;"></span> tipos de falha';
+    var lbl = document.getElementById('maxChartLabel');
+    if (lbl) { lbl.style.color = 'rgba(56,189,248,.7)'; lbl.textContent = 'OCORRÊNCIAS POR CÓDIGO DE ERRO'; }
+  }
 }
 
 // ── Modal de comparativo de períodos ──────────────────────────────
 function maxAbrirComparativo(reg){
-  var fj = reg.falhasJson || {};
+  _maxComparativoReg = reg;
+  _maxRelAtual = null;
+  var fj = typeof reg.falhasJson === 'string' ? JSON.parse(reg.falhasJson) : (reg.falhasJson || {});
   if (!fj.periodos || !fj.periodos.length) {
     alert('Dados do comparativo indisponíveis.');
     return;
@@ -12634,73 +12648,96 @@ function maxAbrirComparativo(reg){
   var top8 = fj.top8Codigos || [];
   var rotulos = periodos.map(function(p){ return p.rotulo || '—'; });
   var conclusoes = fj.conclusoes || [];
+  var dt = new Date(reg.dataHora);
+  var dtStr = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 
-  // Buscar o modal e preencher cabeçalho
   var modal = document.getElementById('maxRelatorioModal');
   if (!modal) return;
 
-  var elUnit = document.getElementById('maxRelUnit');
-  var elPer  = document.getElementById('maxRelPeriodo');
-  var elTot  = document.getElementById('maxRelTotal');
-  var elObs  = document.getElementById('maxRelObs');
-  if (elUnit) elUnit.textContent = 'Comparativo — Elevador ' + reg.unitId;
-  if (elPer)  elPer.textContent = rotulos.join(' / ');
-  if (elTot)  elTot.textContent = periodos.length + ' períodos';
-  if (elObs)  { elObs.style.display = reg.observacao ? 'block' : 'none'; elObs.textContent = reg.observacao ? '📝 ' + reg.observacao : ''; }
+  // Título: "Comparativo — Elevador 96765"
+  var tl = document.getElementById('maxRelTipoLabel');
+  var uid = document.getElementById('maxRelUnitId');
+  if (tl) tl.textContent = 'Comparativo — Elevador ';
+  if (uid) { uid.textContent = reg.unitId; uid.style.color = '#a78bfa'; }
 
-  // Substituir botão Exportar para chamar a versão comparativo
-  var btnExp = document.getElementById('maxBtnExportar');
-  if (btnExp) {
-    var novo = btnExp.cloneNode(true);
-    novo.textContent = '📄 Exportar PDF';
-    novo.onclick = function(){ maxExportarComparativoPDF(reg); };
-    btnExp.parentNode.replaceChild(novo, btnExp);
-  }
+  // Subtítulo: "Data · Períodos: Set · Out · Nov · N tipos de falha"
+  var sub = document.getElementById('maxRelSubtitulo');
+  if (sub) sub.innerHTML = maxEsc(dtStr) + ' &nbsp;·&nbsp; Períodos: <span style="color:rgba(167,139,250,.9);">' + rotulos.map(maxEsc).join(' · ') + '</span> &nbsp;·&nbsp; <span style="color:#a78bfa;font-weight:700;">' + top8.length + '</span> tipos de falha';
 
-  // Renderizar tabela comparativa no lugar do gráfico + lista
+  // Observação
+  var elObs = document.getElementById('maxRelObservacao');
+  if (elObs) { elObs.style.display = reg.observacao ? 'block' : 'none'; elObs.textContent = reg.observacao ? '📝 ' + reg.observacao : ''; }
+
+  // Label do gráfico
+  var lbl = document.getElementById('maxChartLabel');
+  if (lbl) { lbl.style.color = 'rgba(167,139,250,.7)'; lbl.textContent = 'OCORRÊNCIAS POR PERÍODO'; }
+
+  // Coletar descrições dos códigos
+  var descs = {};
+  periodos.forEach(function(p){
+    if (p.codigos) Object.keys(p.codigos).forEach(function(cod){
+      if (!descs[cod] && p.codigos[cod].descricao) descs[cod] = p.codigos[cod].descricao;
+    });
+  });
+
+  // Montar tabela na seção de lista
   var listEl = document.getElementById('maxRelLista');
-  var chartEl = document.getElementById('maxRelChart');
-  if (chartEl) chartEl.style.display = 'none';
-
   if (!listEl) { modal.style.display = 'flex'; return; }
 
-  // Montar HTML do comparativo
   var html = '';
-
-  // Tabela de ocorrências por período
   if (top8.length) {
     html += '<div style="font-size:.85rem;font-weight:700;color:rgba(167,139,250,.9);margin-bottom:.5rem;font-family:\'Syne\',sans-serif;">Ocorrências por período</div>';
-    html += '<table style="width:100%;border-collapse:collapse;font-size:.78rem;margin-bottom:1rem;">';
-    html += '<tr><th style="text-align:left;padding:.35rem .5rem;color:rgba(255,255,255,.5);border-bottom:1px solid rgba(255,255,255,.1);">Código</th>';
-    rotulos.forEach(function(r){ html += '<th style="text-align:center;padding:.35rem .5rem;color:rgba(167,139,250,.8);border-bottom:1px solid rgba(255,255,255,.1);">' + maxEsc(r) + '</th>'; });
-    html += '<th style="text-align:center;padding:.35rem .5rem;color:rgba(255,255,255,.4);border-bottom:1px solid rgba(255,255,255,.1);">Variação</th></tr>';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:.78rem;margin-bottom:1rem;table-layout:fixed;">';
+    html += '<colgroup><col style="width:4em"><col style=""><col style="width:3.5em">'; rotulos.forEach(function(){ html += '<col style="width:3.5em">'; }); html += '</colgroup>';
+    html += '<thead><tr>';
+    html += '<th style="text-align:left;padding:.35rem .4rem;color:rgba(255,255,255,.5);border-bottom:1px solid rgba(255,255,255,.1);">Código</th>';
+    html += '<th style="text-align:left;padding:.35rem .4rem;color:rgba(255,255,255,.5);border-bottom:1px solid rgba(255,255,255,.1);">Descrição</th>';
+    rotulos.forEach(function(r){ html += '<th style="text-align:center;padding:.35rem .3rem;color:rgba(167,139,250,.85);border-bottom:1px solid rgba(255,255,255,.1);font-size:.72rem;">' + maxEsc(r.replace('/2026','').replace('/26','')) + '</th>'; });
+    html += '<th style="text-align:center;padding:.35rem .3rem;color:rgba(255,255,255,.4);border-bottom:1px solid rgba(255,255,255,.1);font-size:.72rem;">Var.</th>';
+    html += '</tr></thead><tbody>';
     top8.forEach(function(cod){
       var qtds = periodos.map(function(p){ return (p.codigos && p.codigos[cod] && p.codigos[cod].total) || 0; });
       var prim = qtds[0], ult = qtds[qtds.length-1];
+      var maxQ = Math.max.apply(null, qtds), maxIdx = qtds.indexOf(maxQ);
       var variacaoStr = '—', variacaoCor = 'rgba(255,255,255,.4)';
-      if (prim > 0 && ult >= 0) {
+      if (prim === 0 && ult > 0) { variacaoStr = 'novo'; variacaoCor = '#fbbf24'; }
+      else if (prim > 0 && ult === 0) { variacaoStr = '−100%'; variacaoCor = '#4ade80'; }
+      else if (prim > 0) {
         var pct = Math.round((ult - prim) / prim * 100);
         if (pct <= -20) { variacaoStr = pct + '%'; variacaoCor = '#4ade80'; }
         else if (pct >= 20) { variacaoStr = '+' + pct + '%'; variacaoCor = '#e2504a'; }
-        else { variacaoStr = pct > 0 ? '+' + pct + '%' : pct + '%'; variacaoCor = '#fbbf24'; }
-      } else if (prim === 0 && ult > 0) { variacaoStr = 'novo'; variacaoCor = '#fbbf24'; }
-      else if (prim > 0 && ult === 0) { variacaoStr = 'zerou'; variacaoCor = '#4ade80'; }
-      html += '<tr><td style="padding:.3rem .5rem;color:#38bdf8;font-weight:700;">' + maxEsc(cod) + '</td>';
-      qtds.forEach(function(q){ var c = q === 0 ? 'rgba(255,255,255,.25)' : (q > 30 ? '#e2504a' : q > 10 ? '#fbbf24' : '#4ade80'); html += '<td style="text-align:center;padding:.3rem .5rem;color:'+c+';font-weight:600;">' + q + '</td>'; });
-      html += '<td style="text-align:center;padding:.3rem .5rem;color:'+variacaoCor+';font-weight:700;">' + variacaoStr + '</td></tr>';
+        else { variacaoStr = (pct >= 0 ? '+' : '') + pct + '%'; variacaoCor = '#fbbf24'; }
+      }
+      // Pico: max no meio (não no primeiro nem no último), e maior que zero
+      if (qtds.length >= 3 && maxIdx > 0 && maxIdx < qtds.length-1 && maxQ > 0) {
+        variacaoStr = 'pico ' + (rotulos[maxIdx] || '').replace('/2026','').replace('/26','');
+        variacaoCor = '#fbbf24';
+      }
+      var desc = descs[cod] || '';
+      html += '<tr>';
+      html += '<td style="padding:.3rem .4rem;color:#a78bfa;font-weight:700;white-space:nowrap;">' + maxEsc(cod) + '</td>';
+      html += '<td style="padding:.3rem .4rem;color:rgba(255,255,255,.6);font-size:.74rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + maxEsc(desc) + '">' + maxEsc(desc) + '</td>';
+      qtds.forEach(function(q){ var c = q === 0 ? 'rgba(255,255,255,.2)' : (q > 30 ? '#e2504a' : q > 10 ? '#fbbf24' : '#4ade80'); html += '<td style="text-align:center;padding:.3rem .3rem;color:'+c+';font-weight:600;">' + q + '</td>'; });
+      html += '<td style="text-align:center;padding:.3rem .3rem;color:'+variacaoCor+';font-weight:700;font-size:.74rem;">' + variacaoStr + '</td>';
+      html += '</tr>';
     });
-    html += '</table>';
+    html += '</tbody></table>';
   }
 
-  // Andares por período (se disponível)
-  if (fj.andaresPorPeriodo && fj.andaresPorPeriodo.trim()) {
-    html += '<div style="font-size:.85rem;font-weight:700;color:rgba(167,139,250,.9);margin-bottom:.4rem;font-family:\'Syne\',sans-serif;">Andares mais afetados</div>';
-    html += '<div style="font-size:.78rem;color:rgba(255,255,255,.65);white-space:pre-line;margin-bottom:1rem;">' + maxEsc(fj.andaresPorPeriodo.trim()) + '</div>';
+  // Andares por período
+  if (fj.andaresPorPeriodo) {
+    var andares = String(fj.andaresPorPeriodo).trim();
+    // Truncar linhas muito longas (dados corrompidos de repetição)
+    var linhasAndares = andares.split('\n').map(function(l){ return l.length > 150 ? l.substring(0,150) + '…' : l; }).join('\n');
+    if (linhasAndares.trim()) {
+      html += '<div style="font-size:.85rem;font-weight:700;color:rgba(167,139,250,.9);margin-bottom:.4rem;margin-top:.75rem;font-family:\'Syne\',sans-serif;">Andares mais afetados</div>';
+      html += '<div style="font-size:.78rem;color:rgba(255,255,255,.6);white-space:pre-line;margin-bottom:1rem;">' + maxEsc(linhasAndares) + '</div>';
+    }
   }
 
   // Conclusões
   if (conclusoes.length) {
-    html += '<div style="font-size:.85rem;font-weight:700;color:rgba(167,139,250,.9);margin-bottom:.4rem;font-family:\'Syne\',sans-serif;">Conclusões automáticas</div>';
+    html += '<div style="font-size:.85rem;font-weight:700;color:rgba(167,139,250,.9);margin-bottom:.4rem;margin-top:.75rem;font-family:\'Syne\',sans-serif;">Conclusões automáticas</div>';
     html += '<ul style="margin:0;padding-left:1.2rem;font-size:.8rem;color:rgba(255,255,255,.7);">';
     conclusoes.forEach(function(c){ html += '<li style="margin-bottom:.25rem;">' + maxEsc(c) + '</li>'; });
     html += '</ul>';
@@ -12712,52 +12749,75 @@ function maxAbrirComparativo(reg){
   modal.style.display = 'flex';
   var body = document.getElementById('maxRelBody');
   if (body) body.scrollTop = 0;
-}
-
-function maxFecharComparativo(){
-  var m = document.getElementById('maxRelatorioModal');
-  if(m) m.style.display = 'none';
-  // Restaurar botão Exportar original
-  var btnExp = document.getElementById('maxBtnExportar');
-  if (btnExp) {
-    var novo = btnExp.cloneNode(true);
-    novo.textContent = '📄 Exportar PDF';
-    novo.onclick = function(){ if(window._maxRegAtual) maxExportarPDF(window._maxRegAtual); };
-    btnExp.parentNode.replaceChild(novo, btnExp);
-  }
-  // Restaurar canvas
-  var chartEl = document.getElementById('maxRelChart');
-  if (chartEl) chartEl.style.display = '';
+  setTimeout(function(){ maxRenderChartComparativo(top8, periodos, fj); }, 60);
 }
 
 function maxExportarComparativoPDF(reg){
-  var fj = reg.falhasJson || {};
+  var fj = typeof reg.falhasJson === 'string' ? JSON.parse(reg.falhasJson) : (reg.falhasJson || {});
   var periodos = fj.periodos || [];
   var top8 = fj.top8Codigos || [];
   var rotulos = periodos.map(function(p){ return p.rotulo || '—'; });
   var conclusoes = fj.conclusoes || [];
 
+  // Coletar descrições
+  var descs = {};
+  periodos.forEach(function(p){ if(p.codigos) Object.keys(p.codigos).forEach(function(cod){ if(!descs[cod]&&p.codigos[cod].descricao) descs[cod]=p.codigos[cod].descricao; }); });
+
+  // Gráfico off-screen (barras agrupadas, fundo branco)
+  var chartImgTag = '';
+  if (top8.length) {
+    var oc = document.createElement('canvas'); oc.width=660; oc.height=200;
+    var octx = oc.getContext('2d');
+    octx.fillStyle='#ffffff'; octx.fillRect(0,0,660,200);
+    var COLS=['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626'];
+    var n=top8.length, nPer=periodos.length, padL=12, padR=12, padT=18, padB=52;
+    var cW=660-padL-padR, cH=200-padT-padB, maxV=1;
+    top8.forEach(function(c){ periodos.forEach(function(p){ var v=(p.codigos&&p.codigos[c]&&p.codigos[c].total)||0; if(v>maxV)maxV=v; }); });
+    var gW=cW/n, bW=Math.max(2,(gW-6)/nPer-2);
+    top8.forEach(function(cod,gi){ var gx=padL+gi*gW;
+      periodos.forEach(function(p,pi){ var v=(p.codigos&&p.codigos[cod]&&p.codigos[cod].total)||0;
+        var bh=v===0?0:Math.max(2,v/maxV*cH), bx=gx+(gW-nPer*(bW+2))/2+pi*(bW+2), by=padT+cH-bh;
+        octx.fillStyle=COLS[pi%COLS.length]; octx.globalAlpha=0.85;
+        octx.fillRect(Math.round(bx),Math.round(by),Math.ceil(bW),Math.ceil(bh));
+        if(v>0){ octx.globalAlpha=1; octx.fillStyle='#111'; octx.font='bold 8px sans-serif'; octx.textAlign='center'; octx.fillText(v,bx+bW/2,Math.max(padT+10,by-2)); }
+      });
+      octx.globalAlpha=1; octx.fillStyle='#374151'; octx.font='9px sans-serif'; octx.textAlign='center';
+      octx.fillText(cod,gx+gW/2,200-padB+12);
+    });
+    var legX=padL;
+    periodos.forEach(function(p,pi){ octx.fillStyle=COLS[pi%COLS.length]; octx.globalAlpha=0.9; octx.fillRect(legX,200-padB+22,10,8); octx.globalAlpha=1; octx.fillStyle='#374151'; octx.font='9px sans-serif'; octx.textAlign='left'; var lbl=(p.rotulo||'').replace('/2026',''); octx.fillText(lbl,legX+13,200-padB+30); legX+=13+octx.measureText(lbl).width+14; });
+    chartImgTag = '<img src="' + oc.toDataURL('image/png') + '" style="width:100%;max-width:660px;height:auto;display:block;margin:8px 0;">';
+  }
+
+  // Tabela
   var linhasTabela = '';
   if (top8.length) {
-    var headerCols = rotulos.map(function(r){ return '<th style="padding:6px 10px;border:1px solid #ddd;background:#f0ebff;color:#5b21b6;">' + r + '</th>'; }).join('');
+    var headerCols = '<th style="padding:5px 8px;border:1px solid #ddd;background:#f0ebff;color:#5b21b6;">Código</th><th style="padding:5px 8px;border:1px solid #ddd;background:#f0ebff;color:#5b21b6;">Descrição</th>'
+      + rotulos.map(function(r){ return '<th style="padding:5px 8px;border:1px solid #ddd;background:#f0ebff;color:#5b21b6;text-align:center;">' + r + '</th>'; }).join('')
+      + '<th style="padding:5px 8px;border:1px solid #ddd;background:#f0ebff;color:#5b21b6;text-align:center;">Variação</th>';
     linhasTabela = top8.map(function(cod){
-      var qtds = periodos.map(function(p){ return (p.codigos && p.codigos[cod] && p.codigos[cod].total) || 0; });
-      var prim = qtds[0], ult = qtds[qtds.length-1];
-      var varStr = '—';
-      if (prim > 0) { var pct=Math.round((ult-prim)/prim*100); varStr = (pct>=0?'+':'')+pct+'%'; }
-      else if (ult > 0) varStr = 'novo';
-      var cells = qtds.map(function(q){ return '<td style="text-align:center;padding:5px 10px;border:1px solid #ddd;">'+q+'</td>'; }).join('');
-      return '<tr><td style="padding:5px 10px;border:1px solid #ddd;font-weight:700;color:#4c1d95;">'+cod+'</td>'+cells+'<td style="text-align:center;padding:5px 10px;border:1px solid #ddd;font-weight:700;">'+varStr+'</td></tr>';
+      var qtds = periodos.map(function(p){ return (p.codigos&&p.codigos[cod]&&p.codigos[cod].total)||0; });
+      var prim=qtds[0], ult=qtds[qtds.length-1], maxQ=Math.max.apply(null,qtds), maxI=qtds.indexOf(maxQ);
+      var varStr='—';
+      if (prim===0 && ult>0) varStr='novo';
+      else if (prim>0 && ult===0) varStr='−100%';
+      else if (prim>0) { var pct=Math.round((ult-prim)/prim*100); varStr=(pct>=0?'+':'')+pct+'%'; }
+      if (qtds.length>=3 && maxI>0 && maxI<qtds.length-1 && maxQ>0) varStr='pico em '+(rotulos[maxI]||'');
+      var cells=qtds.map(function(q){ return '<td style="text-align:center;padding:5px 8px;border:1px solid #ddd;">'+q+'</td>'; }).join('');
+      return '<tr><td style="padding:5px 8px;border:1px solid #ddd;font-weight:700;color:#4c1d95;">'+cod+'</td><td style="padding:5px 8px;border:1px solid #ddd;font-size:11px;color:#374151;">'+(descs[cod]||'')+'</td>'+cells+'<td style="text-align:center;padding:5px 8px;border:1px solid #ddd;font-weight:700;">'+varStr+'</td></tr>';
     }).join('');
   }
 
-  var conclusoesHtml = conclusoes.length ? '<h3 style="color:#5b21b6;margin:1.2rem 0 .5rem;">Conclusões</h3><ul style="margin:0;padding-left:1.2rem;font-size:12px;color:#374151;">' + conclusoes.map(function(c){ return '<li>'+c+'</li>'; }).join('') + '</ul>' : '';
+  var conclusoesHtml = conclusoes.length ? '<h3 style="color:#5b21b6;margin:1.2rem 0 .5rem;">Conclusões</h3><ul style="margin:0;padding-left:1.2rem;font-size:12px;color:#374151;">' + conclusoes.map(function(c){ return '<li style="margin-bottom:4px;">'+c+'</li>'; }).join('') + '</ul>' : '';
 
   var dt = new Date(reg.dataHora);
-  var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Comparativo MAX — Elevador ' + reg.unitId + '</title><style>body{font-family:Arial,sans-serif;padding:20px;color:#1f2937;}table{border-collapse:collapse;width:100%;font-size:12px;}th{text-align:left;}</style></head><body>'
-    + '<h2 style="color:#4c1d95;border-bottom:2px solid #7c3aed;padding-bottom:8px;">Comparativo de Falhas — Elevador ' + reg.unitId + '</h2>'
-    + '<p style="font-size:12px;color:#6b7280;">Gerado em ' + dt.toLocaleString('pt-BR') + ' | Períodos: ' + rotulos.join(' / ') + '</p>'
-    + (top8.length ? '<h3 style="color:#5b21b6;margin:1rem 0 .5rem;">Ocorrências por período</h3><table><thead><tr><th style="padding:6px 10px;border:1px solid #ddd;background:#f0ebff;">Código</th>' + headerCols + '<th style="padding:6px 10px;border:1px solid #ddd;background:#f0ebff;">Variação</th></tr></thead><tbody>' + linhasTabela + '</tbody></table>' : '')
+  var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Comparativo de Falhas — Elevador ' + reg.unitId + '</title>'
+    + '<style>body{font-family:Arial,sans-serif;padding:24px;color:#1f2937;font-size:12px;}table{border-collapse:collapse;width:100%;}th{text-align:left;}@media print{body{padding:12px;}}</style>'
+    + '</head><body>'
+    + '<h2 style="color:#4c1d95;border-bottom:2px solid #7c3aed;padding-bottom:8px;margin-bottom:4px;">Comparativo de Falhas — Elevador ' + reg.unitId + '</h2>'
+    + '<p style="color:#6b7280;margin-bottom:12px;">Gerado em ' + dt.toLocaleString('pt-BR') + ' &nbsp;|&nbsp; Períodos: ' + rotulos.join(' / ') + '</p>'
+    + (chartImgTag ? '<h3 style="color:#5b21b6;margin:1rem 0 .4rem;">Ocorrências por período</h3>' + chartImgTag : '')
+    + (top8.length ? '<table style="margin-top:.5rem;"><thead><tr>' + headerCols + '</tr></thead><tbody>' + linhasTabela + '</tbody></table>' : '')
     + conclusoesHtml
     + '<p style="font-size:10px;color:#9ca3af;margin-top:2rem;border-top:1px solid #e5e7eb;padding-top:8px;">GN Gestão • TK Elevator Recife • Cockpit MAX</p>'
     + '<script>window.onload=function(){window.print();}<\/script></body></html>';
@@ -12826,8 +12886,59 @@ function maxRenderChart(falhas){
   maxDrawBars(ctx,W,200,falhas,true);
 }
 
+// ── Gráfico de barras agrupadas (comparativo) ─────────────────────
+function maxRenderChartComparativo(top8, periodos, fj){
+  var canvas = document.getElementById('maxBarCanvas');
+  if (!canvas || !top8 || !top8.length) return;
+  var W = canvas.offsetWidth || 600;
+  var H = 220;
+  canvas.width = W; canvas.height = H;
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+  var padL=12, padR=12, padT=18, padB=52;
+  var cW = W-padL-padR, cH = H-padT-padB;
+  var COLORS = ['#38bdf8','#a78bfa','#4ade80','#fbbf24','#e2504a'];
+  var n = top8.length, nPer = periodos.length;
+  var maxVal = 1;
+  top8.forEach(function(cod){ periodos.forEach(function(p){ var v=(p.codigos&&p.codigos[cod]&&p.codigos[cod].total)||0; if(v>maxVal)maxVal=v; }); });
+  var groupW = cW/n;
+  var gapInner = 2;
+  var barW = Math.max(2, (groupW-6)/nPer - gapInner);
+  top8.forEach(function(cod, gi){
+    var gx = padL + gi*groupW;
+    periodos.forEach(function(p, pi){
+      var v = (p.codigos&&p.codigos[cod]&&p.codigos[cod].total)||0;
+      var bh = v === 0 ? 0 : Math.max(2, v/maxVal*cH);
+      var bx = gx + (groupW - nPer*(barW+gapInner))/2 + pi*(barW+gapInner);
+      var by = padT + cH - bh;
+      ctx.globalAlpha = 0.85; ctx.fillStyle = COLORS[pi%COLORS.length];
+      ctx.fillRect(Math.round(bx), Math.round(by), Math.ceil(barW), Math.ceil(bh));
+      if (v > 0) {
+        ctx.globalAlpha = 1; ctx.fillStyle = '#fff';
+        ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(v, bx+barW/2, Math.max(padT+10, by-2));
+      }
+    });
+    ctx.globalAlpha = 1; ctx.fillStyle = 'rgba(255,255,255,.65)';
+    ctx.font = '9px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(cod, gx+groupW/2, H-padB+12);
+  });
+  // Legenda
+  var legX = padL;
+  periodos.forEach(function(p, pi){
+    ctx.fillStyle = COLORS[pi%COLORS.length]; ctx.globalAlpha = 0.9;
+    ctx.fillRect(legX, H-padB+22, 10, 8);
+    ctx.globalAlpha = 1; ctx.fillStyle = 'rgba(255,255,255,.65)';
+    ctx.font = '9px sans-serif'; ctx.textAlign = 'left';
+    var lbl = (p.rotulo||'').replace('/2026','');
+    ctx.fillText(lbl, legX+13, H-padB+30);
+    legX += 13 + ctx.measureText(lbl).width + 16;
+  });
+}
+
 // ── Exportar PDF ─────────────────────────────────────────────────
 function maxExportarPDF(){
+  if(_maxComparativoReg){ maxExportarComparativoPDF(_maxComparativoReg); return; }
   if(!_maxRelAtual) return;
   var reg=_maxRelAtual;
   var falhasRaw=Array.isArray(reg.falhasJson)?reg.falhasJson:(typeof reg.falhasJson==='string'?JSON.parse(reg.falhasJson):[]);
@@ -13005,8 +13116,8 @@ async function invAtualizarCambio(){
     <!-- Header fixo -->
     <div style="flex-shrink:0;background:linear-gradient(135deg,#071624,#0a1e30);padding:1rem 1.4rem;display:flex;align-items:flex-start;justify-content:space-between;border-bottom:1px solid rgba(56,189,248,.15);flex-wrap:wrap;gap:.6rem;">
       <div>
-        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;color:#fff;">Relatório — Elevador <span id="maxRelUnitId" style="color:#38bdf8;"></span></div>
-        <div style="font-size:.76rem;color:rgba(255,255,255,.45);margin-top:.25rem;">
+        <div id="maxRelTituloDiv" style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;color:#fff;"><span id="maxRelTipoLabel">Relatório — Elevador </span><span id="maxRelUnitId" style="color:#38bdf8;"></span></div>
+        <div id="maxRelSubtitulo" style="font-size:.76rem;color:rgba(255,255,255,.45);margin-top:.25rem;">
           <span id="maxRelDataHora"></span> &nbsp;·&nbsp; Período: <span id="maxRelPeriodo"></span> &nbsp;·&nbsp; <span id="maxRelTotal" style="color:#38bdf8;font-weight:700;"></span> tipos de falha
         </div>
         <div id="maxRelObservacao" style="display:none;font-size:.78rem;color:rgba(255,215,0,.8);margin-top:.35rem;font-style:italic;"></div>
@@ -13020,7 +13131,7 @@ async function invAtualizarCambio(){
     <div id="maxRelBody" style="flex:1;min-height:0;overflow-y:auto;">
       <!-- Gráfico -->
       <div style="padding:1.1rem 1.4rem;border-bottom:1px solid rgba(56,189,248,.08);">
-        <div style="font-size:.78rem;font-weight:700;color:rgba(56,189,248,.7);margin-bottom:.55rem;letter-spacing:.03em;">OCORRÊNCIAS POR CÓDIGO DE ERRO</div>
+        <div id="maxChartLabel" style="font-size:.78rem;font-weight:700;color:rgba(56,189,248,.7);margin-bottom:.55rem;letter-spacing:.03em;">OCORRÊNCIAS POR CÓDIGO DE ERRO</div>
         <canvas id="maxBarCanvas" style="width:100%;display:block;"></canvas>
       </div>
       <!-- Lista detalhada -->
