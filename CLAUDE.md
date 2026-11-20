@@ -9,6 +9,10 @@ Antes de qualquer commit + push do `index.html`:
 2. **Nenhum `</script` literal** dentro de blocos `<script>` — usar `<\/script>` em strings JS que gerem HTML (ex.: PDFs, `window.document.write`). Verificar com grep/parse. Incidente 20/11/2026: `</script>` em `maxExportarComparativoPDF` quebrou todos os scripts do Hub.
 3. **Incrementar a versão do cache** do `sw.js` (ex.: `gn-gestao-20261120d`) para forçar atualização nos browsers.
 
+**Regras de dados — repetidas em 13/11 e 20/11/2026:**
+4. **`distribuicaoAndares` já é consolidada:** ao agregar por código, nunca somar `distribuicaoAndares` entre episódios do mesmo código — ela já representa todos os episódios. Usar apenas a do primeiro episódio (flag `_andaresSet`). Validar: `soma andares ≤ total do código` no período.
+5. **Datas sem fuso são horário de Recife:** strings como `"2026-11-01T00:00"` (sem `Z` nem offset) representam meia-noite em Recife. Não aplicar conversão UTC→Recife (subtrair 3h) — extrair a data diretamente via `substring(0,10)`.
+
 ---
 
 ## ⚠️ INCIDENTE CRÍTICO — NUNCA REPETIR

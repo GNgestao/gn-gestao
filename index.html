@@ -12889,7 +12889,6 @@ function maxExportarComparativoPDF(reg){
   var rotulos = periodos.map(function(p){ return p.rotulo || '—'; });
   // Recalcular conclusões e andares a partir dos dados brutos
   var conclusoes = maxCalcConclusoes(top8, periodos, DESC_PT);
-  var andaresPorPeriodoPDF = maxCalcAndares(top8, periodos, DESC_PT);
   var avisoObs = fj.avisoParciaisObs || maxCalcAvisoObs(periodos);
 
   // Coletar descrições
@@ -12899,11 +12898,11 @@ function maxExportarComparativoPDF(reg){
   // Gráfico off-screen (barras agrupadas, fundo branco)
   var chartImgTag = '';
   if (top8.length) {
-    var oc = document.createElement('canvas'); oc.width=660; oc.height=200;
+    var oc = document.createElement('canvas'); oc.width=660; oc.height=160;
     var octx = oc.getContext('2d');
-    octx.fillStyle='#ffffff'; octx.fillRect(0,0,660,200);
+    octx.fillStyle='#ffffff'; octx.fillRect(0,0,660,160);
     var COLS=['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626'];
-    var n=top8.length, nPer=periodos.length, padL=12, padR=12, padT=18, padB=52;
+    var n=top8.length, nPer=periodos.length, padL=12, padR=12, padT=14, padB=46;
     var cW=660-padL-padR, cH=200-padT-padB, maxV=1;
     top8.forEach(function(c){ periodos.forEach(function(p){ var v=(p.codigos&&p.codigos[c]&&p.codigos[c].total)||0; if(v>maxV)maxV=v; }); });
     var gW=cW/n, bW=Math.max(2,(gW-6)/nPer-2);
@@ -12962,16 +12961,39 @@ function maxExportarComparativoPDF(reg){
   }
 
   var conclusoesHtml = conclusoes.length
-    ? '<h3 style="color:#5b21b6;margin:.8rem 0 .3rem;font-size:13px;page-break-inside:avoid;">Conclusões</h3>'
+    ? '<h3 style="color:#5b21b6;margin:.5rem 0 .2rem;font-size:13px;page-break-inside:avoid;">Conclusões</h3>'
       + '<ul style="margin:0;padding-left:1.2rem;font-size:11px;color:#374151;page-break-inside:avoid;">'
-      + conclusoes.map(function(concl){ return '<li style="margin-bottom:3px;">'+concl+'</li>'; }).join('')
+      + conclusoes.map(function(concl){ return '<li style="margin-bottom:2px;">'+concl+'</li>'; }).join('')
       + '</ul>'
-      + (avisoObs ? '<p style="font-size:10px;color:#6b7280;font-style:italic;margin:.4rem 0 0;page-break-inside:avoid;">' + avisoObs + '</p>' : '')
+      + (avisoObs ? '<p style="font-size:10px;color:#6b7280;font-style:italic;margin:.3rem 0 0;page-break-inside:avoid;">' + avisoObs + '</p>' : '')
     : '';
-  var andaresHtmlPDF = andaresPorPeriodoPDF.trim()
-    ? '<h3 style="color:#5b21b6;margin:.8rem 0 .3rem;font-size:13px;page-break-inside:avoid;">Onde ocorreram</h3>'
-      + '<pre style="font-size:10px;color:#374151;margin:0;white-space:pre-wrap;page-break-inside:avoid;">' + andaresPorPeriodoPDF.trim() + '</pre>'
-    : '';
+  // "Onde ocorreram" como tabela (mesmo estilo da tabela principal)
+  var CODIGOS_PORTA_SET_PDF = {'1046':1,'1026':1,'1066':1,'1047':1,'1016':1,'1036':1,'1028':1,'2027':1};
+  var codigosAndaresPDF = top8.filter(function(c){ return CODIGOS_PORTA_SET_PDF[c]; }).slice(0, 3);
+  var andaresHtmlPDF = '';
+  if (codigosAndaresPDF.length) {
+    var aHeaderCols = '<th style="padding:4px 7px;border:1px solid #ddd;background:#f0ebff;color:#5b21b6;">Falha</th>'
+      + rotulos.map(function(r){ return '<th style="padding:4px 7px;border:1px solid #ddd;background:#f0ebff;color:#5b21b6;text-align:center;">' + r + '</th>'; }).join('');
+    var aLinhas = codigosAndaresPDF.map(function(cod){
+      var descA = DESC_PT[cod] || descs[cod] || cod;
+      var cells = periodos.map(function(p){
+        var info = p.codigos && p.codigos[cod];
+        if (!info || !info.total || !info.andares || !Object.keys(info.andares).length) {
+          return '<td style="text-align:center;padding:4px 7px;border:1px solid #ddd;color:#9ca3af;font-size:10px;">sem ocorrências</td>';
+        }
+        var top2 = Object.keys(info.andares)
+          .map(function(a){ return {a:a, q:info.andares[a]}; })
+          .sort(function(x,y){ return y.q-x.q; })
+          .slice(0, 2)
+          .map(function(x){ return x.a+' '+x.q; })
+          .join(' \xb7 ');
+        return '<td style="text-align:center;padding:4px 7px;border:1px solid #ddd;font-size:10px;">' + top2 + '</td>';
+      }).join('');
+      return '<tr><td style="padding:4px 7px;border:1px solid #ddd;font-size:10px;color:#374151;"><span style="font-weight:700;color:#4c1d95;">' + cod + '</span> ' + descA + '</td>' + cells + '</tr>';
+    }).join('');
+    andaresHtmlPDF = '<h3 style="color:#5b21b6;margin:.5rem 0 .2rem;font-size:13px;page-break-inside:avoid;">Onde ocorreram</h3>'
+      + '<table style="margin-bottom:.4rem;page-break-inside:avoid;"><thead><tr>' + aHeaderCols + '</tr></thead><tbody>' + aLinhas + '</tbody></table>';
+  }
 
   var dt = new Date(reg.dataHora);
   var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Comparativo de Falhas — Elevador ' + reg.unitId + '</title>'
@@ -12985,8 +13007,8 @@ function maxExportarComparativoPDF(reg){
     + '<h2 style="color:#4c1d95;border-bottom:2px solid #7c3aed;padding-bottom:6px;margin-bottom:3px;font-size:15px;">Comparativo de Falhas — Elevador ' + reg.unitId + '</h2>'
     + '<p style="color:#6b7280;margin-bottom:8px;font-size:10px;">Gerado em ' + dt.toLocaleString('pt-BR') + ' &nbsp;|&nbsp; Períodos: ' + rotulos.join(' / ') + '</p>'
     + cardsHtmlPDF
-    + (chartImgTag ? '<h3 style="color:#5b21b6;margin:.6rem 0 .3rem;font-size:13px;">Ocorrências por período</h3>' + chartImgTag : '')
-    + (top8.length ? '<table style="margin-top:.4rem;"><thead><tr>' + headerCols + '</tr></thead><tbody>' + linhasTabela + '</tbody></table>' : '')
+    + (chartImgTag ? '<h3 style="color:#5b21b6;margin:.4rem 0 .2rem;font-size:13px;">Ocorrências por período</h3>' + chartImgTag : '')
+    + (top8.length ? '<table style="margin-top:.2rem;"><thead><tr>' + headerCols + '</tr></thead><tbody>' + linhasTabela + '</tbody></table>' : '')
     + andaresHtmlPDF
     + conclusoesHtml
     + '<div class="footer" style="font-size:9px;color:#9ca3af;margin-top:.8rem;border-top:1px solid #e5e7eb;padding-top:5px;">GN Gestão • TK Elevator Recife • Cockpit MAX</div>'
