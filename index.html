@@ -12380,26 +12380,58 @@ async function maxCarregarHistorico(){
     lista.forEach(function(reg){
       var dt = new Date(reg.dataHora);
       var dtStr = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      var isComparativo = reg.tipo === 'comparativo' || reg.origem === 'jarvis_comparativo';
       var corFalhas = reg.totalFalhas === 0 ? '#4ade80' : (reg.totalFalhas <= 3 ? '#fbbf24' : '#e2504a');
-      var origemBadge = reg.origem === 'jarvis_texto' ? '🎙 Jarvis' : reg.origem === 'teste' ? '🔧 Teste' : '🔍 ' + reg.origem;
+      var origemBadge = isComparativo ? '📊 Comparativo' : (reg.origem === 'jarvis_texto' ? '🎙 Jarvis' : reg.origem === 'teste' ? '🔧 Teste' : '🔍 ' + reg.origem);
 
       var wrap = document.createElement('div');
-      wrap.style.cssText = 'border-radius:10px;overflow:hidden;border:1px solid rgba(56,189,248,.15);transition:border-color .2s;';
-      wrap.onmouseover = function(){ this.style.borderColor='rgba(56,189,248,.45)'; };
-      wrap.onmouseout  = function(){ this.style.borderColor='rgba(56,189,248,.15)'; };
+      var borderCol = isComparativo ? 'rgba(167,139,250,.15)' : 'rgba(56,189,248,.15)';
+      var borderHov = isComparativo ? 'rgba(167,139,250,.45)' : 'rgba(56,189,248,.45)';
+      wrap.style.cssText = 'border-radius:10px;overflow:hidden;border:1px solid '+borderCol+';transition:border-color .2s;';
+      wrap.onmouseover = function(){ this.style.borderColor=borderHov; };
+      wrap.onmouseout  = function(){ this.style.borderColor=borderCol; };
 
       // Área clicável (corpo do card)
       var cardBody = document.createElement('div');
       cardBody.style.cssText = 'background:rgba(255,255,255,.03);padding:.85rem 1rem;display:grid;grid-template-columns:1fr auto;gap:.5rem;align-items:start;cursor:pointer;';
+      var acorLabel = isComparativo ? 'rgba(167,139,250,.8)' : 'rgba(56,189,248,.8)';
+      var acorSub   = isComparativo ? 'rgba(167,139,250,.45)' : 'rgba(56,189,248,.45)';
+      var titulo, subTitulo, resumoTxt, dica, badgeNum, badgeLabel;
+      if (isComparativo) {
+        var fj = reg.falhasJson || {};
+        var rotulos = (fj.periodos || []).map(function(p){ return p.rotulo || '—'; }).join(' / ');
+        titulo = 'Comparativo — Elevador ' + maxEsc(reg.unitId);
+        subTitulo = dtStr + ' · ' + maxEsc(rotulos) + ' · ' + origemBadge;
+        resumoTxt = maxEsc(reg.resumo || '');
+        dica = 'Clique para ver comparativo completo →';
+        badgeNum = (fj.top8Codigos || []).length || '—';
+        badgeLabel = 'cód.';
+      } else {
+        titulo = 'Equipamento ' + maxEsc(reg.unitId);
+        var periodoStr = reg.periodoInicio && reg.periodoFim ? (function(a,b){
+          var pad=function(n){return String(n).padStart(2,'0');};
+          var da=new Date(new Date(a).getTime()-3*3600000);var db=new Date(new Date(b).getTime()-3*3600000);
+          return pad(da.getUTCDate())+'/'+pad(da.getUTCMonth()+1)+'/'+da.getUTCFullYear()+' '+pad(da.getUTCHours())+':'+pad(da.getUTCMinutes())+' a '+pad(db.getUTCDate())+'/'+pad(db.getUTCMonth()+1)+'/'+db.getUTCFullYear()+' '+pad(db.getUTCHours())+':'+pad(db.getUTCMinutes());
+        })(reg.periodoInicio,reg.periodoFim) : reg.horasPeriodo+'h';
+        subTitulo = dtStr + ' · ' + periodoStr + ' · ' + origemBadge;
+        resumoTxt = maxEsc(reg.resumo || '');
+        dica = 'Clique para ver relatório completo →';
+        badgeNum = reg.totalFalhas;
+        badgeLabel = 'falhas';
+      }
       cardBody.innerHTML = '<div>'
-        + '<div style="font-weight:700;font-size:.95rem;color:#F5F0FF;font-family:\'Syne\',sans-serif;">Equipamento ' + maxEsc(reg.unitId) + '</div>'
-        + '<div style="font-size:.78rem;color:rgba(255,255,255,.5);margin-top:.15rem;">' + dtStr + ' · ' + (reg.periodoInicio && reg.periodoFim ? (function(a,b){var pad=function(n){return String(n).padStart(2,'0');};var da=new Date(new Date(a).getTime()-3*3600000);var db=new Date(new Date(b).getTime()-3*3600000);return pad(da.getUTCDate())+'/'+pad(da.getUTCMonth()+1)+'/'+da.getUTCFullYear()+' '+pad(da.getUTCHours())+':'+pad(da.getUTCMinutes())+' a '+pad(db.getUTCDate())+'/'+pad(db.getUTCMonth()+1)+'/'+db.getUTCFullYear()+' '+pad(db.getUTCHours())+':'+pad(db.getUTCMinutes());})(reg.periodoInicio,reg.periodoFim) : reg.horasPeriodo+'h') + ' · ' + origemBadge + '</div>'
-        + '<div style="font-size:.8rem;color:rgba(56,189,248,.8);margin-top:.3rem;">' + maxEsc(reg.resumo) + '</div>'
+        + '<div style="font-weight:700;font-size:.95rem;color:#F5F0FF;font-family:\'Syne\',sans-serif;">' + titulo + '</div>'
+        + '<div style="font-size:.78rem;color:rgba(255,255,255,.5);margin-top:.15rem;">' + subTitulo + '</div>'
+        + '<div style="font-size:.8rem;color:'+acorLabel+';margin-top:.3rem;">' + resumoTxt + '</div>'
         + (reg.observacao ? '<div style="font-size:.75rem;color:rgba(255,215,0,.75);margin-top:.2rem;font-style:italic;">📝 ' + maxEsc(reg.observacao) + '</div>' : '')
-        + '<div style="font-size:.73rem;color:rgba(56,189,248,.45);margin-top:.35rem;">Clique para ver relatório completo →</div>'
+        + '<div style="font-size:.73rem;color:'+acorSub+';margin-top:.35rem;">' + dica + '</div>'
         + '</div>'
-        + '<div style="font-size:1.4rem;font-weight:800;color:' + corFalhas + ';text-align:right;line-height:1;">' + reg.totalFalhas + '<div style="font-size:.65rem;font-weight:400;color:rgba(255,255,255,.4);">falhas</div></div>';
-      (function(rg, cb){ cb.addEventListener('click', function(){ maxAbrirRelatorio(rg); }); })(reg, cardBody);
+        + '<div style="font-size:1.4rem;font-weight:800;color:' + corFalhas + ';text-align:right;line-height:1;">' + badgeNum + '<div style="font-size:.65rem;font-weight:400;color:rgba(255,255,255,.4);">' + badgeLabel + '</div></div>';
+      if (isComparativo) {
+        (function(rg, cb){ cb.addEventListener('click', function(){ maxAbrirComparativo(rg); }); })(reg, cardBody);
+      } else {
+        (function(rg, cb){ cb.addEventListener('click', function(){ maxAbrirRelatorio(rg); }); })(reg, cardBody);
+      }
 
       // Barra de ações (Editar + Excluir)
       var acoesBar = document.createElement('div');
@@ -12589,6 +12621,149 @@ function maxAbrirRelatorio(reg){
 function maxFecharRelatorio(){
   var m = document.getElementById('maxRelatorioModal');
   if(m) m.style.display = 'none';
+}
+
+// ── Modal de comparativo de períodos ──────────────────────────────
+function maxAbrirComparativo(reg){
+  var fj = reg.falhasJson || {};
+  if (!fj.periodos || !fj.periodos.length) {
+    alert('Dados do comparativo indisponíveis.');
+    return;
+  }
+  var periodos = fj.periodos;
+  var top8 = fj.top8Codigos || [];
+  var rotulos = periodos.map(function(p){ return p.rotulo || '—'; });
+  var conclusoes = fj.conclusoes || [];
+
+  // Buscar o modal e preencher cabeçalho
+  var modal = document.getElementById('maxRelatorioModal');
+  if (!modal) return;
+
+  var elUnit = document.getElementById('maxRelUnit');
+  var elPer  = document.getElementById('maxRelPeriodo');
+  var elTot  = document.getElementById('maxRelTotal');
+  var elObs  = document.getElementById('maxRelObs');
+  if (elUnit) elUnit.textContent = 'Comparativo — Elevador ' + reg.unitId;
+  if (elPer)  elPer.textContent = rotulos.join(' / ');
+  if (elTot)  elTot.textContent = periodos.length + ' períodos';
+  if (elObs)  { elObs.style.display = reg.observacao ? 'block' : 'none'; elObs.textContent = reg.observacao ? '📝 ' + reg.observacao : ''; }
+
+  // Substituir botão Exportar para chamar a versão comparativo
+  var btnExp = document.getElementById('maxBtnExportar');
+  if (btnExp) {
+    var novo = btnExp.cloneNode(true);
+    novo.textContent = '📄 Exportar PDF';
+    novo.onclick = function(){ maxExportarComparativoPDF(reg); };
+    btnExp.parentNode.replaceChild(novo, btnExp);
+  }
+
+  // Renderizar tabela comparativa no lugar do gráfico + lista
+  var listEl = document.getElementById('maxRelLista');
+  var chartEl = document.getElementById('maxRelChart');
+  if (chartEl) chartEl.style.display = 'none';
+
+  if (!listEl) { modal.style.display = 'flex'; return; }
+
+  // Montar HTML do comparativo
+  var html = '';
+
+  // Tabela de ocorrências por período
+  if (top8.length) {
+    html += '<div style="font-size:.85rem;font-weight:700;color:rgba(167,139,250,.9);margin-bottom:.5rem;font-family:\'Syne\',sans-serif;">Ocorrências por período</div>';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:.78rem;margin-bottom:1rem;">';
+    html += '<tr><th style="text-align:left;padding:.35rem .5rem;color:rgba(255,255,255,.5);border-bottom:1px solid rgba(255,255,255,.1);">Código</th>';
+    rotulos.forEach(function(r){ html += '<th style="text-align:center;padding:.35rem .5rem;color:rgba(167,139,250,.8);border-bottom:1px solid rgba(255,255,255,.1);">' + maxEsc(r) + '</th>'; });
+    html += '<th style="text-align:center;padding:.35rem .5rem;color:rgba(255,255,255,.4);border-bottom:1px solid rgba(255,255,255,.1);">Variação</th></tr>';
+    top8.forEach(function(cod){
+      var qtds = periodos.map(function(p){ return (p.codigos && p.codigos[cod] && p.codigos[cod].total) || 0; });
+      var prim = qtds[0], ult = qtds[qtds.length-1];
+      var variacaoStr = '—', variacaoCor = 'rgba(255,255,255,.4)';
+      if (prim > 0 && ult >= 0) {
+        var pct = Math.round((ult - prim) / prim * 100);
+        if (pct <= -20) { variacaoStr = pct + '%'; variacaoCor = '#4ade80'; }
+        else if (pct >= 20) { variacaoStr = '+' + pct + '%'; variacaoCor = '#e2504a'; }
+        else { variacaoStr = pct > 0 ? '+' + pct + '%' : pct + '%'; variacaoCor = '#fbbf24'; }
+      } else if (prim === 0 && ult > 0) { variacaoStr = 'novo'; variacaoCor = '#fbbf24'; }
+      else if (prim > 0 && ult === 0) { variacaoStr = 'zerou'; variacaoCor = '#4ade80'; }
+      html += '<tr><td style="padding:.3rem .5rem;color:#38bdf8;font-weight:700;">' + maxEsc(cod) + '</td>';
+      qtds.forEach(function(q){ var c = q === 0 ? 'rgba(255,255,255,.25)' : (q > 30 ? '#e2504a' : q > 10 ? '#fbbf24' : '#4ade80'); html += '<td style="text-align:center;padding:.3rem .5rem;color:'+c+';font-weight:600;">' + q + '</td>'; });
+      html += '<td style="text-align:center;padding:.3rem .5rem;color:'+variacaoCor+';font-weight:700;">' + variacaoStr + '</td></tr>';
+    });
+    html += '</table>';
+  }
+
+  // Andares por período (se disponível)
+  if (fj.andaresPorPeriodo && fj.andaresPorPeriodo.trim()) {
+    html += '<div style="font-size:.85rem;font-weight:700;color:rgba(167,139,250,.9);margin-bottom:.4rem;font-family:\'Syne\',sans-serif;">Andares mais afetados</div>';
+    html += '<div style="font-size:.78rem;color:rgba(255,255,255,.65);white-space:pre-line;margin-bottom:1rem;">' + maxEsc(fj.andaresPorPeriodo.trim()) + '</div>';
+  }
+
+  // Conclusões
+  if (conclusoes.length) {
+    html += '<div style="font-size:.85rem;font-weight:700;color:rgba(167,139,250,.9);margin-bottom:.4rem;font-family:\'Syne\',sans-serif;">Conclusões automáticas</div>';
+    html += '<ul style="margin:0;padding-left:1.2rem;font-size:.8rem;color:rgba(255,255,255,.7);">';
+    conclusoes.forEach(function(c){ html += '<li style="margin-bottom:.25rem;">' + maxEsc(c) + '</li>'; });
+    html += '</ul>';
+  }
+
+  if (!html) html = '<div style="color:rgba(255,255,255,.4);">Dados do comparativo não disponíveis.</div>';
+  listEl.innerHTML = html;
+
+  modal.style.display = 'flex';
+  var body = document.getElementById('maxRelBody');
+  if (body) body.scrollTop = 0;
+}
+
+function maxFecharComparativo(){
+  var m = document.getElementById('maxRelatorioModal');
+  if(m) m.style.display = 'none';
+  // Restaurar botão Exportar original
+  var btnExp = document.getElementById('maxBtnExportar');
+  if (btnExp) {
+    var novo = btnExp.cloneNode(true);
+    novo.textContent = '📄 Exportar PDF';
+    novo.onclick = function(){ if(window._maxRegAtual) maxExportarPDF(window._maxRegAtual); };
+    btnExp.parentNode.replaceChild(novo, btnExp);
+  }
+  // Restaurar canvas
+  var chartEl = document.getElementById('maxRelChart');
+  if (chartEl) chartEl.style.display = '';
+}
+
+function maxExportarComparativoPDF(reg){
+  var fj = reg.falhasJson || {};
+  var periodos = fj.periodos || [];
+  var top8 = fj.top8Codigos || [];
+  var rotulos = periodos.map(function(p){ return p.rotulo || '—'; });
+  var conclusoes = fj.conclusoes || [];
+
+  var linhasTabela = '';
+  if (top8.length) {
+    var headerCols = rotulos.map(function(r){ return '<th style="padding:6px 10px;border:1px solid #ddd;background:#f0ebff;color:#5b21b6;">' + r + '</th>'; }).join('');
+    linhasTabela = top8.map(function(cod){
+      var qtds = periodos.map(function(p){ return (p.codigos && p.codigos[cod] && p.codigos[cod].total) || 0; });
+      var prim = qtds[0], ult = qtds[qtds.length-1];
+      var varStr = '—';
+      if (prim > 0) { var pct=Math.round((ult-prim)/prim*100); varStr = (pct>=0?'+':'')+pct+'%'; }
+      else if (ult > 0) varStr = 'novo';
+      var cells = qtds.map(function(q){ return '<td style="text-align:center;padding:5px 10px;border:1px solid #ddd;">'+q+'</td>'; }).join('');
+      return '<tr><td style="padding:5px 10px;border:1px solid #ddd;font-weight:700;color:#4c1d95;">'+cod+'</td>'+cells+'<td style="text-align:center;padding:5px 10px;border:1px solid #ddd;font-weight:700;">'+varStr+'</td></tr>';
+    }).join('');
+  }
+
+  var conclusoesHtml = conclusoes.length ? '<h3 style="color:#5b21b6;margin:1.2rem 0 .5rem;">Conclusões</h3><ul style="margin:0;padding-left:1.2rem;font-size:12px;color:#374151;">' + conclusoes.map(function(c){ return '<li>'+c+'</li>'; }).join('') + '</ul>' : '';
+
+  var dt = new Date(reg.dataHora);
+  var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Comparativo MAX — Elevador ' + reg.unitId + '</title><style>body{font-family:Arial,sans-serif;padding:20px;color:#1f2937;}table{border-collapse:collapse;width:100%;font-size:12px;}th{text-align:left;}</style></head><body>'
+    + '<h2 style="color:#4c1d95;border-bottom:2px solid #7c3aed;padding-bottom:8px;">Comparativo de Falhas — Elevador ' + reg.unitId + '</h2>'
+    + '<p style="font-size:12px;color:#6b7280;">Gerado em ' + dt.toLocaleString('pt-BR') + ' | Períodos: ' + rotulos.join(' / ') + '</p>'
+    + (top8.length ? '<h3 style="color:#5b21b6;margin:1rem 0 .5rem;">Ocorrências por período</h3><table><thead><tr><th style="padding:6px 10px;border:1px solid #ddd;background:#f0ebff;">Código</th>' + headerCols + '<th style="padding:6px 10px;border:1px solid #ddd;background:#f0ebff;">Variação</th></tr></thead><tbody>' + linhasTabela + '</tbody></table>' : '')
+    + conclusoesHtml
+    + '<p style="font-size:10px;color:#9ca3af;margin-top:2rem;border-top:1px solid #e5e7eb;padding-top:8px;">GN Gestão • TK Elevator Recife • Cockpit MAX</p>'
+    + '<script>window.onload=function(){window.print();}</script></body></html>';
+
+  var w = window.open('', '_blank');
+  if (w) { w.document.write(html); w.document.close(); }
 }
 
 // ── Gráfico de barras (Canvas 2D nativo) ─────────────────────────
