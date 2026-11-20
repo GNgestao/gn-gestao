@@ -12401,7 +12401,7 @@ async function maxCarregarHistorico(){
         var fj = reg.falhasJson || {};
         var rotulos = (fj.periodos || []).map(function(p){ return p.rotulo || '—'; }).join(' / ');
         titulo = 'Comparativo — Elevador ' + maxEsc(reg.unitId);
-        subTitulo = dtStr + ' · ' + maxEsc(rotulos) + ' · ' + origemBadge;
+        subTitulo = dtStr + ' · ' + maxEsc(rotulos);
         resumoTxt = maxEsc(reg.resumo || '');
         dica = 'Clique para ver comparativo completo →';
         badgeNum = (fj.top8Codigos || []).length || '—';
@@ -12413,7 +12413,7 @@ async function maxCarregarHistorico(){
           var da=new Date(new Date(a).getTime()-3*3600000);var db=new Date(new Date(b).getTime()-3*3600000);
           return pad(da.getUTCDate())+'/'+pad(da.getUTCMonth()+1)+'/'+da.getUTCFullYear()+' '+pad(da.getUTCHours())+':'+pad(da.getUTCMinutes())+' a '+pad(db.getUTCDate())+'/'+pad(db.getUTCMonth()+1)+'/'+db.getUTCFullYear()+' '+pad(db.getUTCHours())+':'+pad(db.getUTCMinutes());
         })(reg.periodoInicio,reg.periodoFim) : reg.horasPeriodo+'h';
-        subTitulo = dtStr + ' · ' + periodoStr + ' · ' + origemBadge;
+        subTitulo = dtStr + ' · ' + periodoStr;
         resumoTxt = maxEsc(reg.resumo || '');
         dica = 'Clique para ver relatório completo →';
         badgeNum = reg.totalFalhas;
@@ -12590,14 +12590,14 @@ function maxAbrirRelatorio(reg){
           return '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(56,189,248,.1);border-radius:8px;padding:.8rem 1rem;margin-bottom:.5rem;">'
             + '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.4rem;">'
             + '<div><span style="font-family:\'Syne\',sans-serif;font-weight:800;font-size:.95rem;color:#38bdf8;">' + maxEsc(f.codigo) + '</span>'
-            + '<span style="font-size:.82rem;color:rgba(255,255,255,.65);margin-left:.6rem;">' + maxEsc(f.descricao||'') + '</span></div>'
+            + '<span style="font-size:.82rem;color:rgba(255,255,255,.65);margin-left:.6rem;">' + maxEsc(DESC_PT[String(f.codigo)]||f.descricao||'') + '</span></div>'
             + '<span style="font-size:1rem;font-weight:700;color:' + corOc + ';">' + (f.ocorrencias||0) + '× ocorrências</span>'
             + '</div>'
-            + (f.pavimento       ? '<div style="font-size:.78rem;color:rgba(255,255,255,.5);margin-top:.3rem;">📍 Pavimento: ' + maxEsc(f.pavimento) + '</div>' : '')
+            + (f.onde && f.onde.resumo ? '<div style="font-size:.78rem;color:rgba(255,255,255,.5);margin-top:.3rem;">📍 ' + maxEsc(f.onde.resumo) + '</div>' : (f.pavimento ? '<div style="font-size:.78rem;color:rgba(255,255,255,.5);margin-top:.3rem;">📍 Pav. ' + maxEsc(f.pavimento) + '</div>' : ''))
             + (f.estadoNoMomento ? '<div style="font-size:.78rem;color:rgba(255,255,255,.5);">⚡ Estado no momento: ' + maxEsc(f.estadoNoMomento) + '</div>' : '')
             + (f.primeiraVez     ? '<div style="font-size:.73rem;color:rgba(255,255,255,.35);">🕐 Primeira: ' + new Date(f.primeiraVez).toLocaleString('pt-BR') + ' · Última: ' + new Date(f.ultimaVez).toLocaleString('pt-BR') + '</div>' : '')
-            + (f.causaProvavel   ? '<div style="font-size:.8rem;color:#fbbf24;margin-top:.4rem;line-height:1.4;">⚠ Causa provável: ' + maxEsc(f.causaProvavel) + '</div>' : '')
-            + (f.acaoSugerida    ? '<div style="font-size:.8rem;color:#4ade80;line-height:1.4;">✅ Ação sugerida: ' + maxEsc(f.acaoSugerida) + '</div>' : '')
+            + (f.causaProvavel   ? '<div style="font-size:.8rem;color:#fbbf24;margin-top:.4rem;line-height:1.4;">⚠ Causa provável:<ul style="margin:.2rem 0 0 1rem;padding:0;">' + (f.causaProvavel||'').split(' | ').map(function(s){return s.trim();}).filter(Boolean).map(function(s){return '<li>'+maxEsc(s)+'</li>';}).join('') + '</ul></div>' : '')
+            + (f.acaoSugerida    ? '<div style="font-size:.8rem;color:#4ade80;line-height:1.4;">✅ Ação sugerida:<ul style="margin:.2rem 0 0 1rem;padding:0;">' + (f.acaoSugerida||'').split(' | ').map(function(s){return s.trim();}).filter(Boolean).map(function(s){return '<li>'+maxEsc(s)+'</li>';}).join('') + '</ul></div>' : '')
             + '</div>';
         }).join('');
       }
@@ -12646,6 +12646,7 @@ var DESC_PT = {
   '1030': 'Falha no inversor de tração (BDL)',
   '2027': 'Porta de pavimento não fechou',
   '1028': 'Porta não abriu',
+  '1050': 'Falha de comunicação MCP–MCC',
   '1137': 'Contagem das placas de nivelamento (descida)',
   '1034': 'Falha de comunicação MCP-MCINV',
   '1036': 'Falha na partida (S0S)',
@@ -13004,7 +13005,7 @@ function maxExportarComparativoPDF(reg){
     + '</style>'
     + '</head><body>'
     + '<h2 style="color:#4c1d95;border-bottom:2px solid #7c3aed;padding-bottom:4px;margin-bottom:2px;font-size:14px;">Comparativo de Falhas — Elevador ' + reg.unitId + '</h2>'
-    + '<p style="color:#6b7280;margin-bottom:2px;font-size:9px;">Gerado em ' + dt.toLocaleString('pt-BR') + ' &nbsp;|&nbsp; Períodos: ' + rotulos.join(' / ') + ' &nbsp;|&nbsp; GN Gestão • TK Elevator Recife</p>'
+    + '<p style="color:#6b7280;margin-bottom:2px;font-size:9px;">Gerado em ' + dt.toLocaleString('pt-BR') + ' &nbsp;|&nbsp; Períodos: ' + rotulos.join(' / ') + ' &nbsp;|&nbsp; TK Elevator Recife</p>'
     + (avisoObs ? '<p style="color:#6b7280;font-style:italic;font-size:9px;margin:0 0 5px;">' + avisoObs + '</p>' : '')
     + cardsHtmlPDF
     + (chartImgTag ? '<h3 style="color:#5b21b6;margin:.3rem 0 .15rem;font-size:12px;">Ocorrências por período</h3>' + chartImgTag : '')
@@ -13141,7 +13142,7 @@ function maxExportarPDF(){
   falhasRaw.forEach(function(f){
     var k=String(f.codigo!=null?f.codigo:'?');
     if(!mapa[k]){
-      mapa[k]={codigo:f.codigo,descricao:f.descricao||'',ocorrencias:0,
+      mapa[k]={codigo:f.codigo,descricao:DESC_PT[String(f.codigo)]||f.descricao||'',ocorrencias:0,
                 causaProvavel:f.causaProvavel||'',acaoSugerida:f.acaoSugerida||'',
                 pavimentos:{},estados:{},ondeResumos:[],ondeDistAll:[]};
     }
@@ -13149,7 +13150,7 @@ function maxExportarPDF(){
     g.ocorrencias+=(f.ocorrencias||1);
     if(f.pavimento)       g.pavimentos[f.pavimento]=(g.pavimentos[f.pavimento]||0)+1;
     if(f.estadoNoMomento) g.estados[f.estadoNoMomento]=(g.estados[f.estadoNoMomento]||0)+1;
-    if(f.onde && f.onde.resumoOnde) g.ondeResumos.push(f.onde.resumoOnde);
+    if(f.onde && (f.onde.resumo || f.onde.resumoOnde)) g.ondeResumos.push(f.onde.resumo || f.onde.resumoOnde);
     // Usar distribuição consolidada apenas do primeiro episódio — todos os episódios do mesmo
     // código carregam a mesma distConsolidada; concatenar múltiplos multiplicaria os valores.
     if(f.onde && f.onde.distribuicaoAndares && g.ondeDistAll.length===0) g.ondeDistAll=f.onde.distribuicaoAndares.slice();
@@ -13179,7 +13180,6 @@ function maxExportarPDF(){
 
   var totalOcorrencias=falhas.reduce(function(s,f){ return s+(f.ocorrencias||0); },0);
   var totalRecorrentes=falhas.filter(function(f){ return f.ocorrencias>20; }).length;
-  var origemLabel=reg.origem==='jarvis_texto'?'Jarvis (voz/texto)':reg.origem||'—';
 
   // 3. Tabela de ranking (resumo, sem causa/ação — só código, descrição, contagem)
   var rankRows=falhas.map(function(f,i){
@@ -13206,7 +13206,7 @@ function maxExportarPDF(){
       // Agrupar distribuições de todos os episódios
       var dm={};f.ondeDistAll.forEach(function(a){var ck=a.andar+'|'+(a.lado||'');if(!dm[ck])dm[ck]={andar:a.andar,lado:a.lado,ocorrencias:0,parado:0};dm[ck].ocorrencias+=a.ocorrencias;dm[ck].parado+=(a.parado||0);});
       var da=Object.values(dm).sort(function(a,b){return b.ocorrencias-a.ocorrencias;}).slice(0,4);
-      distText=da.map(function(a){var l=a.lado==='Frente'?'Fr':a.lado==='Fundo'?'Fd':'';return a.andar+(l?' '+l:'')+':'+a.ocorrencias+(a.parado?' (p:'+a.parado+')':'');}).join(' \u00B7 ');
+      distText=da.map(function(a){var l=a.lado==='Fundo'||a.lado==='Fu'?' Fundo':'';return 'Pav. '+a.andar+l+': '+a.ocorrencias;}).join(' / ');
     }
     var ondeCel='<div style="font-weight:700;font-size:8pt;">'+maxEsc(ondeResumo)+'</div>'
       +(distText?'<div style="font-size:7pt;color:#666;margin-top:2px;">'+maxEsc(distText)+'</div>':'');
@@ -13218,8 +13218,8 @@ function maxExportarPDF(){
       +'</td>'
       +'<td style="padding:.35rem .5rem;max-width:220px;">'+ondeCel+'</td>'
       +'<td style="padding:.35rem .5rem;">'+maxEsc(estStr)+'</td>'
-      +'<td style="padding:.35rem .5rem;color:#92400e;">'+maxEsc(f.causaProvavel||'\u2014')+'</td>'
-      +'<td style="padding:.35rem .5rem;color:#065f46;">'+maxEsc(f.acaoSugerida||'\u2014')+'</td>'
+      +'<td style="padding:.35rem .5rem;color:#92400e;">'+(f.causaProvavel?(function(t){return '<ul style="margin:0;padding-left:1rem;">'+t.split(' | ').map(function(s){return s.trim();}).filter(Boolean).map(function(s){return '<li>'+maxEsc(s)+'</li>';}).join('')+'</ul>';})(f.causaProvavel):'\u2014')+'</td>'
+      +'<td style="padding:.35rem .5rem;color:#065f46;">'+(f.acaoSugerida?(function(t){return '<ul style="margin:0;padding-left:1rem;">'+t.split(' | ').map(function(s){return s.trim();}).filter(Boolean).map(function(s){return '<li>'+maxEsc(s)+'</li>';}).join('')+'</ul>';})(f.acaoSugerida):'\u2014')+'</td>'
       +'</tr>';
   }).join('');
 
@@ -13242,7 +13242,7 @@ function maxExportarPDF(){
     +'@media print{@page{margin:1.5cm;size:A4 landscape}body{padding:0}.nb{page-break-inside:avoid}}'
     +'</style></head><body>'
     +'<h1>Relatório de Falhas — Elevador '+maxEsc(reg.unitId)+'</h1>'
-    +(function(){var pl;if(reg.periodoInicio&&reg.periodoFim){var fR=function(iso){var d=new Date(iso);var r=new Date(d.getTime()-3*3600000);var p=function(n){return String(n).padStart(2,'0');};return p(r.getUTCDate())+'/'+p(r.getUTCMonth()+1)+'/'+r.getUTCFullYear()+' '+p(r.getUTCHours())+':'+p(r.getUTCMinutes());};pl=fR(reg.periodoInicio)+' a '+fR(reg.periodoFim);}else{pl=reg.horasPeriodo+'h';}return'<div class="meta">Análise: '+dtStr+' &nbsp;·&nbsp; Período: '+pl+' &nbsp;·&nbsp; Origem: '+maxEsc(origemLabel)+'</div>';})()
+    +(function(){var pl;if(reg.periodoInicio&&reg.periodoFim){var fR=function(iso){var d=new Date(iso);var r=new Date(d.getTime()-3*3600000);var p=function(n){return String(n).padStart(2,'0');};return p(r.getUTCDate())+'/'+p(r.getUTCMonth()+1)+'/'+r.getUTCFullYear()+' '+p(r.getUTCHours())+':'+p(r.getUTCMinutes());};pl=fR(reg.periodoInicio)+' a '+fR(reg.periodoFim);}else{pl=reg.horasPeriodo+'h';}return'<div class="meta">Análise: '+dtStr+' &nbsp;·&nbsp; Período: '+pl+'</div>';})()
 
     +'<div class="stats">'
     +'<div class="sc"><div class="v">'+falhas.length+'</div><div class="l">Tipos de falha</div></div>'
@@ -13258,7 +13258,7 @@ function maxExportarPDF(){
     +'<h2>Detalhamento por código (agrupado)</h2>'
     +'<table><thead><tr><th>Código</th><th>Descrição</th><th>Ocorr.</th><th>Onde</th><th>Estado predominante</th><th>Causa provável</th><th>Ação sugerida</th></tr></thead>'
     +'<tbody>'+rowsHtml+'</tbody></table>'
-    +'<div class="footer">Gerado pelo GN Gestão &nbsp;·&nbsp; TK Elevator &nbsp;·&nbsp; Recife-PE &nbsp;·&nbsp; '+new Date().toLocaleString('pt-BR')+'</div>'
+    +'<div class="footer">TK Elevator &nbsp;·&nbsp; Recife-PE &nbsp;·&nbsp; '+new Date().toLocaleString('pt-BR')+'</div>'
     +'<script>window.print();<\/script>'
     +'</body></html>';
 
