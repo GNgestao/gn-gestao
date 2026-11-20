@@ -12760,7 +12760,7 @@ function maxExportarComparativoPDF(reg){
     + (top8.length ? '<h3 style="color:#5b21b6;margin:1rem 0 .5rem;">Ocorrências por período</h3><table><thead><tr><th style="padding:6px 10px;border:1px solid #ddd;background:#f0ebff;">Código</th>' + headerCols + '<th style="padding:6px 10px;border:1px solid #ddd;background:#f0ebff;">Variação</th></tr></thead><tbody>' + linhasTabela + '</tbody></table>' : '')
     + conclusoesHtml
     + '<p style="font-size:10px;color:#9ca3af;margin-top:2rem;border-top:1px solid #e5e7eb;padding-top:8px;">GN Gestão • TK Elevator Recife • Cockpit MAX</p>'
-    + '<script>window.onload=function(){window.print();}</script></body></html>';
+    + '<script>window.onload=function(){window.print();}<\/script></body></html>';
 
   var w = window.open('', '_blank');
   if (w) { w.document.write(html); w.document.close(); }
