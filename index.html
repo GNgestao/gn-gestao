@@ -12898,12 +12898,13 @@ function maxExportarComparativoPDF(reg){
   // Gráfico off-screen (barras agrupadas, fundo branco)
   var chartImgTag = '';
   if (top8.length) {
-    var oc = document.createElement('canvas'); oc.width=660; oc.height=160;
+    var CH=160, padL=12, padR=12, padT=14, padB=46;
+    var oc = document.createElement('canvas'); oc.width=660; oc.height=CH;
     var octx = oc.getContext('2d');
-    octx.fillStyle='#ffffff'; octx.fillRect(0,0,660,160);
+    octx.fillStyle='#ffffff'; octx.fillRect(0,0,660,CH);
     var COLS=['#2563eb','#7c3aed','#16a34a','#d97706','#dc2626'];
-    var n=top8.length, nPer=periodos.length, padL=12, padR=12, padT=14, padB=46;
-    var cW=660-padL-padR, cH=200-padT-padB, maxV=1;
+    var n=top8.length, nPer=periodos.length;
+    var cW=660-padL-padR, cH=CH-padT-padB, maxV=1;
     top8.forEach(function(c){ periodos.forEach(function(p){ var v=(p.codigos&&p.codigos[c]&&p.codigos[c].total)||0; if(v>maxV)maxV=v; }); });
     var gW=cW/n, bW=Math.max(2,(gW-6)/nPer-2);
     top8.forEach(function(cod,gi){ var gx=padL+gi*gW;
@@ -12914,10 +12915,10 @@ function maxExportarComparativoPDF(reg){
         if(v>0){ octx.globalAlpha=1; octx.fillStyle='#111'; octx.font='bold 8px sans-serif'; octx.textAlign='center'; octx.fillText(v,bx+bW/2,Math.max(padT+10,by-2)); }
       });
       octx.globalAlpha=1; octx.fillStyle='#374151'; octx.font='9px sans-serif'; octx.textAlign='center';
-      octx.fillText(cod,gx+gW/2,200-padB+12);
+      octx.fillText(cod,gx+gW/2,CH-padB+12);
     });
     var legX=padL;
-    periodos.forEach(function(p,pi){ octx.fillStyle=COLS[pi%COLS.length]; octx.globalAlpha=0.9; octx.fillRect(legX,200-padB+22,10,8); octx.globalAlpha=1; octx.fillStyle='#374151'; octx.font='9px sans-serif'; octx.textAlign='left'; var lbl=(p.rotulo||'').replace('/2026',''); octx.fillText(lbl,legX+13,200-padB+30); legX+=13+octx.measureText(lbl).width+14; });
+    periodos.forEach(function(p,pi){ octx.fillStyle=COLS[pi%COLS.length]; octx.globalAlpha=0.9; octx.fillRect(legX,CH-padB+22,10,8); octx.globalAlpha=1; octx.fillStyle='#374151'; octx.font='9px sans-serif'; octx.textAlign='left'; var lbl=(p.rotulo||'').replace('/2026',''); octx.fillText(lbl,legX+13,CH-padB+30); legX+=13+octx.measureText(lbl).width+14; });
     chartImgTag = '<img src="' + oc.toDataURL('image/png') + '" style="width:100%;max-width:660px;height:auto;display:block;margin:8px 0;">';
   }
 
@@ -12927,9 +12928,9 @@ function maxExportarComparativoPDF(reg){
     cardsHtmlPDF = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">';
     periodos.forEach(function(p) {
       var cor = p.totalOcorrencias > 150 ? '#dc2626' : p.totalOcorrencias > 80 ? '#d97706' : '#16a34a';
-      cardsHtmlPDF += '<div style="flex:1;min-width:60px;border:1px solid #ddd;border-radius:6px;padding:5px 8px;text-align:center;">'
-        + '<div style="font-size:1.2rem;font-weight:800;color:' + cor + ';">' + (p.totalOcorrencias || 0) + '</div>'
-        + '<div style="font-size:9px;color:#6b7280;margin-top:2px;">' + (p.rotulo || '') + '</div>'
+      cardsHtmlPDF += '<div style="flex:1;min-width:60px;border:1px solid #ddd;border-radius:4px;padding:3px 6px;text-align:center;">'
+        + '<div style="font-size:1rem;font-weight:800;color:' + cor + ';">' + (p.totalOcorrencias || 0) + '</div>'
+        + '<div style="font-size:9px;color:#6b7280;margin-top:1px;">' + (p.rotulo || '') + '</div>'
         + '</div>';
     });
     cardsHtmlPDF += '</div>';
@@ -12938,9 +12939,10 @@ function maxExportarComparativoPDF(reg){
   // Tabela
   var linhasTabela = '';
   if (top8.length) {
-    var headerCols = '<th style="padding:5px 8px;border:1px solid #ddd;background:#f0ebff;color:#5b21b6;">Código</th><th style="padding:5px 8px;border:1px solid #ddd;background:#f0ebff;color:#5b21b6;">Descrição</th>'
-      + rotulos.map(function(r){ return '<th style="padding:5px 8px;border:1px solid #ddd;background:#f0ebff;color:#5b21b6;text-align:center;">' + r + '</th>'; }).join('')
-      + '<th style="padding:5px 8px;border:1px solid #ddd;background:#f0ebff;color:#5b21b6;text-align:center;">Variação</th>';
+    var TDP='3px 6px', TDC='border:1px solid #ddd';
+    var headerCols = '<th style="padding:'+TDP+';'+TDC+';background:#f0ebff;color:#5b21b6;">Código</th><th style="padding:'+TDP+';'+TDC+';background:#f0ebff;color:#5b21b6;">Descrição</th>'
+      + rotulos.map(function(r){ return '<th style="padding:'+TDP+';'+TDC+';background:#f0ebff;color:#5b21b6;text-align:center;">'+r+'</th>'; }).join('')
+      + '<th style="padding:'+TDP+';'+TDC+';background:#f0ebff;color:#5b21b6;text-align:center;">Variação</th>';
     linhasTabela = top8.map(function(cod){
       var qtds = periodos.map(function(p){ return (p.codigos&&p.codigos[cod]&&p.codigos[cod].total)||0; });
       var prim=qtds[0], ult=qtds[qtds.length-1], maxQ=Math.max.apply(null,qtds), maxI=qtds.indexOf(maxQ);
@@ -12949,23 +12951,20 @@ function maxExportarComparativoPDF(reg){
       else if (prim>0 && ult===0) varStr='−100%';
       else if (prim>0) {
         var pctP=Math.round((ult-prim)/prim*100);
-        // Pico no meio consistente com lógica de conclusões (Tarefa 7)
         if (qtds.length>=3 && maxI>0 && maxI<qtds.length-1 && maxQ>=10 && ult<=maxQ*0.2) varStr='pico em '+(rotulos[maxI]||'');
         else varStr=(pctP>=0?'+':'')+pctP+'%';
       }
-      // Descrição amigável PT (Tarefa 7: usar DESC_PT)
       var descPDF = DESC_PT[cod] || descs[cod] || '';
-      var cells=qtds.map(function(q){ return '<td style="text-align:center;padding:5px 8px;border:1px solid #ddd;">'+q+'</td>'; }).join('');
-      return '<tr><td style="padding:5px 8px;border:1px solid #ddd;font-weight:700;color:#4c1d95;">'+cod+'</td><td style="padding:5px 8px;border:1px solid #ddd;font-size:11px;color:#374151;">'+descPDF+'</td>'+cells+'<td style="text-align:center;padding:5px 8px;border:1px solid #ddd;font-weight:700;">'+varStr+'</td></tr>';
+      var cells=qtds.map(function(q){ return '<td style="text-align:center;padding:'+TDP+';'+TDC+';">'+q+'</td>'; }).join('');
+      return '<tr><td style="padding:'+TDP+';'+TDC+';font-weight:700;color:#4c1d95;">'+cod+'</td><td style="padding:'+TDP+';'+TDC+';font-size:10px;color:#374151;">'+descPDF+'</td>'+cells+'<td style="text-align:center;padding:'+TDP+';'+TDC+';font-weight:700;">'+varStr+'</td></tr>';
     }).join('');
   }
 
   var conclusoesHtml = conclusoes.length
-    ? '<h3 style="color:#5b21b6;margin:.5rem 0 .2rem;font-size:13px;page-break-inside:avoid;">Conclusões</h3>'
-      + '<ul style="margin:0;padding-left:1.2rem;font-size:11px;color:#374151;page-break-inside:avoid;">'
-      + conclusoes.map(function(concl){ return '<li style="margin-bottom:2px;">'+concl+'</li>'; }).join('')
+    ? '<h3 style="color:#5b21b6;margin:.4rem 0 .2rem;font-size:12px;page-break-inside:avoid;">Conclusões</h3>'
+      + '<ul style="margin:0;padding-left:1.1rem;font-size:10px;color:#374151;page-break-inside:avoid;">'
+      + conclusoes.map(function(concl){ return '<li style="margin-bottom:1px;">'+concl+'</li>'; }).join('')
       + '</ul>'
-      + (avisoObs ? '<p style="font-size:10px;color:#6b7280;font-style:italic;margin:.3rem 0 0;page-break-inside:avoid;">' + avisoObs + '</p>' : '')
     : '';
   // "Onde ocorreram" como tabela (mesmo estilo da tabela principal)
   var CODIGOS_PORTA_SET_PDF = {'1046':1,'1026':1,'1066':1,'1047':1,'1016':1,'1036':1,'1028':1,'2027':1};
@@ -13004,14 +13003,14 @@ function maxExportarComparativoPDF(reg){
     + '@media print{body{padding:0;}.footer{page-break-inside:avoid;page-break-before:avoid;}}'
     + '</style>'
     + '</head><body>'
-    + '<h2 style="color:#4c1d95;border-bottom:2px solid #7c3aed;padding-bottom:6px;margin-bottom:3px;font-size:15px;">Comparativo de Falhas — Elevador ' + reg.unitId + '</h2>'
-    + '<p style="color:#6b7280;margin-bottom:8px;font-size:10px;">Gerado em ' + dt.toLocaleString('pt-BR') + ' &nbsp;|&nbsp; Períodos: ' + rotulos.join(' / ') + '</p>'
+    + '<h2 style="color:#4c1d95;border-bottom:2px solid #7c3aed;padding-bottom:4px;margin-bottom:2px;font-size:14px;">Comparativo de Falhas — Elevador ' + reg.unitId + '</h2>'
+    + '<p style="color:#6b7280;margin-bottom:2px;font-size:9px;">Gerado em ' + dt.toLocaleString('pt-BR') + ' &nbsp;|&nbsp; Períodos: ' + rotulos.join(' / ') + ' &nbsp;|&nbsp; GN Gestão • TK Elevator Recife</p>'
+    + (avisoObs ? '<p style="color:#6b7280;font-style:italic;font-size:9px;margin:0 0 5px;">' + avisoObs + '</p>' : '')
     + cardsHtmlPDF
-    + (chartImgTag ? '<h3 style="color:#5b21b6;margin:.4rem 0 .2rem;font-size:13px;">Ocorrências por período</h3>' + chartImgTag : '')
-    + (top8.length ? '<table style="margin-top:.2rem;"><thead><tr>' + headerCols + '</tr></thead><tbody>' + linhasTabela + '</tbody></table>' : '')
+    + (chartImgTag ? '<h3 style="color:#5b21b6;margin:.3rem 0 .15rem;font-size:12px;">Ocorrências por período</h3>' + chartImgTag : '')
+    + (top8.length ? '<table style="margin-top:.15rem;"><thead><tr>' + headerCols + '</tr></thead><tbody>' + linhasTabela + '</tbody></table>' : '')
     + andaresHtmlPDF
     + conclusoesHtml
-    + '<div class="footer" style="font-size:9px;color:#9ca3af;margin-top:.8rem;border-top:1px solid #e5e7eb;padding-top:5px;">GN Gestão • TK Elevator Recife • Cockpit MAX</div>'
     + '<script>window.onload=function(){window.print();}<\/script></body></html>';
 
   var w = window.open('', '_blank');
