@@ -12393,7 +12393,7 @@ async function maxCarregarHistorico(){
       cardBody.style.cssText = 'background:rgba(255,255,255,.03);padding:.85rem 1rem;display:grid;grid-template-columns:1fr auto;gap:.5rem;align-items:start;cursor:pointer;';
       cardBody.innerHTML = '<div>'
         + '<div style="font-weight:700;font-size:.95rem;color:#F5F0FF;font-family:\'Syne\',sans-serif;">Equipamento ' + maxEsc(reg.unitId) + '</div>'
-        + '<div style="font-size:.78rem;color:rgba(255,255,255,.5);margin-top:.15rem;">' + dtStr + ' · ' + reg.horasPeriodo + 'h · ' + origemBadge + '</div>'
+        + '<div style="font-size:.78rem;color:rgba(255,255,255,.5);margin-top:.15rem;">' + dtStr + ' · ' + (reg.periodoInicio && reg.periodoFim ? (function(a,b){var pad=function(n){return String(n).padStart(2,'0');};var da=new Date(new Date(a).getTime()-3*3600000);var db=new Date(new Date(b).getTime()-3*3600000);return pad(da.getUTCDate())+'/'+pad(da.getUTCMonth()+1)+'/'+da.getUTCFullYear()+' '+pad(da.getUTCHours())+':'+pad(da.getUTCMinutes())+' a '+pad(db.getUTCDate())+'/'+pad(db.getUTCMonth()+1)+'/'+db.getUTCFullYear()+' '+pad(db.getUTCHours())+':'+pad(db.getUTCMinutes());})(reg.periodoInicio,reg.periodoFim) : reg.horasPeriodo+'h') + ' · ' + origemBadge + '</div>'
         + '<div style="font-size:.8rem;color:rgba(56,189,248,.8);margin-top:.3rem;">' + maxEsc(reg.resumo) + '</div>'
         + (reg.observacao ? '<div style="font-size:.75rem;color:rgba(255,215,0,.75);margin-top:.2rem;font-style:italic;">📝 ' + maxEsc(reg.observacao) + '</div>' : '')
         + '<div style="font-size:.73rem;color:rgba(56,189,248,.45);margin-top:.35rem;">Clique para ver relatório completo →</div>'
@@ -12533,7 +12533,14 @@ function maxAbrirRelatorio(reg){
     var elObs= document.getElementById('maxRelObservacao');
     if(elId)  elId.textContent  = reg.unitId;
     if(elDt)  elDt.textContent  = dtStr;
-    if(elPer) elPer.textContent = reg.horasPeriodo + 'h';
+    if(elPer) {
+      if(reg.periodoInicio && reg.periodoFim) {
+        var fmtRecife = function(iso){var d=new Date(iso);var r=new Date(d.getTime()-3*3600000);var p=function(n){return String(n).padStart(2,'0');};return p(r.getUTCDate())+'/'+p(r.getUTCMonth()+1)+'/'+r.getUTCFullYear()+' '+p(r.getUTCHours())+':'+p(r.getUTCMinutes());};
+        elPer.textContent = fmtRecife(reg.periodoInicio) + ' a ' + fmtRecife(reg.periodoFim);
+      } else {
+        elPer.textContent = reg.horasPeriodo + 'h';
+      }
+    }
     if(elTot) elTot.textContent = reg.totalFalhas;
     if(elObs){
       elObs.style.display = reg.observacao ? 'block' : 'none';
@@ -12758,7 +12765,8 @@ function maxExportarPDF(){
     +'@media print{@page{margin:1.5cm;size:A4 landscape}body{padding:0}.nb{page-break-inside:avoid}}'
     +'</style></head><body>'
     +'<h1>Relatório de Falhas — Elevador '+maxEsc(reg.unitId)+'</h1>'
-    +'<div class="meta">Análise: '+dtStr+' &nbsp;·&nbsp; Período: '+reg.horasPeriodo+'h &nbsp;·&nbsp; Origem: '+maxEsc(origemLabel)+'</div>'
+    +(function(){var pl;if(reg.periodoInicio&&reg.periodoFim){var fR=function(iso){var d=new Date(iso);var r=new Date(d.getTime()-3*3600000);var p=function(n){return String(n).padStart(2,'0');};return p(r.getUTCDate())+'/'+p(r.getUTCMonth()+1)+'/'+r.getUTCFullYear()+' '+p(r.getUTCHours())+':'+p(r.getUTCMinutes());};pl=fR(reg.periodoInicio)+' a '+fR(reg.periodoFim);}else{pl=reg.horasPeriodo+'h';}return'<div class="meta">Análise: '+dtStr+' &nbsp;·&nbsp; Período: '+pl+' &nbsp;·&nbsp; Origem: '+maxEsc(origemLabel)+'</div>';})()
+
     +'<div class="stats">'
     +'<div class="sc"><div class="v">'+falhas.length+'</div><div class="l">Tipos de falha</div></div>'
     +'<div class="sc"><div class="v">'+totalOcorrencias+'</div><div class="l">Total ocorrências</div></div>'
