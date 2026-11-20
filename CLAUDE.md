@@ -2,6 +2,15 @@
 
 **Histórico de sessões antigas (23/06 a 07/07/2026):** ver /root/CLAUDE-HISTORICO.md
 
+## ⚠️ REGRA PERMANENTE — CHECKLIST ANTES DE PUBLICAR index.html
+
+Antes de qualquer commit + push do `index.html`:
+1. **node --check** em cada bloco `<script>` (via script Python que extrai e checa um por um)
+2. **Nenhum `</script` literal** dentro de blocos `<script>` — usar `<\/script>` em strings JS que gerem HTML (ex.: PDFs, `window.document.write`). Verificar com grep/parse. Incidente 20/11/2026: `</script>` em `maxExportarComparativoPDF` quebrou todos os scripts do Hub.
+3. **Incrementar a versão do cache** do `sw.js` (ex.: `gn-gestao-20261120d`) para forçar atualização nos browsers.
+
+---
+
 ## ⚠️ INCIDENTE CRÍTICO — NUNCA REPETIR
 
 **O que aconteceu:** uma edição manual do arquivo /home/node/.n8n/config causou travamento (lockup) do n8n, exigindo reinstalação completa do VPS do zero. Todos os workflows n8n foram perdidos e precisaram ser recriados manualmente.
