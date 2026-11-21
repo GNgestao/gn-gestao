@@ -12998,12 +12998,14 @@ function maxExportarComparativoPDF(reg){
   var dt = new Date(reg.dataHora);
   var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Comparativo de Falhas — Elevador ' + reg.unitId + '</title>'
     + '<style>'
-    + 'body{font-family:Arial,sans-serif;padding:12mm 14mm 8mm;color:#1f2937;font-size:11px;}'
+    + 'body{font-family:Arial,sans-serif;padding:0 14mm;color:#1f2937;font-size:11px;}'
     + 'table{border-collapse:collapse;width:100%;font-size:11px;}th{text-align:left;}'
+    + '.lt{width:100%;border-collapse:collapse;}'
     + '@page{size:A4 landscape;margin:0;}'
-    + '@media print{body{padding:12mm 14mm 8mm;}thead{display:table-header-group;}tr{page-break-inside:avoid;}.footer{page-break-inside:avoid;page-break-before:avoid;}}'
+    + '@media print{body{padding:0 14mm;}thead{display:table-header-group;}tfoot{display:table-footer-group;}tr{page-break-inside:avoid;}.footer{page-break-inside:avoid;page-break-before:avoid;}}'
     + '</style>'
     + '</head><body>'
+    + '<table class="lt"><thead><tr><td style="height:12mm;padding:0;border:none;"></td></tr></thead><tfoot><tr><td style="height:12mm;padding:0;border:none;"></td></tr></tfoot><tbody><tr><td style="padding:0;border:none;">'
     + '<h2 style="color:#4c1d95;border-bottom:2px solid #7c3aed;padding-bottom:4px;margin-bottom:2px;font-size:14px;">Comparativo de Falhas — Elevador ' + reg.unitId + '</h2>'
     + '<p style="color:#6b7280;margin-bottom:2px;font-size:9px;">Gerado em ' + dt.toLocaleString('pt-BR') + ' &nbsp;|&nbsp; Períodos: ' + rotulos.join(' / ') + ' &nbsp;|&nbsp; TK Elevator Recife</p>'
     + (avisoObs ? '<p style="color:#6b7280;font-style:italic;font-size:9px;margin:0 0 5px;">' + avisoObs + '</p>' : '')
@@ -13012,6 +13014,7 @@ function maxExportarComparativoPDF(reg){
     + (top8.length ? '<table style="margin-top:.15rem;"><thead><tr>' + headerCols + '</tr></thead><tbody>' + linhasTabela + '</tbody></table>' : '')
     + andaresHtmlPDF
     + conclusoesHtml
+    + '</td></tr></tbody></table>'
     + '<script>window.onload=function(){window.print();}<\/script></body></html>';
 
   var w = window.open('', '_blank');
@@ -13218,7 +13221,8 @@ function maxExportarPDF(){
   var html='<!DOCTYPE html><html><head><meta charset="utf-8">'
     +'<title>Relatório MAX — Elevador '+reg.unitId+'</title>'
     +'<style>'
-    +'body{font-family:Arial,sans-serif;margin:0;padding:12mm;color:#111;font-size:10pt;}'
+    +'body{font-family:Arial,sans-serif;margin:0;padding:0 12mm;color:#111;font-size:10pt;}'
+    +'.lt{width:100%;border-collapse:collapse;}'
     +'h1{font-size:14pt;color:#1e3a5f;margin-bottom:4px;border-bottom:2px solid #1e3a5f;padding-bottom:6px;}'
     +'h2{font-size:10.5pt;color:#1e3a5f;margin:18px 0 5px;border-bottom:1px solid #c0d0e0;padding-bottom:3px;}'
     +'.meta{font-size:9pt;color:#444;margin-bottom:10px;}'
@@ -13232,8 +13236,9 @@ function maxExportarPDF(){
     +'td{border-bottom:1px solid #ddd;vertical-align:top;}'
     +'.footer{font-size:7.5pt;color:#999;margin-top:18px;border-top:1px solid #eee;padding-top:6px;}'
     +'@page{margin:0;size:A4 landscape}'
-    +'@media print{body{padding:12mm}thead{display:table-header-group}tr{page-break-inside:avoid}.nb{page-break-inside:avoid}}'
+    +'@media print{body{padding:0 12mm}thead{display:table-header-group}tfoot{display:table-footer-group}tr{page-break-inside:avoid}.nb{page-break-inside:avoid}}'
     +'</style></head><body>'
+    +'<table class="lt"><thead><tr><td style="height:12mm;padding:0;border:none;"></td></tr></thead><tfoot><tr><td style="height:12mm;padding:0;border:none;"></td></tr></tfoot><tbody><tr><td style="padding:0;border:none;">'
     +'<h1>Relatório de Falhas — Elevador '+maxEsc(reg.unitId)+'</h1>'
     +(function(){var pl;if(reg.periodoInicio&&reg.periodoFim){var fR=function(iso){var d=new Date(iso);var r=new Date(d.getTime()-3*3600000);var p=function(n){return String(n).padStart(2,'0');};return p(r.getUTCDate())+'/'+p(r.getUTCMonth()+1)+'/'+r.getUTCFullYear()+' '+p(r.getUTCHours())+':'+p(r.getUTCMinutes());};pl=fR(reg.periodoInicio)+' a '+fR(reg.periodoFim);}else{pl=reg.horasPeriodo+'h';}return'<div class="meta">Análise: '+dtStr+' &nbsp;·&nbsp; Período: '+pl+'</div>';})()
 
@@ -13252,6 +13257,7 @@ function maxExportarPDF(){
     +'<table><thead><tr><th>Código</th><th>Descrição</th><th>Ocorr.</th><th style="min-width:90px;white-space:nowrap;">Onde</th><th>Estado predominante</th><th>Causa provável</th><th style="max-width:160px;">Ação sugerida</th></tr></thead>'
     +'<tbody>'+rowsHtml+'</tbody></table>'
     +'<div class="footer">TK Elevator &nbsp;·&nbsp; Recife-PE &nbsp;·&nbsp; '+new Date().toLocaleString('pt-BR')+'</div>'
+    +'</td></tr></tbody></table>'
     +'<script>window.onload=function(){window.print();}<\/script>'
     +'</body></html>';
 
