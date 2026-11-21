@@ -12998,10 +12998,10 @@ function maxExportarComparativoPDF(reg){
   var dt = new Date(reg.dataHora);
   var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Comparativo de Falhas — Elevador ' + reg.unitId + '</title>'
     + '<style>'
-    + 'body{font-family:Arial,sans-serif;padding:14px 18px 8px;color:#1f2937;font-size:11px;}'
+    + 'body{font-family:Arial,sans-serif;padding:12mm 14mm 8mm;color:#1f2937;font-size:11px;}'
     + 'table{border-collapse:collapse;width:100%;font-size:11px;}th{text-align:left;}'
-    + '@page{size:A4 landscape;margin:8mm;}'
-    + '@media print{body{padding:0;}.footer{page-break-inside:avoid;page-break-before:avoid;}}'
+    + '@page{size:A4 landscape;margin:0;}'
+    + '@media print{body{padding:12mm 14mm 8mm;}thead{display:table-header-group;}tr{page-break-inside:avoid;}.footer{page-break-inside:avoid;page-break-before:avoid;}}'
     + '</style>'
     + '</head><body>'
     + '<h2 style="color:#4c1d95;border-bottom:2px solid #7c3aed;padding-bottom:4px;margin-bottom:2px;font-size:14px;">Comparativo de Falhas — Elevador ' + reg.unitId + '</h2>'
@@ -13201,7 +13201,7 @@ function maxExportarPDF(){
     var estStr=estPred?(Object.keys(f.estados).length>1?estPred+' (pred.)':estPred):'\u2014';
     // Coluna "Onde": apenas resumoOnde (já é consolidado, top-4 com contagem e "+N outros")
     var ondeResumo=f.ondeResumos.length>0?f.ondeResumos[0]:'\u2014';
-    var ondeCel='<div style="font-weight:700;font-size:8pt;">'+maxEsc(ondeResumo)+'</div>';
+    var ondeCel='<div style="font-weight:700;font-size:8pt;white-space:nowrap;">'+maxEsc(ondeResumo)+'</div>';
     return '<tr'+(rec?' style="background:#fff3cd;"':'')+'>'
       +'<td style="padding:.35rem .5rem;font-weight:700;color:#1e3a5f;white-space:nowrap;">'+maxEsc(f.codigo)+'</td>'
       +'<td style="padding:.35rem .5rem;">'+maxEsc(f.descricao)+'</td>'
@@ -13218,7 +13218,7 @@ function maxExportarPDF(){
   var html='<!DOCTYPE html><html><head><meta charset="utf-8">'
     +'<title>Relatório MAX — Elevador '+reg.unitId+'</title>'
     +'<style>'
-    +'body{font-family:Arial,sans-serif;margin:0;padding:20px;color:#111;font-size:10pt;}'
+    +'body{font-family:Arial,sans-serif;margin:0;padding:12mm;color:#111;font-size:10pt;}'
     +'h1{font-size:14pt;color:#1e3a5f;margin-bottom:4px;border-bottom:2px solid #1e3a5f;padding-bottom:6px;}'
     +'h2{font-size:10.5pt;color:#1e3a5f;margin:18px 0 5px;border-bottom:1px solid #c0d0e0;padding-bottom:3px;}'
     +'.meta{font-size:9pt;color:#444;margin-bottom:10px;}'
@@ -13231,7 +13231,8 @@ function maxExportarPDF(){
     +'tr:nth-child(even):not([style*="background"]){background:#f0f4f8;}'
     +'td{border-bottom:1px solid #ddd;vertical-align:top;}'
     +'.footer{font-size:7.5pt;color:#999;margin-top:18px;border-top:1px solid #eee;padding-top:6px;}'
-    +'@media print{@page{margin:1.5cm;size:A4 landscape}body{padding:0}.nb{page-break-inside:avoid}}'
+    +'@page{margin:0;size:A4 landscape}'
+    +'@media print{body{padding:12mm}thead{display:table-header-group}tr{page-break-inside:avoid}.nb{page-break-inside:avoid}}'
     +'</style></head><body>'
     +'<h1>Relatório de Falhas — Elevador '+maxEsc(reg.unitId)+'</h1>'
     +(function(){var pl;if(reg.periodoInicio&&reg.periodoFim){var fR=function(iso){var d=new Date(iso);var r=new Date(d.getTime()-3*3600000);var p=function(n){return String(n).padStart(2,'0');};return p(r.getUTCDate())+'/'+p(r.getUTCMonth()+1)+'/'+r.getUTCFullYear()+' '+p(r.getUTCHours())+':'+p(r.getUTCMinutes());};pl=fR(reg.periodoInicio)+' a '+fR(reg.periodoFim);}else{pl=reg.horasPeriodo+'h';}return'<div class="meta">Análise: '+dtStr+' &nbsp;·&nbsp; Período: '+pl+'</div>';})()
@@ -13248,7 +13249,7 @@ function maxExportarPDF(){
     +'<tbody>'+rankRows+'</tbody></table>'
     +'</div>'
     +'<h2>Detalhamento por código (agrupado)</h2>'
-    +'<table><thead><tr><th>Código</th><th>Descrição</th><th>Ocorr.</th><th>Onde</th><th>Estado predominante</th><th>Causa provável</th><th>Ação sugerida</th></tr></thead>'
+    +'<table><thead><tr><th>Código</th><th>Descrição</th><th>Ocorr.</th><th style="min-width:90px;white-space:nowrap;">Onde</th><th>Estado predominante</th><th>Causa provável</th><th style="max-width:160px;">Ação sugerida</th></tr></thead>'
     +'<tbody>'+rowsHtml+'</tbody></table>'
     +'<div class="footer">TK Elevator &nbsp;·&nbsp; Recife-PE &nbsp;·&nbsp; '+new Date().toLocaleString('pt-BR')+'</div>'
     +'<script>window.onload=function(){window.print();}<\/script>'
