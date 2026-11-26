@@ -12423,6 +12423,7 @@ async function maxCarregarHistorico(){
         + '<div style="font-weight:700;font-size:.95rem;color:#F5F0FF;font-family:\'Syne\',sans-serif;">' + titulo + '</div>'
         + '<div style="font-size:.78rem;color:rgba(255,255,255,.5);margin-top:.15rem;">' + subTitulo + '</div>'
         + '<div style="font-size:.8rem;color:'+acorLabel+';margin-top:.3rem;">' + resumoTxt + '</div>'
+        + ((!isComparativo && reg.quedasEnergia > 0) ? '<div style="font-size:.73rem;color:#fbbf24;margin-top:.2rem;">⚡ ' + reg.quedasEnergia + ' queda' + (reg.quedasEnergia > 1 ? 's' : '') + ' de energia</div>' : '')
         + (reg.observacao ? '<div style="font-size:.75rem;color:rgba(255,215,0,.75);margin-top:.2rem;font-style:italic;">📝 ' + maxEsc(reg.observacao) + '</div>' : '')
         + '<div style="font-size:.73rem;color:'+acorSub+';margin-top:.35rem;">' + dica + '</div>'
         + '</div>'
@@ -12587,7 +12588,10 @@ function maxAbrirRelatorio(reg){
       } else {
         listEl.innerHTML = falhas.map(function(f){
           var corOc = (f.ocorrencias||0) > 30 ? '#e2504a' : (f.ocorrencias||0) > 10 ? '#fbbf24' : '#4ade80';
-          return '<div style="background:rgba(255,255,255,.03);border:1px solid rgba(56,189,248,.1);border-radius:8px;padding:.8rem 1rem;margin-bottom:.5rem;">'
+          var destaqueBar = f.destaque ? '<div style="background:#e2504a;color:#fff;font-size:.72rem;font-weight:700;padding:.2rem .7rem;border-radius:4px;margin-bottom:.45rem;letter-spacing:.04em;">⚠ MOVIMENTO NÃO INTENCIONAL</div>' : '';
+          var borderStyle = f.destaque ? 'border:1.5px solid #e2504a' : 'border:1px solid rgba(56,189,248,.1)';
+          return '<div style="background:rgba(255,255,255,.03);'+borderStyle+';border-radius:8px;padding:.8rem 1rem;margin-bottom:.5rem;">'
+            + destaqueBar
             + '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.4rem;">'
             + '<div><span style="font-family:\'Syne\',sans-serif;font-weight:800;font-size:.95rem;color:#38bdf8;">' + maxEsc(f.codigo) + '</span>'
             + '<span style="font-size:.82rem;color:rgba(255,255,255,.65);margin-left:.6rem;">' + maxEsc(f.descricao||DESC_PT[String(f.codigo)]||'') + '</span></div>'
@@ -12600,6 +12604,38 @@ function maxAbrirRelatorio(reg){
             + (f.acaoSugerida    ? '<div style="font-size:.8rem;color:#4ade80;line-height:1.4;">✅ Ação sugerida:<ul style="margin:.2rem 0 0 1rem;padding:0;">' + (f.acaoSugerida||'').split(' | ').map(function(s){return s.trim();}).filter(Boolean).map(function(s){return '<li>'+maxEsc(s)+'</li>';}).join('') + '</ul></div>' : '')
             + '</div>';
         }).join('');
+      }
+    }
+
+    // Bloco energia e resgate
+    var energiaSection = document.getElementById('maxEnergiaSection');
+    var energiaTabela  = document.getElementById('maxEnergiaTabela');
+    var energiaEvs = Array.isArray(reg.eventosEnergia) ? reg.eventosEnergia : [];
+    if(energiaSection && energiaTabela){
+      if(energiaEvs.length){
+        energiaSection.style.display = 'block';
+        energiaTabela.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:.78rem;">'
+          + '<thead><tr>'
+          + '<th style="text-align:left;padding:.3rem .5rem;color:rgba(255,255,255,.5);font-weight:600;border-bottom:1px solid rgba(56,189,248,.12);">Data/hora</th>'
+          + '<th style="text-align:left;padding:.3rem .5rem;color:rgba(255,255,255,.5);font-weight:600;border-bottom:1px solid rgba(56,189,248,.12);">Andar</th>'
+          + '<th style="text-align:left;padding:.3rem .5rem;color:rgba(255,255,255,.5);font-weight:600;border-bottom:1px solid rgba(56,189,248,.12);">Evento</th>'
+          + '<th style="text-align:left;padding:.3rem .5rem;color:rgba(255,255,255,.5);font-weight:600;border-bottom:1px solid rgba(56,189,248,.12);">Resultado / Obs.</th>'
+          + '</tr></thead><tbody>'
+          + energiaEvs.map(function(e){
+              var isAlerta = e.resultado === 'abortado' || e.tipo === 'Falha no módulo de resgate';
+              var corLinha = isAlerta ? 'rgba(226,80,74,.12)' : '';
+              var corTipo  = isAlerta ? '#e2504a' : (e.tipo === 'Falta de energia' ? '#fbbf24' : 'rgba(255,255,255,.75)');
+              var obs = [e.resultado, e.observacao].filter(Boolean).join(' · ');
+              return '<tr style="background:'+corLinha+';">'
+                + '<td style="padding:.28rem .5rem;color:rgba(255,255,255,.65);white-space:nowrap;">' + maxEsc(e.dataHora||'') + '</td>'
+                + '<td style="padding:.28rem .5rem;color:rgba(255,255,255,.65);">' + (e.andar != null ? maxEsc(String(e.andar)) : '—') + '</td>'
+                + '<td style="padding:.28rem .5rem;color:'+corTipo+';font-weight:600;">' + maxEsc(e.tipo||'') + '</td>'
+                + '<td style="padding:.28rem .5rem;color:rgba(255,255,255,.55);">' + (obs ? maxEsc(obs) : '—') + '</td>'
+                + '</tr>';
+            }).join('')
+          + '</tbody></table>';
+      } else {
+        energiaSection.style.display = 'none';
       }
     }
 
@@ -13183,6 +13219,8 @@ function maxExportarPDF(){
 
   var totalOcorrencias=falhas.reduce(function(s,f){ return s+(f.ocorrencias||0); },0);
   var totalRecorrentes=falhas.filter(function(f){ return f.ocorrencias>20; }).length;
+  var energiaPdf=Array.isArray(reg.eventosEnergia)?reg.eventosEnergia:[];
+  var quedasPdf=reg.quedasEnergia||energiaPdf.filter(function(e){return e.tipo==='Falta de energia';}).length;
 
   // 3. Tabela de ranking (resumo, sem causa/ação — só código, descrição, contagem)
   var rankRows=falhas.map(function(f,i){
@@ -13246,7 +13284,24 @@ function maxExportarPDF(){
     +'<div class="sc"><div class="v">'+falhas.length+'</div><div class="l">Tipos de falha</div></div>'
     +'<div class="sc"><div class="v">'+totalOcorrencias+'</div><div class="l">Total ocorrências</div></div>'
     +'<div class="sc"><div class="v" style="color:'+(totalRecorrentes>0?'#dc2626':'#1e3a5f')+';">'+totalRecorrentes+'</div><div class="l">Padrões recorrentes<br>(>20 ocorr.)</div></div>'
+    +(quedasPdf>0?'<div class="sc"><div class="v" style="color:#b45309;">'+quedasPdf+'</div><div class="l">Quedas de<br>energia</div></div>':'')
     +'</div>'
+    +(energiaPdf.length>0
+      ?'<div class="nb" style="margin-bottom:14px;">'
+       +'<h2>Falta de energia e resgate</h2>'
+       +'<table><thead><tr><th>Data/hora</th><th>Andar</th><th>Evento</th><th>Resultado / Obs.</th></tr></thead><tbody>'
+       +energiaPdf.map(function(e){
+          var isAlerta=e.resultado==='abortado'||e.tipo==='Falha no módulo de resgate';
+          var obs=[e.resultado,e.observacao].filter(Boolean).join(' · ');
+          return '<tr'+(isAlerta?' style="background:#fef2f2;color:#991b1b;"':'')+'>'
+            +'<td style="padding:.3rem .5rem;white-space:nowrap;">'+maxEsc(e.dataHora||'')+'</td>'
+            +'<td style="padding:.3rem .5rem;">'+(e.andar!=null?maxEsc(String(e.andar)):'—')+'</td>'
+            +'<td style="padding:.3rem .5rem;font-weight:700;">'+maxEsc(e.tipo||'')+'</td>'
+            +'<td style="padding:.3rem .5rem;">'+(obs?maxEsc(obs):'—')+'</td>'
+            +'</tr>';
+        }).join('')
+       +'</tbody></table></div>'
+      :'')
     +'<div class="nb">'
     +(chartImg?'<div style="margin-bottom:10px;"><div style="font-size:8.5pt;font-weight:bold;color:#1e3a5f;margin-bottom:3px;">Ranking de ocorrências por código</div><img src="'+chartImg+'" style="max-width:100%;height:auto;border:1px solid #e0e0e0;display:block;"></div>':'')
     +'<h2>Ranking resumido</h2>'
@@ -13323,6 +13378,11 @@ async function invAtualizarCambio(){
       <div style="padding:1.1rem 1.4rem;border-bottom:1px solid rgba(56,189,248,.08);">
         <div id="maxChartLabel" style="font-size:.78rem;font-weight:700;color:rgba(56,189,248,.7);margin-bottom:.55rem;letter-spacing:.03em;">OCORRÊNCIAS POR CÓDIGO DE ERRO</div>
         <canvas id="maxBarCanvas" style="width:100%;display:block;"></canvas>
+      </div>
+      <!-- Bloco energia e resgate (oculto quando vazio) -->
+      <div id="maxEnergiaSection" style="display:none;padding:1.1rem 1.4rem .5rem;border-bottom:1px solid rgba(56,189,248,.08);">
+        <div style="font-size:.78rem;font-weight:700;color:#fbbf24;margin-bottom:.6rem;letter-spacing:.03em;">⚡ FALTA DE ENERGIA E RESGATE</div>
+        <div id="maxEnergiaTabela"></div>
       </div>
       <!-- Lista detalhada -->
       <div style="padding:1.1rem 1.4rem 1.5rem;">
