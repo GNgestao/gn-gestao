@@ -12889,6 +12889,20 @@ function maxAbrirComparativo(reg){
       html += '<td style="text-align:center;padding:.3rem .3rem;color:'+variacaoCor+';font-weight:700;font-size:.74rem;">' + variacaoStr + '</td>';
       html += '</tr>';
     });
+    // Linha de quedas de energia (só se algum período tiver > 0)
+    var totalQuedasComp = periodos.reduce(function(s, p){ return s + (p.quedasEnergia || 0); }, 0);
+    if (totalQuedasComp > 0) {
+      html += '<tfoot><tr style="border-top:1px solid rgba(251,191,36,.25);background:rgba(251,191,36,.04);">';
+      html += '<td style="padding:.3rem .4rem;color:#fbbf24;font-weight:700;white-space:nowrap;">⚡</td>';
+      html += '<td style="padding:.3rem .4rem;color:rgba(251,191,36,.8);font-size:.74rem;">Quedas de energia</td>';
+      periodos.forEach(function(p){
+        var q = p.quedasEnergia || 0;
+        var cor = q === 0 ? 'rgba(255,255,255,.2)' : '#fbbf24';
+        html += '<td style="text-align:center;padding:.3rem .3rem;color:' + cor + ';font-weight:600;">' + q + '</td>';
+      });
+      html += '<td></td>';
+      html += '</tr></tfoot>';
+    }
     html += '</tbody></table>';
   }
 
@@ -12995,6 +13009,12 @@ function maxExportarComparativoPDF(reg){
       var cells=qtds.map(function(q){ return '<td style="text-align:center;padding:'+TDP+';'+TDC+';">'+q+'</td>'; }).join('');
       return '<tr><td style="padding:'+TDP+';'+TDC+';font-weight:700;color:#4c1d95;">'+cod+'</td><td style="padding:'+TDP+';'+TDC+';font-size:10px;color:#374151;">'+descPDF+'</td>'+cells+'<td style="text-align:center;padding:'+TDP+';'+TDC+';font-weight:700;">'+varStr+'</td></tr>';
     }).join('');
+    // Linha de quedas de energia no PDF
+    var totalQuedasPDF = periodos.reduce(function(s,p){ return s+(p.quedasEnergia||0); }, 0);
+    if (totalQuedasPDF > 0) {
+      var energiaCells = periodos.map(function(p){ var q=p.quedasEnergia||0; return '<td style="text-align:center;padding:'+TDP+';'+TDC+';color:'+(q>0?'#b45309':'#9ca3af')+';">'+q+'</td>'; }).join('');
+      linhasTabela += '<tr style="background:#fef3c7;"><td style="padding:'+TDP+';'+TDC+';font-weight:700;color:#92400e;">&#9889;</td><td style="padding:'+TDP+';'+TDC+';font-size:10px;color:#92400e;">Quedas de energia</td>'+energiaCells+'<td style="padding:'+TDP+';'+TDC+';">—</td></tr>';
+    }
   }
 
   var conclusoesHtml = conclusoes.length
